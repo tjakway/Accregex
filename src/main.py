@@ -6,17 +6,6 @@ import csv
 import shutil
 from gnucash import Session, GncNumeric, Split
 
-#this logging class doesn't actually print anything
-#it just stores a string (thus no side effects)
-class Logger:
-    _log_string = ""
-    
-    def write(self, write_str):
-        self._log_string += str(write_str)
-        self._log_string += '\n'
-
-    def get_log(self):
-        return _log_string
 
 #create the global logger
 global_logger = Logger()
@@ -59,6 +48,6 @@ def main():
     
     if not args.inplace:
         res_file = copy_input(args.file)
-        global_logger.write("Copied {} to {}".format(args.file, res_file))
+        global_logger.write("Copied gnucash input file: {} to {}".format(args.file, res_file))
 
     
