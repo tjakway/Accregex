@@ -6,6 +6,21 @@ import csv
 import shutil
 from gnucash import Session, GncNumeric, Split
 
+#this logging class doesn't actually print anything
+#it just stores a string (thus no side effects)
+class Logger:
+    _log_string = ""
+    
+    def write(self, write_str):
+        self._log_string += str(write_str)
+        self._log_string += '\n'
+
+    def get_log(self):
+        return _log_string
+
+#create the global logger
+global_logger = Logger()
+
 def get_cli_arg_parser():
     parser = argparse.ArgumentParser()
     
@@ -20,10 +35,11 @@ def get_cli_arg_parser():
     parser.add_argument('--inplace', dest='inplace', help='Don\'t create a backup of the Gnucash file', action="store_true")
     return parser
 
-#copy the input file
+#copy the input file and return the name of the destination file
 def copy_input(input_file):
    new_file = input_file + ".bak"
    shutil.copy(input_file, new_file)
+   return new_file
 
 
 def get_account(root, acc_name):
@@ -41,5 +57,8 @@ def main():
         parser.print_help()
         sys.exit(0)
     
-#    if not args.inplace:
-        
+    if not args.inplace:
+        res_file = copy_input(args.file)
+        global_logger.write("Copied {} to {}".format(args.file, res_file))
+
+    
