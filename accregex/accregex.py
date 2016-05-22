@@ -5,6 +5,7 @@ import argparse
 import csv
 import shutil
 from gnucash import Session, GncNumeric, Split
+from .Logger import Logger
 
 
 #create the global logger
@@ -37,11 +38,20 @@ def get_account(root, acc_name):
 
 #def sessionWithFile(input_file):
     
-def main():
+def main(argv=None):
+    if argv == None:
+        argv = sys.argv
+
     #parse cli args
     parser = get_cli_arg_parser()
+    
+
     try:
-        args = parser.parse_args()
+        #print help and exit if no arguments were passed
+        if not len(argv) > 1:
+            raise "No arguments passed!"
+
+        args = parser.parse_args(argv)
     except:
         parser.print_help()
         sys.exit(0)
