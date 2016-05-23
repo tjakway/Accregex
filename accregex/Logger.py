@@ -1,4 +1,3 @@
-
 #this logging class doesn't actually print anything
 #it just stores a string (thus no side effects)
 class Logger:
