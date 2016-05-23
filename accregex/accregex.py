@@ -4,12 +4,17 @@ import sys
 import argparse
 import csv
 import shutil
+import os
 from gnucash import Session, GncNumeric, Split
 from .Logger import Logger
-
+from __future__ import print_function
 
 #create the global logger
 global_logger = Logger()
+
+#see http://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 def get_cli_arg_parser():
     parser = argparse.ArgumentParser()
@@ -36,7 +41,14 @@ def get_account(root, acc_name):
     root.lookup_by_name(acc_name)
 
 
-#def sessionWithFile(input_file):
+def sessionForFile(input_file):
+    try:
+        return Session(os.path.abspath(input_file))
+    except GnuCashBackendException, backend_exception:
+        if ERR_BACKEND_LOCKED in backend_exception.errors:
+            eprint("Cannot open %s, file is locked." % input_file)
+        raise
+    
     
 def main(argv=None):
     if argv == None:
@@ -56,8 +68,12 @@ def main(argv=None):
         parser.print_help()
         sys.exit(0)
     
+    #done with argument parsing
+
+    #make file backup if necessary
     if not args.inplace:
         res_file = copy_input(args.file)
         global_logger.write("Copied gnucash input file: {} to {}".format(args.file, res_file))
 
+    
     
