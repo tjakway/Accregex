@@ -1,34 +1,18 @@
 #!/usr/bin/env python2
 
+from __future__ import print_function
 import sys
-import argparse
 import csv
 import shutil
 import os
 from gnucash import Session, GncNumeric, Split
 from .Logger import Logger
-from __future__ import print_function
+from .Args import get_cli_arg_parser
 
 #create the global logger
 global_logger = Logger()
 
-#see http://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
 
-def get_cli_arg_parser():
-    parser = argparse.ArgumentParser()
-    
-    #can't pass -q and -v at the same time
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-q', '--quiet', dest='quiet', help='Suppress output', action="store_true")
-    group.add_argument('-v', '--verbose', dest='verbose', help='Verbose output', action="store_true")
-
-    parser.add_argument('-f', '--input-file', dest='file', help='Gnucash input file')
-    #todo: list accepted file formats
-    parser.add_argument('-b', '--bank-file', dest='bankfile', help='Transactions to import')
-    parser.add_argument('--inplace', dest='inplace', help='Don\'t create a backup of the Gnucash file', action="store_true")
-    return parser
 
 #copy the input file and return the name of the destination file
 def copy_input(input_file):
@@ -50,7 +34,7 @@ def sessionForFile(input_file):
         raise
     
     
-def main(argv=None):
+def accregex_main(argv=None):
     if argv == None:
         argv = sys.argv
 
