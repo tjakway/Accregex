@@ -1,4 +1,4 @@
-import accregex
+import Accregex
 
 if __name__ == "__main__":
-    accregex.main()
+    Accregex.main()
