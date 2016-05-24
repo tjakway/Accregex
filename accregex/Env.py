@@ -61,7 +61,12 @@ def choose_main(argv=None):
     if argv == None:
         argv = sys.argv
 
-    if need_relaunch(argv):
+    #remove the program name from arg parsing
+    if len(argv) > 0 and "__main__.py" in argv[0]:
+        del argv[0]
+
+    #if no args are passed we need to relaunch
+    if len(argv) == 0 or need_relaunch(argv):
         relauncher_main(argv)
     else:
         accregex_main(argv)
