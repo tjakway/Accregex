@@ -35,7 +35,7 @@ def relaunch(gnucash_env, argv):
     
     gnucash_env_path = os.path.abspath(gnucash_env)
     #Popen expects the program path to be the first item in argv if you pass a sequence
-    accregex_proc = Popen([gnucash_env_path] + argv, bufsize=-1, executable=gnucash_env, shell=True, cwd=ccwd)
+    accregex_proc = Popen([gnucash_env_path] + argv, bufsize=-1, executable=gnucash_env, cwd=ccwd)
     accregex_proc.wait()
 
 def relauncher_main(argv=None):
