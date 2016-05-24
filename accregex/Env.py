@@ -61,7 +61,7 @@ def choose_main(argv=None):
     if argv == None:
         argv = sys.argv
 
-   if need_relaunch(argv):
-       relauncher_main(argv)
-   else:
-       accregex_main(argv)
+    if need_relaunch(argv):
+        relauncher_main(argv)
+    else:
+        accregex_main(argv)

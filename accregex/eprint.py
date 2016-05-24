@@ -1,5 +1,5 @@
-import sys
 from __future__ import print_function
+import sys
 
 #print to stderr
 #see http://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python
