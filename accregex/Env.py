@@ -29,15 +29,16 @@ def find_prog(program):
     return None
 
 def relaunch(gnucash_env, argv):
-    os.getcwd()
+    ccwd = os.getcwd()
     
-    accregex_proc = Popen(argv, executable=gnucash_env,  )
+    gnucash_env_path = os.path.abspath(gnucash_env)
+    #Popen expects the program path to be the first item in argv if you pass a sequence
+    accregex_proc = Popen(gnucash_env_path + argv, bufsize=-1, executable=gnucash_env, shell=True, cwd=ccwd)
+    accregex_proc.wait()
 
 def relauncher_main(argv=None):
     if argv == None:
         argv = sys.argv
-
-    additional_args = ["python2", "-maccregex"]
 
     #find gnucash-env, fail if we can't find it
     gnucash_env = find_prog("gnucash-env")
@@ -45,6 +46,12 @@ def relauncher_main(argv=None):
         eprint("Could not find gnucash-env!  Is GnuCash correctly installed?")
         sys.exit(1)
 
+    #need to pass the --no-relaunch flag to make sure we don't get stuck in an infinite loop
+    #this will make choose_main run accregex_main instead of relauncher_main
+    additional_args = shlex.split("python2 -maccregex --no-relaunch")
+    new_argv = additional_args + argv
+
+    relaunch(gnucash_env, new_argv)
     
 
 #this is where program execution actually starts
