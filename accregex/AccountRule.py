@@ -53,6 +53,10 @@ def read_account_rules(json_file_name):
     #read in each account rule from each JSON sub-object 
     #the top-level keys correspond to each rule
     for key in json_data.keys():
+        #ignore the 'src' element--it isn't a rule
+        if key is "src":
+            pass
+
         rule_name = key
         
         try:
