@@ -7,3 +7,5 @@ On Ubuntu:
 ```
 sudo apt-get install gnucash python-gnucash python2.7
 ```
+
+[MIT Licensed](https://opensource.org/licenses/MIT)
