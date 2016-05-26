@@ -1,4 +1,5 @@
 import json
+import re
 from .eprint import eprint
 
 class AccountRule:
@@ -36,8 +37,10 @@ def _json_obj_to_account_rule(rule_name, global_src_account, obj):
 
 #read account rules from a JSON file
 #next need to make sure the named destination accounts correspond to actual accounts
-def read_account_rules(json_file):
-    json_data = json.load(json_file)
+def read_account_rules(json_file_name):
+    with open(json_file_name) as json_file:
+        json_data = json.load(json_file)
+
     all_rules = []
 
     #can optionally specify a "src" element as the default source account
