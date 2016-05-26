@@ -8,4 +8,6 @@ from accregex import AccountRule
 
 class ReadSimpleJSONTests(unittest.TestCase):
     def test_simple_json(self):
-        self.assertEqual(len(AccountRule.read_account_rules("match_all_unspecified.json")), 1)
+        #list of account rules
+        account_rules = AccountRule.read_account_rules("match_all_unspecified.json")
+        self.assertEqual(len(account_rules), 1)
