@@ -1,7 +1,7 @@
 Dependencies:
-    * GnuCash python bindings
-    * gnucash-env (should be installed with your copy of GnuCash)
-    * python 2.7
+-GnuCash python bindings
+-gnucash-env (should be installed with your copy of GnuCash)
+-python 2.7
 
 On Ubuntu:
 ```
