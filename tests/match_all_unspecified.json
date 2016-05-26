@@ -3,7 +3,7 @@
 
     "my_rule": {
         "priority": 1,
-        "regex": "*",
+        "regex": ".",
         "dest": "Undefined"
     }
 }
