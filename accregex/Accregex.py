@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
 
-from __future__ import print_function
 import sys
 import csv
 import shutil
@@ -20,20 +19,6 @@ def copy_input(input_file):
    shutil.copy(input_file, new_file)
    return new_file
 
-
-def get_account(root, acc_name):
-    root.lookup_by_name(acc_name)
-
-
-def sessionForFile(input_file):
-    try:
-        return Session(os.path.abspath(input_file))
-    except GnuCashBackendException, backend_exception:
-        if ERR_BACKEND_LOCKED in backend_exception.errors:
-            eprint("Cannot open %s, file is locked." % input_file)
-        raise
-    
-    
 def accregex_main(argv=None):
     if argv == None:
         argv = sys.argv
@@ -58,6 +43,3 @@ def accregex_main(argv=None):
     if not args.inplace:
         res_file = copy_input(args.file)
         global_logger.write("Copied gnucash input file: {} to {}".format(args.file, res_file))
-
-    
-    
