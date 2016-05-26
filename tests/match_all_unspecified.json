@@ -1,4 +1,6 @@
 {
+    "src": "my_src_account",
+
     "my_rule": {
         "priority": 1,
         "regex": "*",
