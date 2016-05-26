@@ -5,8 +5,8 @@ from .eprint import eprint
 class AccountRule:
     def __init__(self, rule_name, regex_str, priority, dest, src):
        self.rule_name = rule_name
-       self.priority = priority
        self.regex = re.compile(regex_str)
+       self.priority = priority
        #the destination account
        self.dest = dest
        self.src = src
@@ -39,6 +39,7 @@ def _json_obj_to_account_rule(rule_name, global_src_account, obj):
 #next need to make sure the named destination accounts correspond to actual accounts
 def read_account_rules(json_file_name):
     with open(json_file_name) as json_file:
+        #see http://stackoverflow.com/questions/19483351/converting-json-string-to-dictionary-not-list-python
         json_data = json.load(json_file)
 
     all_rules = []
@@ -54,8 +55,8 @@ def read_account_rules(json_file_name):
     #the top-level keys correspond to each rule
     for key in json_data.keys():
         #ignore the 'src' element--it isn't a rule
-        if key is "src":
-            pass
+        if key == "src":
+            continue
 
         rule_name = key
         
