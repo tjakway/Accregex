@@ -6,8 +6,8 @@ import csv
 import shutil
 import os
 from gnucash import Session, GncNumeric, Split
-import Logger.Logger
-import Args.get_cli_arg_parser
+from .Logger import Logger
+from .Args import get_cli_arg_parser
 
 #create the global logger
 global_logger = Logger()
