@@ -10,8 +10,6 @@ def add_parent_to_path():
     if parent_dir == '' or parent_dir is None:
         parent_dir = os.getcwd()
 
-#    parent_dir = os.path.abspath("..")
-
     #add the parent directory to PYTHONPATH
     #see http://stackoverflow.com/questions/4934806/how-can-i-find-scripts-directory-with-python
     sys.path.insert(0, parent_dir)
