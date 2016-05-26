@@ -2,7 +2,7 @@ import unittest
 #need to mess with PYTHONPATH to import from a relative location
 import PathDirs
 PathDirs.add_parent_to_path()
-import AccountRule
+import accregex.AccountRule
 
 
 
