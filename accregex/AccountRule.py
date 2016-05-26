@@ -11,7 +11,7 @@ class AccountRule:
        self.src = src
 
 #construct an AccountRule object from a 2nd-tier JSON object
-def _json_obj_to_account_rule(rule_name, global_src_account=None, obj):
+def _json_obj_to_account_rule(rule_name, global_src_account, obj):
     #either use the global source account or the source account specified for this rule
     #prefer the per-rule source account if both exist
     #if neither exist it's an error
