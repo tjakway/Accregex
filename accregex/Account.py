@@ -16,25 +16,28 @@ def sessionForFile(input_file):
         raise
 
 #check that all dest and source accounts pointed to by the list of AccountRules are real
-def check_accounts_exist(account_rules):
+def check_accounts_exist(root_account, account_rules):
     #exception formatting helper function
     def mk_account_exception(rule, which_account):
         AccountNotFoundException("Invalid {} account found in rule: {} for rule {}" \
                     .format(which_account, getattr(rule, which_account), str(rule)))
 
+    def account_exists(rule, which_account):
+        account = root_account.lookup_by_name(getattr(rule, which_account))
+        return account is None
+
+    #check every account in every rule (i.e. 2 accounts per rule)
     for this_rule in account_rules:
-        #check for null accounts
-        if this_rule.dest is None:
-            raise mk_account_exception(this_rule, "dest")
-        if this_rule.src is None:
-            raise mk_account_exception(this_rule, "src")
-
-        
-        
-
+        for which_account in ["dest", "src"]:
+            #check for null accounts
+            if getattr(this_rule, which_account) is None:
+                raise mk_account_exception(this_rule, which_account)
+            #make sure the account actually exists
+            if not account_exists(this_rule, which_account):
+                raise mk_account_exception(this_rule, which_account)
 
 def run(input_file, account_rules):
     session = sessionForFile(input_file)
     root_account = gnucash_session.book.get_root_account()
-    account_of_interest = account_from_path(root_account, account_path)
 
+    check_accounts_exist(root_account, account_rules) 
