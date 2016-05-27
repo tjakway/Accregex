@@ -16,6 +16,7 @@ def sessionForFile(input_file):
         raise
 
 #check that all dest and source accounts pointed to by the list of AccountRules are real
+#will throw an exception if any account in account_rules does not exist
 def check_accounts_exist(root_account, account_rules):
     #exception formatting helper function
     def mk_account_exception(rule, which_account):
@@ -40,4 +41,5 @@ def run(input_file, account_rules):
     session = sessionForFile(input_file)
     root_account = gnucash_session.book.get_root_account()
 
+    #make sure all accounts exist before running any rules
     check_accounts_exist(root_account, account_rules) 
