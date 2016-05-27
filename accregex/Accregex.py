@@ -30,7 +30,7 @@ def accregex_main(argv=None):
     try:
         #print help and exit if no arguments were passed
         if not len(argv) > 1:
-            raise "No arguments passed!"
+            raise InputError("No arguments passed!")
 
         args = parser.parse_args(argv)
     except:
