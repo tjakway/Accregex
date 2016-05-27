@@ -11,6 +11,15 @@ class AccountRule:
        self.dest = dest
        self.src = src
 
+    #see http://stackoverflow.com/questions/1535327/how-to-print-a-class-or-objects-of-class-using-print
+    def __str__(self):
+        return str(self.__class__) + ": " + str(self.__dict__)
+
+"""Thrown if a dest or src account pointed to by an AccountRule does not exist"""
+class AccountNotFoundException(Exception):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
 #construct an AccountRule object from a 2nd-tier JSON object
 def _json_obj_to_account_rule(rule_name, global_src_account, obj):
     #either use the global source account or the source account specified for this rule
