@@ -14,4 +14,4 @@ On Ubuntu:
 sudo apt-get install gnucash python-gnucash python2.7
 ```
 
-[MIT Licensed](https://opensource.org/licenses/MIT)
+This software is licensed under the [same terms](https://github.com/Gnucash/gnucash/blob/master/LICENSE) as GnuCash itself (i.e. the GNU General Public License).
