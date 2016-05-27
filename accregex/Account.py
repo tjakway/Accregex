@@ -37,6 +37,17 @@ def check_accounts_exist(root_account, account_rules):
             if not account_exists(this_rule, which_account):
                 raise mk_account_exception(this_rule, which_account)
 
+#get the set of all source accounts in account_rules
+def get_source_account_set(root_account, account_rules):
+    accounts = set()
+
+    for this_rule in account_rules:
+        src_account = root_account.lookup_by_name(this_rule.src)
+        accounts.add(src_account)
+
+    return accounts
+
+
 def run(input_file, account_rules):
     session = sessionForFile(input_file)
     root_account = gnucash_session.book.get_root_account()
