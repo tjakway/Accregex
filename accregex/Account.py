@@ -17,6 +17,7 @@ def get_account(top_account, acc_name):
     query_top_account = s[0]
     query_next_accounts = s[1]
 
+    #lookup_by_name only does a depth-1 search
     next_account = top_account.lookup_by_name(query_top_account)
     if not ":" in acc_name:
         #if there are no more colons, we're at the end of the list
