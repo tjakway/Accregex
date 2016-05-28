@@ -16,7 +16,10 @@ def get_account(top_account, acc_name):
 
     s = acc_name.split(":", 1)
     query_top_account = s[0]
-    query_next_accounts = s[1]
+    if len(s) > 1:
+        query_next_accounts = s[1]
+    else:
+        query_next_accounts = s[0]
 
     #lookup_by_name only does a depth-1 search
     next_account = top_account.lookup_by_name(query_top_account)
@@ -105,7 +108,48 @@ def splits_filter_debits(split_list):
 def splits_filter_credits(split_list):
     return _splits_filter_amount(split_list, lambda x: x > ZERO)
 
-#def get_matching_rules()
+#don't forget to handle splits that no rules match
+def get_matching_rules(description, rules):
+    matching_rules = []
+    for this_rule in rules:
+        if this_rule.regex.match(description) is not None:
+            matching_rules.append(this_rule)
+
+    return matching_rules
+
+def get_highest_priority_rule(rules):
+    return sorted(rules, key=AccountRule.priority)[-1:]
+
+def move_split(split, rule):
+    try:
+        parent_transaction = split.GetParent()
+        parent_transaction.BeginEditing()
+        txn_splits = parent_transaction.GetSplitList()
+
+        #get the debit ("dest") splits
+        debit_splits = splits_filter_debits(txn_splits)
+
+        #lookup the account for this rule
+        new_account = get_account(rule)
+        for i in debit_splits:
+            debit_splits.SetAccount(new_account)
+        
+        parent_transaction.CommitEdit() 
+    except:
+        if "parent_transaction" in locals():
+            parent_transaction.RollbackEdit()
+        raise
+
+#get only (debit) splits where the destination account is Undefined
+def filter_undefined_splits(account):
+    debit_splits = splits_filter_debits(account.GetSplitList())
+    undefined_splits = []
+    for i in debit_splits:
+        if i.GetAccount().name is "Undefined":
+            undefined_splits.append(i)
+
+    return undefined_splits
+    
 
 def run(input_file, account_rules):
     session = sessionForFile(input_file)
@@ -114,4 +158,5 @@ def run(input_file, account_rules):
     #make sure all accounts exist before running any rules
     check_accounts_exist(root_account, account_rules) 
 
+     
 
