@@ -1,7 +1,9 @@
 from .eprint import eprint
 
 import os
+import operator
 from gnucash import Session, GncNumeric, Split
+from datetime import datetime, date
 from accregex.AccountRule import AccountNotFoundException
 
 def get_account(root, acc_name):
@@ -47,10 +49,27 @@ def get_source_account_set(root_account, account_rules):
 
     return accounts
 
+#return splits based on the passed comparison function (INCLUSIVE)
+def _splits_comp_date(split_list, p_date, comparator):
+    matching_splits = []
+    for this_split in split_list:
+        trans = this_split.parent
+        trans_date = date.fromtimestamp(trans.GetDate())
+
+        if comparator(trans_date, p_date):
+            matching_splits.append(this_split)
+ 
+    return matching_splits
+
+def splits_after_date(split_list, p_date):
+    _splits_comp_date(split_list, p_date, operator.ge)
+
+def splits_before_date(split_list, p_date):
+    _splits_comp_date(split_list, p_date, operator.le)
 
 def run(input_file, account_rules):
     session = sessionForFile(input_file)
-    root_account = gnucash_session.book.get_root_account()
+    root_account = session.book.get_root_account()
 
     #make sure all accounts exist before running any rules
     check_accounts_exist(root_account, account_rules) 
