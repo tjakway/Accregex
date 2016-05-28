@@ -6,8 +6,25 @@ from gnucash import Session, GncNumeric, Split
 from datetime import datetime, date
 from accregex.AccountRule import AccountNotFoundException
 
-def get_account(root, acc_name):
-    root.lookup_by_name(acc_name)
+
+#get the account from a colon separated account hierarchy
+#e.g. "Expenses:Auto:Gas"
+def get_account(top_account, acc_name):
+    if top_account is None or acc_name is None:
+        return None
+
+    s = acc_name.split(":", 1)
+    query_top_account = s[0]
+    query_next_accounts = s[1]
+
+    next_account = top_account.lookup_by_name(query_top_account)
+    if not ":" in acc_name:
+        #if there are no more colons, we're at the end of the list
+        #return it if we've found it
+        return next_account
+    else:
+        #walk down the hierarchy
+        return get_account(next_account, query_next_accounts)
 
 def sessionForFile(input_file):
     try:
@@ -26,8 +43,8 @@ def check_accounts_exist(root_account, account_rules):
                     .format(which_account, getattr(rule, which_account), str(rule)))
 
     def account_exists(rule, which_account):
-        account = root_account.lookup_by_name(getattr(rule, which_account))
-        return account is None
+        account = get_account(root_account, getattr(rule, which_account))
+        return account is not None
 
     #check every account in every rule (i.e. 2 accounts per rule)
     for this_rule in account_rules:
@@ -85,6 +102,8 @@ def splits_filter_debits(split_list):
 
 def splits_filter_credits(split_list):
     return _splits_filter_amount(split_list, lambda x: x > ZERO)
+
+def get_matching_rules
 
 def run(input_file, account_rules):
     session = sessionForFile(input_file)
