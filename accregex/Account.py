@@ -62,10 +62,29 @@ def _splits_comp_date(split_list, p_date, comparator):
     return matching_splits
 
 def splits_after_date(split_list, p_date):
-    _splits_comp_date(split_list, p_date, operator.ge)
+    return _splits_comp_date(split_list, p_date, operator.ge)
 
 def splits_before_date(split_list, p_date):
-    _splits_comp_date(split_list, p_date, operator.le)
+    return _splits_comp_date(split_list, p_date, operator.le)
+
+#return only splits for which the comparator only its amount returns True
+def _splits_filter_amount(split_list, comparator):
+    matching_splits = []
+    for this_split in split_list:
+        split_amount = gnc_numeric_to_python_Decimal(split.GetAmount())        
+
+        if comparator(split_amount):
+            matching_splits.append(this_split)
+
+    return matching_splits
+
+ZERO = Decimal(0)
+
+def splits_filter_debits(split_list):
+    return _splits_filter_amount(split_list, lambda x: x < ZERO)
+
+def splits_filter_credits(split_list):
+    return _splits_filter_amount(split_list, lambda x: x > ZERO)
 
 def run(input_file, account_rules):
     session = sessionForFile(input_file)
@@ -73,3 +92,5 @@ def run(input_file, account_rules):
 
     #make sure all accounts exist before running any rules
     check_accounts_exist(root_account, account_rules) 
+
+
