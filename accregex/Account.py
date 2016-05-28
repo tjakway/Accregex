@@ -5,6 +5,7 @@ import operator
 from gnucash import Session, GncNumeric, Split
 from datetime import datetime, date
 from accregex.AccountRule import AccountNotFoundException
+from decimal import Decimal
 
 
 #get the account from a colon separated account hierarchy
@@ -104,7 +105,7 @@ def splits_filter_debits(split_list):
 def splits_filter_credits(split_list):
     return _splits_filter_amount(split_list, lambda x: x > ZERO)
 
-def get_matching_rules
+#def get_matching_rules()
 
 def run(input_file, account_rules):
     session = sessionForFile(input_file)
