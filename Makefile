@@ -1,4 +1,4 @@
 TEST_DIR=tests/
 
 check:
-	cd $(TEST_DIR) && python -munittest ReadSimpleJSON
+	cd $(TEST_DIR) && python -munittest TestReadSimpleJSON
