@@ -1,5 +1,10 @@
 from AccregexTest import AccregexTest
 
+#just use UUID's--simple and effective
+def rand_string():
+    import uuid; 
+    return str(uuid.uuid4()).upper()
+
 def get_account_fully_qualified_name(account, name = ""):
     curr_depth = account.get_current_depth()
     new_name = account.GetName() + ":" + name
@@ -42,3 +47,26 @@ class TestReadAccountData(AccregexTest):
 
     def testFindExpenseAccounts(self):
         self.assertRecursiveFindAccounts(self.root, self.expense_accounts)
+
+    #pass a function that returns the account name
+    def assertAccountDoesntExist(self, get_account_name):
+        account_name = get_account_name()
+        from accregex import Account
+        self.assertEqual(Account.get_account(self.root, account_name), None)
+        
+    #just use a basic random string
+    def testFindNonexistantRandomAccount(self):
+        assertAccountDoesntExist(rand_string)
+
+    #more devious version.  generate several random strings concatenated with ":"
+    def testFindNonexistantRandomHierarchicalAccount(self):
+        def rand_hierarchical_string():
+            #random is seeded on first import
+            ret_str = ""
+            import random
+            for i in random.randint(2, 10):
+                ret_str = ret_str + ":" + rand_string()
+            return ret_str
+
+        assertAccountDoesntExist(rand_hierarchical_string)
+
