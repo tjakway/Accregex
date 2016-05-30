@@ -16,3 +16,7 @@ class AccregexTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         pass
+    
+    #resource paths
+    match_all_unspecified_json = "res/match_all_unspecified.json"
+    reg_doc_example = "res/reg_doc_example.gnucash"
