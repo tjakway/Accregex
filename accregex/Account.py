@@ -2,7 +2,7 @@ from .eprint import eprint
 
 import os
 import operator
-from gnucash import Session, GncNumeric, Split
+from gnucash import Session, GncNumeric, Split, GnuCashBackendException, ERR_BACKEND_LOCKED
 from datetime import datetime, date
 from accregex.AccountRule import AccountNotFoundException
 from decimal import Decimal
