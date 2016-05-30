@@ -1,8 +1,8 @@
 from AccregexTest import AccregexTest
 
-def get_account_fully_qualified_name(account, name = []):
+def get_account_fully_qualified_name(account, name = ""):
     curr_depth = account.get_current_depth()
-    new_name = account.GetName() + [":"] + name
+    new_name = account.GetName() + ":" + name
     if curr_depth > 0:
         return get_account_fully_qualified_name(account.get_parent(), new_name)
     else:
@@ -31,6 +31,7 @@ class TestReadAccountData(AccregexTest):
         self.assertEqual(self.root.get_current_depth(), 0)
 
     def assertRecursiveFindAccounts(self, root_account, accounts):
+        from accregex import Account
         for a in accounts:
            this_account = Account.get_account(root_account, a)
            #make sure we found the right account
