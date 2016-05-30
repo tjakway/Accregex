@@ -5,17 +5,10 @@ def rand_string():
     import uuid; 
     return str(uuid.uuid4()).upper()
 
-def get_account_fully_qualified_name(account, name = ""):
-    curr_depth = account.get_current_depth()
-    new_name = account.GetName() + ":" + name
-    if curr_depth > 0:
-        return get_account_fully_qualified_name(account.get_parent(), new_name)
-    else:
-        return new_name
-
 class TestReadAccountData(AccregexTest):
     asset_base = "Assets:Current Assets:"
-    asset_accounts = [asset_base + "Checking Account",
+    checking_account = asset_base + "Checking Account"
+    asset_accounts = [checking_account,
             asset_base + "Savings Account",
             asset_base + "Cash in Wallet"]
     expense_base = "Expenses:Auto:"
@@ -29,6 +22,7 @@ class TestReadAccountData(AccregexTest):
         self.root = self.session.book.get_root_account()
 
     def tearDown(self):
+        AccregexTest.tearDown(self)
         #we're not making any changes--don't need to commit
         self.session.end()
 

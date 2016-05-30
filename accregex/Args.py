@@ -18,6 +18,7 @@ def get_cli_arg_parser():
     group.add_argument('-v', '--verbose', dest='verbose', help='Verbose output', action="store_true")
 
     parser.add_argument('-f', '--input-file', dest='file', required=True, help='Gnucash input file')
+    parser.add_argument('-r', '--rule-file', dest='rulefile', required=True, help='JSON rule file')
     parser.add_argument('--inplace', dest='inplace', help='Don\'t create a backup of the Gnucash file', action="store_true")
     parser.add_argument('--no-relaunch', dest='norelaunch', help="Don't relaunch with gnucash-env (should not be passed except for debugging)", action="store_true")
 

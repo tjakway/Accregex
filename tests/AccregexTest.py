@@ -20,3 +20,4 @@ class AccregexTest(unittest.TestCase):
     #resource paths
     match_all_unspecified_json = "res/match_all_unspecified.json"
     reg_doc_example = "res/reg_doc_example.gnucash"
+    parking_fee_rule_json = "res/parking_fee_rule.json"

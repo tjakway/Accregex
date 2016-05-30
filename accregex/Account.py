@@ -31,6 +31,14 @@ def get_account(top_account, acc_name):
         #walk down the hierarchy
         return get_account(next_account, query_next_accounts)
 
+def get_account_fully_qualified_name(account, name = ""):
+    curr_depth = account.get_current_depth()
+    new_name = account.GetName() + ":" + name
+    if curr_depth > 0:
+        return get_account_fully_qualified_name(account.get_parent(), new_name)
+    else:
+        return new_name
+
 def sessionForFile(input_file):
     try:
         return Session(os.path.abspath(input_file))
