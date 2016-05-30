@@ -52,7 +52,7 @@ class TestReadAccountData(AccregexTest):
     def assertAccountDoesntExist(self, get_account_name):
         account_name = get_account_name()
         from accregex import Account
-        self.assertEqual(Account.get_account(self.root, account_name), None)
+        self.assertIs(Account.get_account(self.root, account_name), None)
         
     #just use a basic random string
     def testFindNonexistantRandomAccount(self):
