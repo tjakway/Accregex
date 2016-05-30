@@ -1,4 +1,5 @@
 TEST_DIR=tests/
+RES_DIR=$(TEST_DIR)/res
 TEST_CLASSES=TestReadSimpleJSON TestReadAccountData
 
 .PHONY: .all
@@ -7,7 +8,8 @@ TEST_CLASSES=TestReadSimpleJSON TestReadAccountData
 #delete gnucash lock files
 #they can make the tests fail
 remove_locks:
-	find tests/res/ -name "*.LNK" -o -name "*.LCK" -o -name "*.log" -delete
+	find $(RES_DIR) -regex ".*\.LNK\|.*\.LCK\|.*\.log" -delete
+	
 
 check: remove_locks
 	cd $(TEST_DIR) && python -munittest $(TEST_CLASSES)
