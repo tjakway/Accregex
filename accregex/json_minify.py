@@ -15,6 +15,9 @@ Contributers:
     - Reformatted tests and moved to separate file
     - Made into a PyPI Package
 """
+
+import re
+
 def json_minify(string, strip_space=True):
     tokenizer = re.compile('"|(/\*)|(\*/)|(//)|\n|\r')
     end_slashes_re = re.compile(r'(\\)*$')
