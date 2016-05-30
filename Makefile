@@ -3,7 +3,7 @@ RES_DIR=$(TEST_DIR)/res
 TEST_CLASSES=TestReadSimpleJSON TestReadAccountData
 
 .PHONY: .all
-.all: check
+all: check
 
 #delete gnucash lock files
 #they can make the tests fail
