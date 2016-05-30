@@ -13,7 +13,7 @@ class TestReadAccountData(AccregexTest):
     asset_accounts = [asset_base + "Checking Account",
             asset_base + "Savings Account",
             asset_base + "Cash in Wallet"]
-    expense_base = "Expenses:Auto"
+    expense_base = "Expenses:Auto:"
     expense_accounts = [expense_base + "Gas",
             expense_base + "Repair and Maintenance"]
 
