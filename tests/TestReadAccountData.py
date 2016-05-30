@@ -35,3 +35,9 @@ class TestReadAccountData(AccregexTest):
            this_account = Account.get_account(root_account, a)
            #make sure we found the right account
            get_account_fully_qualified_name(this_account) == a
+
+    def testFindAssetAccounts(self):
+        self.assertRecursiveFindAccounts(self.root, self.asset_accounts)
+
+    def testFindExpenseAccounts(self):
+        self.assertRecursiveFindAccounts(self.root, self.expense_accounts)
