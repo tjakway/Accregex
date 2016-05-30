@@ -56,7 +56,7 @@ class TestReadAccountData(AccregexTest):
         
     #just use a basic random string
     def testFindNonexistantRandomAccount(self):
-        assertAccountDoesntExist(rand_string)
+        self.assertAccountDoesntExist(rand_string)
 
     #more devious version.  generate several random strings concatenated with ":"
     def testFindNonexistantRandomHierarchicalAccount(self):
@@ -64,9 +64,9 @@ class TestReadAccountData(AccregexTest):
             #random is seeded on first import
             ret_str = ""
             import random
-            for i in random.randint(2, 10):
+            for i in range(1, random.randrange(2, 10)):
                 ret_str = ret_str + ":" + rand_string()
             return ret_str
 
-        assertAccountDoesntExist(rand_hierarchical_string)
+        self.assertAccountDoesntExist(rand_hierarchical_string)
 
