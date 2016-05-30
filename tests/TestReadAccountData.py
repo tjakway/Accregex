@@ -21,14 +21,14 @@ class TestReadAccountData(AccregexTest):
         AccregexTest.setUp(self)
         from accregex import Account
         self.session = Account.sessionForFile(AccregexTest.reg_doc_example)
-        self.root = session.book.get_root_account()
+        self.root = self.session.book.get_root_account()
 
     def tearDown(self):
         #we're not making any changes--don't need to commit
-        self.session.close()
+        self.session.end()
 
     def testRootDepth(self):
-        assertEqual(self.root.get_current_depth() == 0)
+        self.assertEqual(self.root.get_current_depth(), 0)
 
     def assertRecursiveFindAccounts(self, root_account, accounts):
         for a in accounts:
