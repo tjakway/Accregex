@@ -1,0 +1,10 @@
+{
+    "src": "Assets:Current Assets:Checking Account",
+
+    "parking_rule": {
+        "priority": 1,
+        //don't forget to ignore case!
+        "regex": "^parking.*(?i)",
+        "dest": "Expenses:Auto:Parking"
+    }
+}
