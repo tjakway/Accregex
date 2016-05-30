@@ -47,9 +47,14 @@ def _json_obj_to_account_rule(rule_name, global_src_account, obj):
 #read account rules from a JSON file
 #next need to make sure the named destination accounts correspond to actual accounts
 def read_account_rules(json_file_name):
-    with open(json_file_name) as json_file:
+    with open(json_file_name, 'r') as json_file_string:
+        from .json_minify import json_minify
+        #this workaround allows comments in JSON
+        #which the standard does not require
+        #see http://stackoverflow.com/questions/244777/can-i-use-comments-inside-a-json-file
+        stripped_json = json_minify(json_file_string)
         #see http://stackoverflow.com/questions/19483351/converting-json-string-to-dictionary-not-list-python
-        json_data = json.load(json_file)
+        json_data = json.loads(stripped_json)
 
     all_rules = []
 
