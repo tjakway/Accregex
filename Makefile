@@ -1,6 +1,6 @@
 TEST_DIR=tests/
 RES_DIR=$(TEST_DIR)/res
-TEST_CLASSES=TestReadSimpleJSON TestReadAccountData
+TEST_CLASSES=TestReadSimpleJSON TestReadAccountData TestChangeParking
 
 .PHONY: .all
 all: check
