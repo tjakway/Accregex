@@ -15,8 +15,9 @@ class TestChangeParking(AccregexTest):
 
     #launch main with the necessary parameters
     def instrument_main(self):
+        paths = map(os.path.abspath, [AccregexTest.reg_doc_example, AccregexTest.parking_fee_rule_json])
         extra_argv = shlex.split("-f {} -r {} -s 2000-05-01 --inplace -v" \
-                .format(AccregexTest.reg_doc_example, AccregexTest.parking_fee_rule_json))
+                .format(*paths))
         from accregex import Env
 
         prev_cwd = os.getcwd()
