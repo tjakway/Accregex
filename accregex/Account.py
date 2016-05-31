@@ -11,7 +11,7 @@ from decimal import Decimal
 #get the account from a colon separated account hierarchy
 #e.g. "Expenses:Auto:Gas"
 def get_account(top_account, acc_name):
-    if top_account is None or acc_name is None or acc_name == "":
+    if top_account is None or acc_name is None:
         return None
 
     s = acc_name.split(":", 1)
@@ -35,10 +35,12 @@ def get_account(top_account, acc_name):
 def get_account_fully_qualified_name(account, name = ""):
     curr_depth = account.get_current_depth()
     new_name = account.GetName() + ":" + name
-    if curr_depth > 0:
+    #skip the root account (curr_depth = 0)
+    if curr_depth > 1:
         return get_account_fully_qualified_name(account.get_parent(), new_name)
     else:
-        return new_name
+        #remove the last colon
+        return new_name[:-1]
 
 def sessionForFile(input_file):
     try:
