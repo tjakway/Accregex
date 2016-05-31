@@ -13,7 +13,7 @@ class TestChangeParking(AccregexTest):
 
     #launch main with the necessary parameters
     def instrument_main(self):
-        extra_argv = shlex.split("-f {} -r {} -s 2000-05-01 --inplace" \
+        extra_argv = shlex.split("-f {} -r {} -s 2000-05-01 --inplace -v" \
                 .format(AccregexTest.reg_doc_example, AccregexTest.parking_fee_rule_json))
         from accregex import Env
         Env.choose_main(extra_argv)
