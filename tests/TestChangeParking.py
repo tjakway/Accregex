@@ -1,6 +1,8 @@
 import shlex
+import os
 from decimal import Decimal
 from AccregexTest import AccregexTest
+from PathDirs import get_parent_of_cwd
 
 parking_expense_account_full_name = "Expenses:Auto:Parking"
 
@@ -16,7 +18,15 @@ class TestChangeParking(AccregexTest):
         extra_argv = shlex.split("-f {} -r {} -s 2000-05-01 --inplace -v" \
                 .format(AccregexTest.reg_doc_example, AccregexTest.parking_fee_rule_json))
         from accregex import Env
+
+        prev_cwd = os.getcwd()
+        #if we don't change the cwd we'll try to run the program from accregex/tests/ and it won't find the module
+        parent_dir = get_parent_of_cwd()
+        os.chdir(parent_dir)
         Env.choose_main(extra_argv)
+
+        #cd back to our original directory
+        os.chdir(prev_cwd)
 
     def testParkingChargeChanged(self):
         self.instrument_main()
