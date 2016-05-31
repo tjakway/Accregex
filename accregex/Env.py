@@ -32,6 +32,9 @@ def find_prog(program):
     return None
 
 def relaunch(gnucash_env, argv):
+    if(verbose_enabled(argv)):
+        print("Env.relaunch called with {}".format(str(argv)))
+
     ccwd = os.getcwd()
 
     gnucash_env_path = os.path.abspath(gnucash_env)
@@ -42,6 +45,9 @@ def relaunch(gnucash_env, argv):
 def relauncher_main(argv=None):
     if argv == None:
         argv = sys.argv
+
+    if(verbose_enabled(argv)):
+        print("Env.relauncher_main called with {}".format(str(argv)))
 
     #find gnucash-env, fail if we can't find it
     gnucash_env = find_prog("gnucash-env")
