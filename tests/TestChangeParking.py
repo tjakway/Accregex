@@ -1,9 +1,10 @@
 import shlex
+from decimal import Decimal
 from AccregexTest import AccregexTest
 
-class TestChangeParking(AccregexTest):
-    parking_expense_account_full_name = "Expenses:Auto:Parking"
+parking_expense_account_full_name = "Expenses:Auto:Parking"
 
+class TestChangeParking(AccregexTest):
     def setUp(self):
         AccregexTest.setUp(self)
 
@@ -23,7 +24,7 @@ class TestChangeParking(AccregexTest):
         try:
             from accregex import Account
             from accregex.AccountUtil import gnc_numeric_to_python_Decimal
-            session = Account.sessionForFile(input_file)
+            session = Account.sessionForFile(AccregexTest.reg_doc_example)
             parking_expense_account = Account.get_account(session.book.get_root_account(), parking_expense_account_full_name)
             actual_balance = gnc_numeric_to_python_Decimal(parking_expense_account.GetBalance())
             expected_balance = Decimal(25)
