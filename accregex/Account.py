@@ -11,7 +11,7 @@ from decimal import Decimal
 #get the account from a colon separated account hierarchy
 #e.g. "Expenses:Auto:Gas"
 def get_account(top_account, acc_name):
-    if top_account is None or acc_name is None:
+    if top_account is None or acc_name is None or acc_name == "":
         return None
 
     s = acc_name.split(":", 1)
