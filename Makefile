@@ -5,10 +5,14 @@ TEST_CLASSES=TestReadSimpleJSON TestReadAccountData TestChangeParking
 .PHONY: .all
 all: check
 
+.PHONY: rm_numbered_gnucash_files
+rm_numbered_gnucash_files:
+	find $(RES_DIR) -regextype sed -regex ".*\.gnucash\.[0-9]\+\.gnucash" -delete
+
 #delete gnucash lock files
 #they can make the tests fail
 .PHONY: remove_locks
-remove_locks:
+remove_locks: rm_numbered_gnucash_files
 	find $(RES_DIR) -regex ".*\.LNK\|.*\.LCK\|.*\.log" -delete
 	
 .PHONY: check
