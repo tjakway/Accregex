@@ -58,7 +58,8 @@ def check_accounts_exist(root_account, account_rules):
 
     def account_exists(rule, which_account):
         account = get_account(root_account, getattr(rule, which_account))
-        return account is not None
+        return account is not None and \
+            get_account_fully_qualified_name(account) == getattr(rule, which_account)
 
     #check every account in every rule (i.e. 2 accounts per rule)
     for this_rule in account_rules:
@@ -76,6 +77,9 @@ def get_source_account_set(root_account, account_rules):
 
     for this_rule in account_rules:
         src_account = root_account.lookup_by_name(this_rule.src)
+        if src_account is None:
+            eprint("Could not find account {}".format(this_rule.src))
+            return None
         accounts.add(src_account)
 
     return accounts
@@ -184,10 +188,13 @@ def run(input_file, account_rules, start_date, end_date=None):
         #make sure all accounts exist before running any rules
         check_accounts_exist(root_account, account_rules) 
 
-        for src_acc in get_source_account_set(root_account, account_rules):
-            process_source_account(src_acc, account_rules, start_date, end_date)
+        source_account_set = get_source_account_set(root_account, account_rules)
+        if source_account_set is not None:
+            for src_acc in source_account_set:
+                process_source_account(src_acc, account_rules, start_date, end_date)
+            #only save if we've made changes
+            session.save()
 
-        session.save()
         session.end()
     except:
         if "session" in locals():
