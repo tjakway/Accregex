@@ -53,7 +53,7 @@ def sessionForFile(input_file):
 def check_accounts_exist(root_account, account_rules):
     #exception formatting helper function
     def mk_account_exception(rule, which_account):
-        AccountNotFoundException("Invalid {} account found in rule: {} for rule {}" \
+        return AccountNotFoundException("Invalid {} account found in rule: {} for rule {}" \
                     .format(which_account, getattr(rule, which_account), str(rule)))
 
     def account_exists(rule, which_account):
