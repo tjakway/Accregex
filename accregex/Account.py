@@ -176,11 +176,19 @@ def process_source_account(src_acc, account_rules, start_date, end_date=None):
 
 
 def run(input_file, account_rules, start_date, end_date=None):
-    session = sessionForFile(input_file)
-    root_account = session.book.get_root_account()
+    try:
+        session = sessionForFile(input_file)
+        root_account = session.book.get_root_account()
 
-    #make sure all accounts exist before running any rules
-    check_accounts_exist(root_account, account_rules) 
+        #make sure all accounts exist before running any rules
+        check_accounts_exist(root_account, account_rules) 
 
-    for src_acc in get_source_account_set(root_account, account_rules):
-        process_source_account(src_acc, account_rules, start_date, end_date)
+        for src_acc in get_source_account_set(root_account, account_rules):
+            process_source_account(src_acc, account_rules, start_date, end_date)
+
+        session.save()
+        session.end()
+    except:
+        if "session" in locals():
+            session.end()
+        raise
