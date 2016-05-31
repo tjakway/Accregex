@@ -21,9 +21,9 @@ def get_highest_priority_rule(rules):
 
 
 """Thrown if a dest or src account pointed to by an AccountRule does not exist"""
-class AccountNotFoundException(Exception):
+class AccountNotFoundException(BaseException):
     def __init__(self,*args,**kwargs):
-        Exception.__init__(self,*args,**kwargs)
+        BaseException.__init__(self,*args,**kwargs)
 
 #construct an AccountRule object from a 2nd-tier JSON object
 def _json_obj_to_account_rule(rule_name, global_src_account, obj):
