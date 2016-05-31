@@ -23,6 +23,7 @@
 # @author Mark Jenkins, ParIT Worker Co-operative <mark@parit.ca>
 
 
+from decimal import Decimal
 from math import log10
 from gnucash import Session, GncNumeric, Split
 
