@@ -6,7 +6,6 @@ from subprocess import Popen
 from eprint import eprint
 from Args import need_relaunch, verbose_enabled
 from Accregex import accregex_main
-from PathDirs import get_parent_of_cwd
 
 #search environment for executable
 #see http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
