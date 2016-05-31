@@ -32,3 +32,9 @@ def get_cli_arg_parser():
 
 def need_relaunch(argv):
     return get_cli_arg_parser().parse_args(argv).norelaunch == False
+
+def verbose_enabled(argv):
+    if argv is [] or argv is None:
+        return False
+    else:
+        return get_cli_arg_parser().parse_args(argv).verbose == True
