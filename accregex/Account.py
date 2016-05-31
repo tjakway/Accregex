@@ -4,7 +4,7 @@ import os
 import operator
 from gnucash import Session, GncNumeric, Split, GnuCashBackendException, ERR_BACKEND_LOCKED
 from datetime import datetime, date
-from accregex.AccountRule import AccountNotFoundException
+from accregex.AccountRule import AccountNotFoundException, get_highest_priority_rule
 from decimal import Decimal
 
 
@@ -125,9 +125,6 @@ def get_matching_rules(description, rules):
 
     return matching_rules
 
-def get_highest_priority_rule(rules):
-    return sorted(rules, key=AccountRule.priority)[-1:]
-
 def move_split(split, rule):
     try:
         parent_transaction = split.GetParent()
@@ -149,22 +146,41 @@ def move_split(split, rule):
         raise
 
 #get only (debit) splits where the destination account is Undefined
-def filter_undefined_splits(account):
-    debit_splits = splits_filter_debits(account.GetSplitList())
+def get_undefined_splits(splits):
     undefined_splits = []
-    for i in debit_splits:
+    for i in splits:
         if i.GetAccount().name is "Undefined":
             undefined_splits.append(i)
 
     return undefined_splits
     
 
-def run(input_file, account_rules):
+def process_source_account(src_acc, account_rules, start_date, end_date=None):
+    splits = src_acc.GetSplitList()
+
+    #the filters to apply:
+    #1. date range
+    #2. debits
+    #3. Undefined accounts
+
+    if end_date is not None:
+        splits = splits_before_date(splits, end_date)
+
+    splits = get_undefined_splits(splits_filter_debits(splits))
+
+    for this_split in splits:
+        matching_rules = get_matching_rules(this_split.GetMemo(), account_rules)
+        if matching_rules is not []:
+            highest_priority_rule = get_highest_priority_rule(matching_rules)
+            move_split(this_split, highest_priority_rule)
+
+
+def run(input_file, account_rules, start_date, end_date=None):
     session = sessionForFile(input_file)
     root_account = session.book.get_root_account()
 
     #make sure all accounts exist before running any rules
     check_accounts_exist(root_account, account_rules) 
 
-     
-
+    for src_acc in get_source_account_set(root_account, account_rules):
+        process_source_account(src_acc, account_rules, start_date, end_date)

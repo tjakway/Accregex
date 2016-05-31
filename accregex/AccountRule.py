@@ -15,6 +15,10 @@ class AccountRule:
     def __str__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
 
+def get_highest_priority_rule(rules):
+    return sorted(rules, key=AccountRule.priority)[-1:]
+
+
 """Thrown if a dest or src account pointed to by an AccountRule does not exist"""
 class AccountNotFoundException(Exception):
     def __init__(self,*args,**kwargs):
