@@ -78,7 +78,7 @@ def get_source_account_set(root_account, account_rules):
     accounts = set()
 
     for this_rule in account_rules:
-        src_account = root_account.lookup_by_name(this_rule.src)
+        src_account = get_account(root_account, this_rule.src)
         if src_account is None:
             eprint("Could not find account {}".format(this_rule.src))
             return None
