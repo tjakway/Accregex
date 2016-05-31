@@ -1,10 +1,12 @@
+from __future__ import print_function
 import sys
 import os
 import shlex
 from subprocess import Popen
 from eprint import eprint
-from Args import need_relaunch
+from Args import need_relaunch, verbose_enabled
 from Accregex import accregex_main
+from PathDirs import get_parent_of_cwd
 
 #search environment for executable
 #see http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
@@ -32,7 +34,7 @@ def find_prog(program):
 
 def relaunch(gnucash_env, argv):
     ccwd = os.getcwd()
-    
+
     gnucash_env_path = os.path.abspath(gnucash_env)
     #Popen expects the program path to be the first item in argv if you pass a sequence
     accregex_proc = Popen([gnucash_env_path] + argv, bufsize=-1, executable=gnucash_env, cwd=ccwd)
@@ -62,6 +64,9 @@ def relauncher_main(argv=None):
 def choose_main(argv=None):
     if argv == None:
         argv = sys.argv
+
+    if(verbose_enabled(argv)):
+        print("Env.choose_main called with {}".format(str(argv)))
 
     #remove the program name from arg parsing
     if len(argv) > 0 and "__main__.py" in argv[0]:
