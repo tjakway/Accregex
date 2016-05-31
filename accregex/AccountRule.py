@@ -7,9 +7,10 @@ class AccountRule:
        self.rule_name = rule_name
        self.regex = re.compile(regex_str)
        self.priority = priority
-       #the destination account
-       self.dest = dest
-       self.src = src
+       #the destination and source accounts
+       #the json module returns unicode strings--convert them into python string objects
+       self.dest = str(dest)
+       self.src = str(src)
 
     #see http://stackoverflow.com/questions/1535327/how-to-print-a-class-or-objects-of-class-using-print
     def __str__(self):

@@ -22,7 +22,8 @@ def get_account(top_account, acc_name):
         query_next_accounts = s[0]
 
     #lookup_by_name only does a depth-1 search
-    next_account = top_account.lookup_by_name(query_top_account)
+    #lookup_by_name expects a python string object, not a unicode object
+    next_account = top_account.lookup_by_name(str(query_top_account))
     if not ":" in acc_name:
         #if there are no more colons, we're at the end of the list
         #return it if we've found it
