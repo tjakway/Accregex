@@ -6,9 +6,12 @@ def add_path_no_dup(pypathdir):
     if not pypathdir in sys.path:
         sys.path.insert(0, pypathdir)
 
+def get_parent_of_cwd():
+    return os.path.abspath("..")
+
 #add the parent directory of this script's location to PYTHONPATH (*NOT* the parent dir of the current working directory!)
 def add_parent_to_path():
-    parent_dir = os.path.abspath("..")
+    parent_dir = get_parent_of_cwd()
 
     #add the parent directory to PYTHONPATH
     #see http://stackoverflow.com/questions/4934806/how-can-i-find-scripts-directory-with-python
