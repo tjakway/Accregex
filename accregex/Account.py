@@ -109,7 +109,7 @@ def splits_before_date(split_list, p_date):
 def _splits_filter_amount(split_list, comparator):
     matching_splits = []
     for this_split in split_list:
-        split_amount = gnc_numeric_to_python_Decimal(split.GetAmount())        
+        split_amount = gnc_numeric_to_python_Decimal(this_split.GetAmount())
 
         if comparator(split_amount):
             matching_splits.append(this_split)
