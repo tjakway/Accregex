@@ -6,6 +6,7 @@ from gnucash import Session, GncNumeric, Split, GnuCashBackendException, ERR_BAC
 from datetime import datetime, date
 from accregex.AccountRule import AccountNotFoundException, get_highest_priority_rule
 from decimal import Decimal
+from AccountUtil import gnc_numeric_to_python_Decimal
 
 
 #get the account from a colon separated account hierarchy
