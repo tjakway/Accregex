@@ -34,7 +34,11 @@ def need_relaunch(argv):
     return get_cli_arg_parser().parse_args(argv).norelaunch == False
 
 def verbose_enabled(argv):
-    if argv is [] or argv is None:
+    #manually search the argv array for "-v" because argparse will call _sys.exit if it doesn't
+    #recognize some options...
+    if argv is None or argv is []:
         return False
-    else:
-        return get_cli_arg_parser().parse_args(argv).verbose == True
+    for i in argv:
+        if i == "-v":
+            return True
+    return False
