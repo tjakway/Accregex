@@ -143,11 +143,45 @@ def copy_split(a):
     chain_mutations(b, a)
     return b
 
+def splits_equal(a, b):
+    def guid_str(n):
+        return n.GetGUID().to_string()
+    return guid_str(a) == guid_str(b)
+
+def move_transaction(root_account, split, rule):
+    trans = split.GetParent()
+    from SplitTransactionsNotSupportedException import *
+    #more than 2 splits means a "split" transaction
+    #i.e. between 3 or more accounts
+    if len(trans) != 2:
+        raise SplitTransactionsNotSupportedException()
+
+    trans.BeginEdit()    
+    try:
+
+        undef_splits = get_undefined_splits(trans.GetSplitList()) 
+        assert len(undef_splits) == 1
+        
+        dest_account = get_account(root_account, rule.dest)
+
+        undef_splits[0].SetAccount(dest_account)
+
+        trans.CommitEdit()
+    except:
+        if "trans" in locals():
+            trans.RollbackEdit()
+        raise
+    
+    
+     
+        
+
 def move_split(root_account, split, rule):
     try:
         parent_transaction = split.GetParent()
         parent_transaction.BeginEdit()
         txn_splits = parent_transaction.GetSplitList()
+        import pdb ; pdb.set_trace()
         
         #get the debit ("dest") splits
         debit_splits = splits_filter_debits(txn_splits)
@@ -205,8 +239,7 @@ def move_split(root_account, split, rule):
 def get_undefined_splits(splits):
     undefined_splits = []
     for i in splits:
-        other_split = i.GetOtherSplit()
-        if other_split is not None and other_split.GetAccount().name == "Undefined":
+        if i is not None and i.GetAccount().name == "Undefined":
             undefined_splits.append(i)
 
     return undefined_splits
