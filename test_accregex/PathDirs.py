@@ -1,5 +1,14 @@
 import sys
 import os
+import os.path
+
+def abs_this_dir():
+    return os.path.dirname(os.path.realpath(__file__))
+
+#get the directory this python file is defined in
+#see http://stackoverflow.com/questions/5137497/find-current-directory-and-files-directory
+def abs_from_here(path):
+    return os.path.join(abs_this_dir(), path)
 
 #check if pypathdir is already in PYTHONPATH and add it if it isn't
 def add_path_no_dup(pypathdir):
@@ -10,7 +19,7 @@ def get_parent_of_cwd():
     return os.path.abspath("..")
 
 #add the parent directory of this script's location to PYTHONPATH (*NOT* the parent dir of the current working directory!)
-def add_parent_to_path():
+def _add_parent_of_cwd_to_path():
     parent_dir = get_parent_of_cwd()
 
     #add the parent directory to PYTHONPATH
@@ -28,3 +37,13 @@ def add_parent_to_path():
     for f in all_child_dirs:
         if os.path.isdir(f):
             add_path_no_dup(f)
+
+def parent_of(path):
+    #see http://stackoverflow.com/questions/2860153/how-do-i-get-the-parent-directory-in-python
+    return os.path.abspath(os.path.join(path, os.pardir))
+
+def get_accregex_abs_path():
+    return os.path.join(parent_of(abs_this_dir()), "accregex")
+
+def add_accregex_to_python_path():
+    add_path_no_dup(get_accregex_abs_path())
