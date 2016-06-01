@@ -1,6 +1,11 @@
-TEST_DIR=accregex_tests/
+#get the path to the makefile (does not depend on realpath)
+#see http://stackoverflow.com/questions/322936/common-gnu-makefile-directory-path
+#specifically http://stackoverflow.com/questions/322936/common-gnu-makefile-directory-path#comment11704496_324782
+#(the comment by @Xavier Holt (http://stackoverflow.com/users/589985/xavier-holt)
+TOP := $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
+TEST_PACKAGE=accregex_tests
+TEST_DIR=$(TOP)/$(TEST_PACKAGE)
 RES_DIR=$(TEST_DIR)/res
-TEST_CLASSES=TestReadSimpleJSON TestReadAccountData TestChangeParking
 
 .PHONY: .all
 all: check
@@ -21,7 +26,7 @@ remove_locks:
 	
 .PHONY: check
 check: remove_locks
-	cd $(TEST_DIR) && python -munittest $(TEST_CLASSES)
+	cd $(TOP) && python -m $(TEST_PACKAGE)
 
 .PHONY: clean
 clean: remove_locks rm_numbered_gnucash_files rm_gnucash_backups
