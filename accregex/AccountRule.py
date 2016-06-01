@@ -12,12 +12,17 @@ class AccountRule:
        self.dest = str(dest)
        self.src = str(src)
 
+    def __lt__(self, other):
+        return self.priority < other.priority
+
     #see http://stackoverflow.com/questions/1535327/how-to-print-a-class-or-objects-of-class-using-print
     def __str__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
 
-def get_highest_priority_rule(rules):
-    return sorted(rules, key=AccountRule.priority)[-1:]
+#has an awkward name intentionally to avoid calling it the
+#"highest priority rule" since priority 1 is the most important
+def get_most_urgent_priority_rule(rules):
+    return sorted(rules)[-1:]
 
 
 """Thrown if a dest or src account pointed to by an AccountRule does not exist"""
