@@ -188,8 +188,11 @@ def move_split(root_account, split, rule):
                 src_account.insert_split(split_clone)
                 src_account.CommitEdit()
             except:
-                if "src_account" in locals():
-                    src_account.RollbackEdit()
+               #idiotically, Account has "BeginEdit" and "CommitEdit" but no
+               #Delete/Rollback/Undo/Abort Edit or anything that would
+               #serve that purpose
+               # if "src_account" in locals():
+               #     src_account.RollbackEdit()
                 raise
         
         parent_transaction.CommitEdit()
