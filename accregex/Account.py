@@ -171,26 +171,15 @@ def move_split(root_account, split, rule):
             try:
                 src_account.BeginEdit()
                 new_dest_account.BeginEdit()
-                orig_src_split = this_undef_split.GetOtherSplit()
-                #make a copy of the split, modify it, and replace the old split
-                src_split_clone = copy_split(orig_src_split)
-                src_split_clone.SetParent(parent_transaction)
-
-                dest_split_clone = copy_split(src_split_clone)
-                dest_split_clone.SetParent(parent_transaction)
-                dest_split_clone.SetAccount(new_dest_account)
-                dest_split_clone.SetValue(src_split_clone.GetValue().neg())
-                dest_split_clone.SetAmount(src_split_clone.GetAmount().neg())
-
-                #make the original undefined split delete itself
                 old_dest_account = this_undef_split.GetAccount()
                 old_dest_account.BeginEdit()
 
-                src_account.insert_split(src_split_clone)
-                new_dest_account.insert_split(dest_split_clone)
+                src_split = this_undef_split.GetOtherSplit()
 
-                old_dest_account.remove_split(this_undef_split)
-                src_account.remove_split(orig_src_split)
+                this_undef_split.SetAccount(new_dest_account)
+                this_undef_split.SetValue(src_split.GetValue().neg())
+                this_undef_split.SetAmount(src_split.GetAmount().neg())
+
                 src_account.CommitEdit()
                 new_dest_account.CommitEdit()
                 old_dest_account.CommitEdit()
