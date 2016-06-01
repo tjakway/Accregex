@@ -1,4 +1,4 @@
-TEST_DIR=tests/
+TEST_DIR=accregex_tests/
 RES_DIR=$(TEST_DIR)/res
 TEST_CLASSES=TestReadSimpleJSON TestReadAccountData TestChangeParking
 
