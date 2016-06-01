@@ -157,6 +157,8 @@ def move_split(root_account, split, rule):
         #get undefined splits
         undef_splits = get_splits_for_target_account(debit_splits, "Undefined") 
 
+        #if we're calling move_split it means we already found what we want to move--
+        #this can only be a bug
         assert undef_splits != []
 
         #lookup the account for this rule
