@@ -85,7 +85,10 @@ def get_source_account_set(root_account, account_rules):
             return None
         accounts.add(src_account)
 
-    return accounts
+    if accounts != []:
+        return accounts
+    else:
+        return None
 
 #return splits based on the passed comparison function (INCLUSIVE)
 def _splits_comp_date(split_list, p_date, comparator):
@@ -194,6 +197,7 @@ def process_source_account(src_acc, account_rules, start_date, end_date=None):
         matching_rules = get_matching_rules(this_split.GetParent().GetDescription(), account_rules)
         if matching_rules is not []:
             highest_priority_rule = get_highest_priority_rule(matching_rules)
+            assert highest_priority_rule is not None
             move_split(this_split, highest_priority_rule)
 
 
@@ -207,6 +211,7 @@ def run(input_file, account_rules, start_date, end_date=None):
 
         source_account_set = get_source_account_set(root_account, account_rules)
         if source_account_set is not None:
+            assert source_account_set != []
             for src_acc in source_account_set:
                 process_source_account(src_acc, account_rules, start_date, end_date)
             #only save if we've made changes
