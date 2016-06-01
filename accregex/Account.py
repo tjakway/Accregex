@@ -146,12 +146,19 @@ def get_splits_for_target_account(splits, target):
     else:
         return None
 
+def copy_split(a): 
+    b = Split(a.GetBook())
+    #hack to copy the data over since Split doesn't have Clone()
+    chain_mutations(b, a)
+    return b
+
 def move_split(root_account, split, rule):
     try:
         parent_transaction = split.GetParent()
-        parent_transaction.BeginEditing()
-        txn_splits = parent_transaction.GetSplitList()
-
+        txn_copy = parent_transaction.Clone()
+        txn_copy.BeginEditing()
+        txn_splits = txn_copy.GetSplitList()
+        
         #get the debit ("dest") splits
         debit_splits = splits_filter_debits(txn_splits)
         #get undefined splits
@@ -163,13 +170,19 @@ def move_split(root_account, split, rule):
 
         #lookup the account for this rule
         new_account = get_account(root_account, rule.dest)
-        for i in undef_splits:
-            i.SetAccount(new_account)
+        for this_undef_split in undef_splits:
+            this_undef_split.SetAccount(new_account)
         
-        parent_transaction.CommitEdit() 
+        txn_copy.CommitEdit()
+        undef_splits = get_splits_for_target_account(debit_splits, "Undefined") 
+        #we should have assigned all the undefined splits
+        assert len(undef_splits) == 0
+
+        #destroy the original transaction
+        parent_transaction.Destroy()
     except:
-        if "parent_transaction" in locals():
-            parent_transaction.RollbackEdit()
+        if "txn_copy" in locals():
+            txn_copy.RollbackEdit()
         raise
 
 #get only (debit) splits where the destination account is Undefined

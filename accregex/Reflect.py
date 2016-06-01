@@ -16,6 +16,7 @@ def setters(obj):
 #this is a huge hack for the lack of a copy constructor in Split
 #but without it I'd have to manually type out a.SetFoo(b.GetFoo()) for every method under the sun
 #and I make too many typos for that to be a good idea
+#THE FIRST ARGUMENT IS MUTATED!
 def chain_mutations(a, b):
     #! DO NOT DO THIS IF THE TYPES DO NOT MATCH!
     assert type(a) == type(b)
