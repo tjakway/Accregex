@@ -5,6 +5,13 @@ The base class for tests
 The purpose of this module is to add the source directory to PYTHONPATH
 """
 
+
+#get the absolute path of a file relative to 
+#see http://stackoverflow.com/questions/5137497/find-current-directory-and-files-directory
+def abs_from_here(path):
+    import os
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
+
 class AccregexTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -18,6 +25,6 @@ class AccregexTest(unittest.TestCase):
         pass
     
     #resource paths
-    match_all_unspecified_json = "res/match_all_unspecified.json"
-    reg_doc_example = "res/reg_doc_example.gnucash"
-    parking_fee_rule_json = "res/parking_fee_rule.json"
+    match_all_unspecified_json = abs_from_here("res/match_all_unspecified.json")
+    reg_doc_example = abs_from_here("res/reg_doc_example.gnucash")
+    parking_fee_rule_json = abs_from_here("res/parking_fee_rule.json")
