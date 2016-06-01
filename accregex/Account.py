@@ -145,7 +145,7 @@ def move_split(split, rule):
         #lookup the account for this rule
         new_account = get_account(rule)
         for i in debit_splits:
-            debit_splits.SetAccount(new_account)
+            debit_splits.Assign(new_account)
         
         parent_transaction.CommitEdit() 
     except:
