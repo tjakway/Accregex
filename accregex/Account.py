@@ -136,16 +136,6 @@ def get_matching_rules(description, rules):
 
     return matching_rules
 
-def get_splits_for_target_account(splits, target):
-    target_splits = []
-    for i in splits:
-        if i.GetAccount() == target:
-            target_splits.append(i)
-    if target_splits != []:
-        return target_splits
-    else:
-        return None
-
 def copy_split(a): 
     from .Reflect import chain_mutations
     b = Split(a.GetBook())
@@ -196,8 +186,6 @@ def move_split(root_account, split, rule):
                 raise
         
         parent_transaction.CommitEdit()
-        #we should have assigned all the undefined splits
-        assert len(get_splits_for_target_account(debit_splits, "Undefined")) == 0
     except:
         if "parent_transaction" in locals():
             parent_transaction.RollbackEdit()
