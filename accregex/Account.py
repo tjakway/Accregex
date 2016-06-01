@@ -226,7 +226,7 @@ def process_source_account(src_acc, account_rules, start_date, end_date=None):
         if matching_rules is not []:
             urgent_priority_rule = get_most_urgent_priority_rule(matching_rules)
             assert urgent_priority_rule is not None
-            move_split(this_split, urgent_priority_rule)
+            move_split(src_acc.get_root(), this_split, urgent_priority_rule)
 
 
 def run(input_file, account_rules, start_date, end_date=None):
