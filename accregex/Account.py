@@ -177,8 +177,8 @@ def move_split(root_account, split, rule):
                 src_split = this_undef_split.GetOtherSplit()
 
                 this_undef_split.SetAccount(new_dest_account)
-                this_undef_split.SetValue(src_split.GetValue().neg())
-                this_undef_split.SetAmount(src_split.GetAmount().neg())
+                this_undef_split.SetValue(src_split.GetValue())
+                this_undef_split.SetAmount(src_split.GetAmount())
 
                 src_account.CommitEdit()
                 new_dest_account.CommitEdit()
