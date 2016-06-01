@@ -133,7 +133,17 @@ def get_matching_rules(description, rules):
 
     return matching_rules
 
-def move_split(split, rule):
+def get_splits_for_target_account(splits, target):
+    target_splits = []
+    for i in splits:
+        if i.GetAccount() == target:
+            target_splits.append(i)
+    if target_splits != []:
+        return target_splits
+    else:
+        return None
+
+def move_split(root_account, split, rule):
     try:
         parent_transaction = split.GetParent()
         parent_transaction.BeginEditing()
@@ -141,11 +151,15 @@ def move_split(split, rule):
 
         #get the debit ("dest") splits
         debit_splits = splits_filter_debits(txn_splits)
+        #get undefined splits
+        undef_splits = get_splits_for_target_account(debit_splits, "Undefined") 
+
+        assert undef_splits != []
 
         #lookup the account for this rule
-        new_account = get_account(rule)
-        for i in debit_splits:
-            debit_splits.SetAccount(new_account)
+        new_account = get_account(root_account, rule.dest)
+        for i in undef_splits:
+            i.SetAccount(new_account)
         
         parent_transaction.CommitEdit() 
     except:
