@@ -22,8 +22,10 @@ class TestChangeParking(AccregexTest):
 
         prev_cwd = os.getcwd()
         #if we don't change the cwd we'll try to run the program from accregex/tests/ and it won't find the module
-        parent_dir = get_parent_of_cwd()
-        os.chdir(parent_dir)
+        #run from the directory above where this file is defined
+        from .PathDirs import abs_this_dir, parent_of
+        run_from = parent_of(abs_this_dir())
+        os.chdir(run_from)
         Env.choose_main(extra_argv)
 
         #cd back to our original directory
