@@ -153,12 +153,11 @@ def modify_transaction(root_account, split, rule):
     from SplitTransactionsNotSupportedException import *
     #more than 2 splits means a "split" transaction
     #i.e. between 3 or more accounts
-    if len(trans) != 2:
+    if len(trans.GetSplitList()) != 2:
         raise SplitTransactionsNotSupportedException()
 
     try:
         undef_splits = get_undefined_splits(trans.GetSplitList()) 
-        import pdb ; pdb.set_trace();
         if len(undef_splits) == 1: 
             trans.BeginEdit()    
             dest_account = get_account(root_account, rule.dest)
