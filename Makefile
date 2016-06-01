@@ -18,6 +18,10 @@ rm_gnucash_backups:
 rm_numbered_gnucash_files:
 	find $(RES_DIR) -regextype sed -regex ".*\.gnucash\.[0-9]\+\.gnucash" -delete
 
+.PHONY: rm_temp_files
+rm_temp_files:
+	find $(RES_DIR) -regex ".*\.gnucash.tmp-.*" -delete
+
 #delete gnucash lock files
 #they can make the tests fail
 .PHONY: remove_locks
@@ -29,5 +33,5 @@ check: remove_locks
 	cd $(TOP) && python -m $(TEST_PACKAGE)
 
 .PHONY: clean
-clean: remove_locks rm_numbered_gnucash_files rm_gnucash_backups
+clean: remove_locks rm_numbered_gnucash_files rm_gnucash_backups rm_temp_files
 	find . -name "*.pyc" -type f -delete
