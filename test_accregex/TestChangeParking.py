@@ -29,7 +29,7 @@ class TestChangeParking(AccregexTest):
         #cd back to our original directory
         os.chdir(prev_cwd)
 
-    def testParkingChargeChanged(self):
+    def test_parking_charge_changed(self):
         self.instrument_main()
 
         try:
