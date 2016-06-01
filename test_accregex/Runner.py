@@ -1,9 +1,15 @@
 def get_all_test_suites():
-    from unittest import TestSuite
+    import unittest
+
+    #load tests directly from modules
+    import TestReadSimpleJSON
     import TestChangeParking
     import TestReadAccountData
-    import TestReadSimpleJSON
-
-    return TestSuite([  TestReadSimpleJSON.get_test_suite(),
-                        TestChangeParking.get_test_suite(),
-                        TestReadAccountData.get_test_suite()])
+    test_modules = [TestReadSimpleJSON,
+                    TestChangeParking,
+                    TestReadAccountData]
+    test_loader = unittest.defaultTestLoader
+    combined_test_suite = unittest.TestSuite(map(test_loader.loadTestsFromModule, test_modules))
+    text_test_runner = unittest.TextTestRunner()
+    text_test_runner.run(combined_test_suite)
+    

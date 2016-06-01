@@ -6,10 +6,6 @@ from PathDirs import get_parent_of_cwd
 
 parking_expense_account_full_name = "Expenses:Auto:Parking"
 
-def get_test_suite():
-    from unittest import TestSuite
-    return TestSuite(TestChangeParking())
-
 class TestChangeParking(AccregexTest):
     def setUp(self):
         AccregexTest.setUp(self)
