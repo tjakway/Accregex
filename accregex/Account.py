@@ -172,69 +172,6 @@ def modify_transaction(root_account, split, rule):
             trans.RollbackEdit()
         raise
     
-    
-     
-        
-
-def move_split(root_account, split, rule):
-    try:
-        parent_transaction = split.GetParent()
-        parent_transaction.BeginEdit()
-        txn_splits = parent_transaction.GetSplitList()
-        
-        #get the debit ("dest") splits
-        debit_splits = splits_filter_debits(txn_splits)
-        assert debit_splits != []
-        assert debit_splits is not None
-        #get undefined splits
-        undef_splits = get_undefined_splits(debit_splits) 
-
-        #if we're calling move_split it means we already found what we want to move--
-        #this can only be a bug
-        assert undef_splits != []
-        assert undef_splits is not None
-
-        #lookup the accounts for this rule
-        src_account = get_account(root_account, rule.src)
-        new_dest_account = get_account(root_account, rule.dest)
-
-        #make sure we're referring to the right source account
-        assert src_account.name == split.GetAccount().name
-        for this_undef_split in undef_splits:
-            try:
-                src_account.BeginEdit()
-                new_dest_account.BeginEdit()
-                old_dest_account = this_undef_split.GetAccount()
-                old_dest_account.BeginEdit()
-
-                src_split = this_undef_split.GetOtherSplit()
-
-                this_undef_split.SetAccount(new_dest_account)
-                this_undef_split.SetValue(src_split.GetValue().neg())
-                this_undef_split.SetAmount(src_split.GetAmount().neg())
-
-                src_split.SetParent(this_undef_split.GetParent()) #??
-                src_account.insert_split(this_undef_split) #??
-                src_account.insert_split(src_split) #??
-
-                src_account.CommitEdit()
-                new_dest_account.CommitEdit()
-                old_dest_account.CommitEdit()
-            except:
-               #idiotically, Account has "BeginEdit" and "CommitEdit" but no
-               #Delete/Rollback/Undo/Abort Edit or anything that would
-               #serve that purpose
-               # if "src_account" in locals():
-               #     src_account.RollbackEdit()
-                raise
-        
-        parent_transaction.CommitEdit()
-    except:
-        if "parent_transaction" in locals():
-            parent_transaction.RollbackEdit()
-        raise
-
-
 #can't use a set because we don't have access to Split.__eq__
 def get_unique_splits(splits):
     unique_splits = []
