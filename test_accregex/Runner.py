@@ -1,4 +1,4 @@
-def get_all_test_suites():
+def run_all_test_suites():
     import unittest
 
     #load tests directly from modules
