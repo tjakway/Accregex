@@ -4,6 +4,6 @@ def get_all_test_suites():
     import TestReadAccountData
     import TestReadSimpleJSON
 
-    return TestSuite([  TestReadSimpleJSON.get_test_suite()
+    return TestSuite([  TestReadSimpleJSON.get_test_suite(),
                         TestChangeParking.get_test_suite(),
                         TestReadAccountData.get_test_suite()])
