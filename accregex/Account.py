@@ -235,6 +235,23 @@ def move_split(root_account, split, rule):
             parent_transaction.RollbackEdit()
         raise
 
+
+#can't use a set because we don't have access to Split.__eq__
+def get_unique_splits(splits):
+    unique_splits = []
+    for i in splits:
+        found = False
+        for j in unique_splits:
+            #! don't use foo == bar for splits, use splits_equal
+            if splits_equal(i, j):
+                found = True
+
+        if not found:
+            unique_splits.append(i)
+
+    return unique_splits
+
+
 #get only (debit) splits where the destination account is Undefined
 def get_undefined_splits(splits):
     undefined_splits = []
@@ -244,7 +261,7 @@ def get_undefined_splits(splits):
         if i.GetOtherSplit() is not None and i.GetOtherSplit().GetAccount().name == "Undefined":
             undefined_splits.append(i.GetOtherSplit())
 
-    return undefined_splits
+    return get_unique_splits(undefined_splits)
     
 
 def process_source_account(src_acc, account_rules, start_date, end_date=None):
