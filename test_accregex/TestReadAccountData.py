@@ -1,5 +1,8 @@
 from AccregexTest import AccregexTest
 
+def get_test_suite():
+    return TestReadAccountData()
+
 #just use UUID's--simple and effective
 def rand_string():
     import uuid; 
