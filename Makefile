@@ -3,7 +3,7 @@
 #specifically http://stackoverflow.com/questions/322936/common-gnu-makefile-directory-path#comment11704496_324782
 #(the comment by @Xavier Holt (http://stackoverflow.com/users/589985/xavier-holt)
 TOP := $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
-TEST_PACKAGE=accregex_tests
+TEST_PACKAGE=test_accregex
 TEST_DIR=$(TOP)/$(TEST_PACKAGE)
 RES_DIR=$(TEST_DIR)/res
 
