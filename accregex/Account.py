@@ -156,7 +156,7 @@ def copy_split(a):
 def move_split(root_account, split, rule):
     try:
         parent_transaction = split.GetParent()
-        parent_transaction.BeginEditing()
+        parent_transaction.BeginEdit()
         txn_splits = parent_transaction.GetSplitList()
         
         #get the debit ("dest") splits
@@ -173,7 +173,7 @@ def move_split(root_account, split, rule):
         new_dest_account = get_account(root_account, rule.dest)
 
         #make sure we're referring to the right source account
-        assert src_account.name == split.GetParent().get_parent().name
+        assert src_account.name == split.GetAccount().name
 
         for this_undef_split in undef_splits:
             try:
