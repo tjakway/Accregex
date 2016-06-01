@@ -57,4 +57,3 @@ def add_accregex_to_python_path():
     add_child_dirs_to_path(abs_parent)
     add_path_no_dup(get_accregex_abs_path())
     add_path_no_dup(abs_parent)
-    print str(sys.path)
