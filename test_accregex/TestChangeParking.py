@@ -37,7 +37,8 @@ class TestChangeParking(AccregexTest):
         try:
             from accregex import Account
             from accregex.AccountUtil import gnc_numeric_to_python_Decimal
-            session = Account.sessionForFile(AccregexTest.reg_doc_example)
+            from gnucash import Session
+            session = Session(AccregexTest.reg_doc_example, is_new=False, ignore_lock=False)
             parking_expense_account = Account.get_account(session.book.get_root_account(), parking_expense_account_full_name)
             actual_balance = gnc_numeric_to_python_Decimal(parking_expense_account.GetBalance())
             expected_balance = Decimal(25)

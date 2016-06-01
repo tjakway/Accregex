@@ -167,16 +167,28 @@ def move_split(root_account, split, rule):
 
         #make sure we're referring to the right source account
         assert src_account.name == split.GetAccount().name
-
         for this_undef_split in undef_splits:
             try:
                 src_account.BeginEdit()
+                new_dest_account.BeginEdit()
+                orig_src_split = this_undef_split.GetOtherSplit()
                 #make a copy of the split, modify it, and replace the old split
-                split_clone = copy_split(this_undef_split)
-                split_clone.SetAccount(new_dest_account)
-                src_account.remove_split(this_undef_split)
-                src_account.insert_split(split_clone)
+                src_split_clone = copy_split(orig_src_split)
+                src_split_clone.SetParent(parent_transaction)
+
+                dest_split_clone = copy_split(src_split_clone)
+                dest_split_clone.SetParent(parent_transaction)
+                dest_split_clone.SetAccount(new_dest_account)
+                dest_split_clone.SetValue(src_split_clone.GetValue().neg())
+                dest_split_clone.SetAmount(src_split_clone.GetAmount().neg())
+
+                #new_dest_account.remove_split(this_undef_split)
+                #src_account.remove_split(orig_src_split)
+
+               # src_account.insert_split(split_clone)
+
                 src_account.CommitEdit()
+                new_dest_account.CommitEdit()
             except:
                #idiotically, Account has "BeginEdit" and "CommitEdit" but no
                #Delete/Rollback/Undo/Abort Edit or anything that would
@@ -238,6 +250,9 @@ def run(input_file, account_rules, start_date, end_date=None):
                 process_source_account(src_acc, account_rules, start_date, end_date)
             #only save if we've made changes
             session.save()
+            if session.book.session_not_saved():
+                raise "Session book was not saved!"
+
 
         session.end()
     except:
