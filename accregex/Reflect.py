@@ -40,7 +40,7 @@ def chain_mutations(a, b):
     #! DO NOT DO THIS IF THE TYPES DO NOT MATCH!
     assert type(a) == type(b)
     getter_strs = getter_strings(b)
-    setter_strs = setter_strs(a)
+    setter_strs = setter_strings(a)
 
     gs, ss = filter_for_only_reciprocals(getter_strs, setter_strs)
 
