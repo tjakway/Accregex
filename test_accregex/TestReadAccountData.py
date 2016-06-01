@@ -1,9 +1,5 @@
 from AccregexTest import AccregexTest
 
-def get_test_suite():
-    from unittest import TestSuite
-    return TestSuite(TestReadAccountData())
-
 #just use UUID's--simple and effective
 def rand_string():
     import uuid; 
@@ -30,9 +26,6 @@ class TestReadAccountData(AccregexTest):
         #we're not making any changes--don't need to commit
         self.session.end()
 
-    def testRootDepth(self):
-        self.assertEqual(self.root.get_current_depth(), 0)
-
     def assertRecursiveFindAccounts(self, root_account, accounts):
         from accregex import Account
         for a in accounts:
@@ -40,24 +33,32 @@ class TestReadAccountData(AccregexTest):
            #make sure we found the right account
            Account.get_account_fully_qualified_name(this_account) == a
 
-    def testFindAssetAccounts(self):
-        self.assertRecursiveFindAccounts(self.root, self.asset_accounts)
-
-    def testFindExpenseAccounts(self):
-        self.assertRecursiveFindAccounts(self.root, self.expense_accounts)
-
     #pass a function that returns the account name
     def assertAccountDoesntExist(self, get_account_name):
         account_name = get_account_name()
         from accregex import Account
         self.assertIs(Account.get_account(self.root, account_name), None)
-        
+
+class TestRootDepth(TestReadAccountData):
+    def runTest(self):
+        self.assertEqual(self.root.get_current_depth(), 0)
+
+class TestFindAssetAccounts(TestReadAccountData):
+    def runTest(self):
+        self.assertRecursiveFindAccounts(self.root, self.asset_accounts)
+
+class TestFindExpenseAccounts(TestReadAccountData):
+    def runTest(self):
+        self.assertRecursiveFindAccounts(self.root, self.expense_accounts)
+
+class TestFindNonexistantRandomAccount(TestReadAccountData):
     #just use a basic random string
-    def testFindNonexistantRandomAccount(self):
+    def runTest(self):
         self.assertAccountDoesntExist(rand_string)
 
+class TestFindNonexistantRandomHierarchicalAccount(TestReadAccountData):
     #more devious version.  generate several random strings concatenated with ":"
-    def testFindNonexistantRandomHierarchicalAccount(self):
+    def runTest(self):
         def rand_hierarchical_string():
             #random is seeded on first import
             ret_str = ""
@@ -67,4 +68,3 @@ class TestReadAccountData(AccregexTest):
             return ret_str
 
         self.assertAccountDoesntExist(rand_hierarchical_string)
-
