@@ -1,7 +1,8 @@
 from AccregexTest import AccregexTest
 
 def get_test_suite():
-    return TestReadSimpleJSON()
+    from unittest import TestSuite
+    return TestSuite(TestReadSimpleJSON())
 
 class TestReadSimpleJSON(AccregexTest):
     def setUp(self):
