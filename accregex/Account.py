@@ -148,7 +148,7 @@ def splits_equal(a, b):
         return n.GetGUID().to_string()
     return guid_str(a) == guid_str(b)
 
-def move_transaction(root_account, split, rule):
+def modify_transaction(root_account, split, rule):
     trans = split.GetParent()
     from SplitTransactionsNotSupportedException import *
     #more than 2 splits means a "split" transaction
@@ -156,17 +156,18 @@ def move_transaction(root_account, split, rule):
     if len(trans) != 2:
         raise SplitTransactionsNotSupportedException()
 
-    trans.BeginEdit()    
     try:
-
         undef_splits = get_undefined_splits(trans.GetSplitList()) 
-        assert len(undef_splits) == 1
-        
-        dest_account = get_account(root_account, rule.dest)
+        import pdb ; pdb.set_trace();
+        if len(undef_splits) == 1: 
+            trans.BeginEdit()    
+            dest_account = get_account(root_account, rule.dest)
+            dest_account.BeginEdit()
 
-        undef_splits[0].SetAccount(dest_account)
+            undef_splits[0].SetAccount(dest_account)
 
-        trans.CommitEdit()
+            trans.CommitEdit()
+            dest_account.CommitEdit()
     except:
         if "trans" in locals():
             trans.RollbackEdit()
@@ -181,7 +182,6 @@ def move_split(root_account, split, rule):
         parent_transaction = split.GetParent()
         parent_transaction.BeginEdit()
         txn_splits = parent_transaction.GetSplitList()
-        import pdb ; pdb.set_trace()
         
         #get the debit ("dest") splits
         debit_splits = splits_filter_debits(txn_splits)
@@ -241,6 +241,8 @@ def get_undefined_splits(splits):
     for i in splits:
         if i is not None and i.GetAccount().name == "Undefined":
             undefined_splits.append(i)
+        if i.GetOtherSplit() is not None and i.GetOtherSplit().GetAccount().name == "Undefined":
+            undefined_splits.append(i.GetOtherSplit())
 
     return undefined_splits
     
@@ -263,7 +265,7 @@ def process_source_account(src_acc, account_rules, start_date, end_date=None):
         if matching_rules is not []:
             urgent_priority_rule = get_most_urgent_priority_rule(matching_rules)
             assert urgent_priority_rule is not None
-            move_split(src_acc.get_root(), this_split, urgent_priority_rule)
+            modify_transaction(src_acc.get_root(), this_split, urgent_priority_rule)
 
 
 def run(input_file, account_rules, start_date, end_date=None):
