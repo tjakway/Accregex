@@ -177,7 +177,7 @@ def process_source_account(src_acc, account_rules, start_date, end_date=None):
     splits = get_undefined_splits(splits_filter_debits(splits))
 
     for this_split in splits:
-        matching_rules = get_matching_rules(this_split.GetMemo(), account_rules)
+        matching_rules = get_matching_rules(this_split.GetParent().GetDescription(), account_rules)
         if matching_rules is not []:
             highest_priority_rule = get_highest_priority_rule(matching_rules)
             move_split(this_split, highest_priority_rule)
