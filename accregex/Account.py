@@ -161,12 +161,15 @@ def move_split(root_account, split, rule):
         
         #get the debit ("dest") splits
         debit_splits = splits_filter_debits(txn_splits)
+        assert debit_splits != []
+        assert debit_splits is not None
         #get undefined splits
-        undef_splits = get_splits_for_target_account(debit_splits, "Undefined") 
+        undef_splits = get_undefined_splits(debit_splits) 
 
         #if we're calling move_split it means we already found what we want to move--
         #this can only be a bug
         assert undef_splits != []
+        assert undef_splits is not None
 
         #lookup the accounts for this rule
         src_account = get_account(root_account, rule.src)
