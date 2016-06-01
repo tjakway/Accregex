@@ -182,13 +182,18 @@ def move_split(root_account, split, rule):
                 dest_split_clone.SetValue(src_split_clone.GetValue().neg())
                 dest_split_clone.SetAmount(src_split_clone.GetAmount().neg())
 
-                #new_dest_account.remove_split(this_undef_split)
-                #src_account.remove_split(orig_src_split)
+                #make the original undefined split delete itself
+                old_dest_account = this_undef_split.GetAccount()
+                old_dest_account.BeginEdit()
 
-               # src_account.insert_split(split_clone)
+                src_account.insert_split(src_split_clone)
+                new_dest_account.insert_split(dest_split_clone)
 
+                old_dest_account.remove_split(this_undef_split)
+                src_account.remove_split(orig_src_split)
                 src_account.CommitEdit()
                 new_dest_account.CommitEdit()
+                old_dest_account.CommitEdit()
             except:
                #idiotically, Account has "BeginEdit" and "CommitEdit" but no
                #Delete/Rollback/Undo/Abort Edit or anything that would
