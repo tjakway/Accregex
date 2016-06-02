@@ -150,7 +150,7 @@ def splits_equal(a, b):
 
 def modify_transaction(root_account, split, rule):
     trans = split.GetParent()
-    from SplitTransactionsNotSupportedException import *
+    from SplitTransactionsNotSupportedException import SplitTransactionsNotSupportedException
     #more than 2 splits means a "split" transaction
     #i.e. between 3 or more accounts
     if len(trans.GetSplitList()) != 2:
