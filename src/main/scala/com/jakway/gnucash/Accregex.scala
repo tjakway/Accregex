@@ -1,5 +1,9 @@
 package com.jakway.gnucash
 
+import org.scalatest.fixture
+
+import scala.annotation.tailrec
+import scala.reflect.internal.Precedence
 import scala.xml.{Node, XML}
 
 object Accregex {
@@ -50,5 +54,30 @@ object Validate {
   }
   def apply(root: Node) = {
 
+  }
+}
+
+object XMLUtils {
+  def searchNode(f: Node => Boolean)(top: Node): Seq[Node] = {
+
+    @tailrec
+    def helper(acc: Seq[Node])(thisNode: Node): Seq[Node] = {
+      val nextAcc = if(f(thisNode)) {
+        acc.+:(thisNode)
+      } else {
+        acc
+      }
+
+      val child = thisNode.child
+      if(child.isEmpty) {
+        nextAcc
+      } else {
+        child.foldLeft(nextAcc) match {
+          case (fAcc, nextNode) => helper(fAcc)(nextNode)
+        }
+      }
+    }
+
+    helper(Seq())(top)
   }
 }
