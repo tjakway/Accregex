@@ -33,8 +33,7 @@ trait ValidationError
   */
 object NodeTests {
 
-
-  private def onlyOne[A](s: Seq[A])(implicit errorType: String => ValidationError): Either[ValidationError, A] = {
+  def onlyOne[A](s: Seq[A])(implicit errorType: String => ValidationError): Either[ValidationError, A] = {
     val msg = "expected only 1 item in seq but got: "
     if(s.length == 1) {
       Right(s.head)
@@ -46,7 +45,7 @@ object NodeTests {
     }
   }
 
-  private def hasSubNodes(root: Node, name: String)
+  def hasSubNodes(root: Node, name: String)
                          (implicit errorType: String => ValidationError): Either[ValidationError, NodeSeq] = {
 
     val sub = (root \ name)
@@ -56,7 +55,7 @@ object NodeTests {
     }
   }
 
-  private def hasSubNode(root: Node, name: String)
+  def hasSubNode(root: Node, name: String)
                         (implicit errorType: String => ValidationError): Either[ValidationError, Node] = {
     for {
       h <- hasSubNodes(root, name)
@@ -65,6 +64,9 @@ object NodeTests {
       r
     }
   }
+
+
+
 }
 
 /**
