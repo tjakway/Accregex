@@ -1,8 +1,6 @@
 package com.jakway.gnucash
 
-import org.scalatest.fixture
 
-import scala.annotation.tailrec
 import scala.xml.{Node, XML}
 
 object Accregex {
