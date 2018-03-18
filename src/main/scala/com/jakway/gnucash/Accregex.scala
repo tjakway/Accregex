@@ -33,6 +33,7 @@ trait ValidationError
   */
 object NodeTests {
 
+
   private def onlyOne[A](s: Seq[A])(implicit errorType: String => ValidationError): Either[ValidationError, A] = {
     val msg = "expected only 1 item in seq but got: "
     if(s.length == 1) {
@@ -52,6 +53,16 @@ object NodeTests {
     sub.isEmpty match {
       case true => Left(errorType(s"could not find subnode of $root named $name"))
       case false => Right(sub)
+    }
+  }
+
+  private def hasSubNode(root: Node, name: String)
+                        (implicit errorType: String => ValidationError): Either[ValidationError, Node] = {
+    for {
+      h <- hasSubNodes(root, name)
+      r <- onlyOne(h)
+    } yield {
+      r
     }
   }
 }
