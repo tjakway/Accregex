@@ -118,7 +118,7 @@ object NodeTests {
     val searchRes = name.contains(namespaceSeparator) match {
       case true => {
         for {
-          (ns, attrName) <- splitStringOnLastIndexOf(name)
+          (ns: String, attrName: String) <- splitStringOnLastIndexOf(name)
         } yield {
           root.attribute(ns, attrName)
         }
