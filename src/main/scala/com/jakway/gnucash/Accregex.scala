@@ -114,7 +114,7 @@ object NodeTests {
       }
     }
 
-    //check if the attribute is prefixed
+    //find the attribute, abstracted over whether it's prefixed
     val searchRes = name.contains(namespaceSeparator) match {
       case true => {
         for {
