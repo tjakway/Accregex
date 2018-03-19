@@ -22,8 +22,13 @@ object NodeTests {
     }
   }
 
-  def hasSubNodes(root: Node, name: String)
-                         (implicit errorType: String => ValidationError): Either[ValidationError, NodeSeq] = {
+  def hasSubNodes: ValidateF[(Node, String), NodeSeq] =
+    //scala lacks automatic tuple unboxing so we have to do it manually
+    //it also doesn't have variadic type parameters which would obviate the
+    //need for this
+    (t: (Node, String), errorType: String => ValidationError) => {
+
+    val (root: Node, name: String) = t
 
     val sub = (root \ name)
     sub.isEmpty match {
@@ -32,10 +37,11 @@ object NodeTests {
     }
   }
 
-  def hasSubNode(root: Node, name: String)
-                        (implicit errorType: String => ValidationError): Either[ValidationError, Node] = {
+  def hasSubNode: ValidateF[(Node, String), Node] =
+    (t: (Node, String), errorType: String => ValidationError) => {
+
     for {
-      h <- hasSubNodes(root, name)
+      h <- hasSubNodes(t)
       r <- onlyOne(h)
     } yield {
       r
@@ -43,7 +49,6 @@ object NodeTests {
   }
 
   /**
-    * the : is used as the separator in XML namespaces
     * @param s
     * @param sep
     * @param errorType
