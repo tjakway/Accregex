@@ -61,9 +61,10 @@ object NodeTests {
     }
   }
 
-  def hasAttribute(root: Node, name: String)
-                        (implicit errorType: String => ValidationError): Either[ValidationError, Attribute] = {
+  def hasAttribute: ValidateF[(Node, String), Attribute] =
+    (t: (Node, String), errorType: String => ValidationError) => {
 
+    val (root, name) = t
     val noAttrError = Left(errorType(s"$root does not contain attribute $name"))
 
     def convResult(x: Option[Seq[Node]]): Either[ValidationError, Attribute] = x match {
@@ -86,7 +87,7 @@ object NodeTests {
     val searchRes = name.contains(namespaceSeparator) match {
       case true => {
         for {
-          (ns: String, attrName: String) <- splitStringOnLastIndexOf(name)
+          (ns: String, attrName: String) <- splitXMLNameOnLastSeparator(name)
         } yield {
           root.attribute(ns, attrName)
         }
