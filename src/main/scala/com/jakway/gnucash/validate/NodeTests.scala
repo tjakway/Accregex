@@ -8,11 +8,13 @@ object NodeTests {
 
   val namespaceSeparator = ":"
 
-  def onlyOne[A](s: Seq[A])(implicit errorType: String => ValidationError): Either[ValidationError, A] = {
+  def onlyOne[A]: ValidateF[Seq[A], A] =
+    (s: Seq[A], errorType: String => ValidationError) => {
+
     val msg = "expected only 1 item in seq but got: "
-    if(s.length == 1) {
+    if (s.length == 1) {
       Right(s.head)
-    } else if(s.isEmpty) {
+    } else if (s.isEmpty) {
       Left(errorType(msg + "empty seq"))
     }
     else {
