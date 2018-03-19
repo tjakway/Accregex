@@ -1,8 +1,14 @@
 package com.jakway.gnucash.validate
 
+import com.jakway.util.XMLUtils
+
 import scala.util.{Failure, Success, Try}
 import scala.xml.{Attribute, Node, NodeSeq}
 
+/**
+  * the downside to using SAM here is that to call other ValidationF's from a ValidationF we need to
+  * either re-declare errorType as an implicit or pass it explicitly
+  */
 object NodeTests {
   import ValidationError._
 
@@ -41,8 +47,8 @@ object NodeTests {
     (t: (Node, String), errorType: String => ValidationError) => {
 
     for {
-      h <- hasSubNodes(t)
-      r <- onlyOne(h)
+      h <- hasSubNodes(t)(errorType)
+      r <- onlyOne(h)(errorType)
     } yield {
       r
     }
@@ -71,7 +77,7 @@ object NodeTests {
       case None => noAttrError
       case Some(xs) if xs.isEmpty => noAttrError
       case Some(xs) => for {
-        r <- onlyOne(xs)
+        r <- onlyOne(xs)(errorType)
 
         //convert the possible ClassCastException into an Either
         asAttr <- Try(r.asInstanceOf[Attribute]) match {
@@ -87,8 +93,9 @@ object NodeTests {
     val searchRes = name.contains(namespaceSeparator) match {
       case true => {
         for {
-          (ns: String, attrName: String) <- splitXMLNameOnLastSeparator(name)
+          q <- splitXMLNameOnLastSeparator(name)(errorType)
         } yield {
+          val (ns: String, attrName: String) = q
           root.attribute(ns, attrName)
         }
       }
@@ -100,8 +107,11 @@ object NodeTests {
     searchRes.flatMap(convResult)
   }
 
-  def findOnlyOne(f: Node => Boolean)(n: Node)
-      (implicit errorType: String => ValidationError): Either[ValidationError, Node] = {
+  def findOnlyOne: ValidateF[(Node => Boolean, Node), Node] =
+    (t: (Node => Boolean, Node), errorType: String => ValidationError) => {
 
+      //not using Function.uncurried because for some reason it thinks this should take 4 parameters...
+
+      onlyOne(XMLUtils.searchNode(t._1)(t._2))(errorType)
   }
 }
