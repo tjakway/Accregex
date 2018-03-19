@@ -4,20 +4,17 @@ import scala.xml.Node
 
 //package private validation function class
 //see https://stackoverflow.com/questions/49353695/type-synonyms-for-implicits
-private[validate] abstract class ValidateF {
+private[validate] abstract class ValidateF[I,O] {
   // single abstract method without implicits
-  def apply_impl(
-                  f: Node => Boolean,
-                  n: Node,
+  def apply_impl( i: I,
                   errorType: String => ValidationError
-                ): Either[ValidationError, Node]
+                ): Either[ValidationError, O]
 
   // actual `apply` with implicits
   def apply
-  (f: Node => Boolean)
-  (n: Node)
+  (i: I)
   (implicit errorType: String => ValidationError)
-  : Either[ValidationError, Node] = {
-    apply_impl(f, n, errorType)
+  : Either[ValidationError, O] = {
+    apply_impl(i, errorType)
   }
 }
