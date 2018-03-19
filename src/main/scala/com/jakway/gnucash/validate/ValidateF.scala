@@ -6,7 +6,7 @@ import scala.xml.Node
 //see https://stackoverflow.com/questions/49353695/type-synonyms-for-implicits
 private[validate] abstract class ValidateF[I,O] {
   // single abstract method without implicits
-  def apply_impl( i: I,
+  def validate( i: I,
                   errorType: String => ValidationError
                 ): Either[ValidationError, O]
 
@@ -15,6 +15,6 @@ private[validate] abstract class ValidateF[I,O] {
   (i: I)
   (implicit errorType: String => ValidationError)
   : Either[ValidationError, O] = {
-    apply_impl(i, errorType)
+    validate(i, errorType)
   }
 }
