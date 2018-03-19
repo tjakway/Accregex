@@ -48,17 +48,10 @@ object NodeTests {
     }
   }
 
-  /**
-    * @param s
-    * @param sep
-    * @param errorType
-    * @return
-    */
-  private def splitStringOnLastIndexOf(s: String, sep: String = namespaceSeparator)
-                                      (implicit errorType: String => ValidationError):
-    Either[ValidationError, (String, String)] = {
+  private def splitXMLNameOnLastSeparator: ValidateF[String, (String, String)] =
+    (s: String, errorType: String => ValidationError) => {
 
-    val splitIndex = s.lastIndexOf(sep)
+    val splitIndex = s.lastIndexOf(namespaceSeparator)
     val prefix = s.substring(0, splitIndex)
     if(splitIndex >= (s.length - 1)) {
       Left(errorType("You cannot search for an attribute with a namespace and no name"))
