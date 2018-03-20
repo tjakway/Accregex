@@ -67,45 +67,51 @@ object NodeTests {
     }
   }
 
-  def hasAttribute: ValidateF[(Node, String), Attribute] =
+  def hasNamespace: ValidateF[(Node, String), String]
     (t: (Node, String), errorType: String => ValidationError) => {
+      val (node, prefix) = t
 
-    val (root, name) = t
-    val noAttrError = Left(errorType(s"$root does not contain attribute $name"))
+      //we need to look up the URI of the namespace prefix from the NamespaceBinding
+      //object then (if that prefix points to a valid namespace)
+      //check if this node actually is in that namespace
 
-    def convResult(x: Option[Seq[Node]]): Either[ValidationError, Attribute] = x match {
-      case None => noAttrError
-      case Some(xs) if xs.isEmpty => noAttrError
-      case Some(xs) => for {
-        r <- onlyOne(xs)(errorType)
+      //look up the URI of the namespace prefix
+      val nsURI = node.scope.getURI(prefix)
 
-        //convert the possible ClassCastException into an Either
-        asAttr <- Try(r.asInstanceOf[Attribute]) match {
-          case Success(q) => Right(q)
-          case Failure(q) => Left(errorType(getMsg((q))))
+      //if it's null that namespace doesn't exist
+      val nsExists = nsURI == null
+
+      if(nsExists) {
+        //check if this node has that namespace
+        if(node.namespace == nsURI) {
+          Right(nsURI)
+        } else {
+          Left(errorType(s"node.namespace was ${node.namespace} but expected $nsURI"))
         }
-      } yield {
-        asAttr
+      } else {
+        Left(errorType(s"No namespace with prefix $prefix exists"))
       }
-    }
-
-    //find the attribute, abstracted over whether it's prefixed
-    val searchRes = name.contains(namespaceSeparator) match {
-      case true => {
-        for {
-          q <- splitXMLNameOnLastSeparator(name)(errorType)
-        } yield {
-          val (ns: String, attrName: String) = q
-          root.attribute(ns, attrName)
-        }
-      }
-      case false => {
-        Right(root.attribute(name))
-      }
-    }
-
-    searchRes.flatMap(convResult)
   }
+
+  /**
+    * WARNING: this method does not distinguish between attributes that don't
+    * exist and attributes whose values are the empty string (it will
+    * consider empty attributes to not exist)
+    * @return
+    */
+  def getAttribute: ValidateF[(Node, String), String] =
+    (t: (Node, String), errorType: String => ValidationError) => {
+      val (node, attrId) = t
+
+      val text = node \@ attrId
+
+      if(text.trim.isEmpty) {
+        Left(errorType(s"Could not find attribute $attrId in $node"))
+      }
+      else {
+        Right(text)
+      }
+    }
 
   def findOnlyOne: ValidateF[(Node => Boolean, Node), Node] =
     (t: (Node => Boolean, Node), errorType: String => ValidationError) => {

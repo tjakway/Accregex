@@ -9,11 +9,17 @@ import scala.xml.Node
   * -
   */
 object Validate {
+  import NodeTests._
 
-  private def isBook(node: Node): Boolean = {
-    node.namespace == "gnc" && node.label == "book"
-  }
+  def findBookNode(root: Node): ValidateF[Node, Node] =
+    (root, errorType: String => ValidationError) => {
+      def isBookNode(n: Node): Boolean = {
+        for {
+          _ <- hasAttribute((n, "version"))
 
+        }
+      }
+    }
 
 
   def extractNumAccounts(book: Node): Either[ValidationError, Int] = {
