@@ -1,10 +1,10 @@
-package com.jakway.gnucash.validate
+package com.jakway.gnucash.parser
 
 import scala.xml.Node
 
 //package private validation function class
 //see https://stackoverflow.com/questions/49353695/type-synonyms-for-implicits
-private[validate] abstract class ValidateF[I,O] {
+private[parser] abstract class ValidateF[I,O] {
   // single abstract method without implicits
   def validate( i: I,
                   errorType: String => ValidationError

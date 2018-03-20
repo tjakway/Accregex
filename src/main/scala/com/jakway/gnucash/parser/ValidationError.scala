@@ -1,4 +1,4 @@
-package com.jakway.gnucash.validate
+package com.jakway.gnucash.parser
 
 trait ValidationError
 

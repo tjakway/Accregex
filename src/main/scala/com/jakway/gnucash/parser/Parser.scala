@@ -1,25 +1,19 @@
-package com.jakway.gnucash.validate
+package com.jakway.gnucash.parser
 
 import com.jakway.util.XMLUtils
 
 import scala.util.Try
 import scala.xml.Node
 
-/**
-  * TODO:
-  * -check count-data attribute cd:type=="book" && text=="1"
-  *
-  * -
-  */
-object Validate {
+class Parser {
   import NodeTests._
 
   def findBookNode(root: Node): ValidateF[Node, Node] =
     (root, errorType: String => ValidationError) => {
       def isBookNode(n: Node): Boolean = {
         n.label == "book" &&
-         getAttribute((n, "version")).isRight &&
-         hasNamespace((n, "gnc")).isRight
+          getAttribute((n, "version")).isRight &&
+          hasNamespace((n, "gnc")).isRight
       }
 
       findOnlyOne((isBookNode _, root))
@@ -43,7 +37,14 @@ object Validate {
         .filterOrElse(_ == "account", Left()).isRight))
   }
 
-  def apply(root: Node) = {
+  def extractNumTransactions(book: Node): Either[ValidationError, Int] = {
+    case class ExtractNumTransactionsError(msg: String) extends ValidationError
+    implicit def errorType: String => ValidationError = ExtractNumTransactionsError.apply
 
+
+    onlyOne(XMLUtils.searchNode(isCountDataNode)(book)
+      .filter(n => getAttribute((n, "cd:type"))
+        .filterOrElse(_ == "transaction", Left()).isRight))
   }
+
 }
