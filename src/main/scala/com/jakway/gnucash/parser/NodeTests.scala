@@ -53,6 +53,19 @@ object NodeTests {
     (t: (String, Node), errorType: String => ValidationError) =>
       getElems(t)(errorType).flatMap(onlyOne(_)(errorType))
 
+  /**
+    * @return the (trimmed) text of the Node or Left if there isn't any
+    */
+  def getNodeText: ValidateF[Node, String] =
+    (n: Node, errorType: String => ValidationError) => {
+      val text = n.text.trim
+      if(text.isEmpty) {
+        Left(errorType(s"$n has no text"))
+      } else {
+        Right(text)
+      }
+  }
+
   def hasSubNodes: ValidateF[(Node, String), NodeSeq] =
     //scala lacks automatic tuple unboxing so we have to do it manually
     //it also doesn't have variadic type parameters which would obviate the
