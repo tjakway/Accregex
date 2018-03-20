@@ -28,6 +28,31 @@ object NodeTests {
     }
   }
 
+  /**
+    * XMLUtils.searchNode with ValidateF
+    * returns Left if no elems are found
+    * @return
+    */
+  def getElems: ValidateF[(String, Node), Seq[Node]] =
+    (t: (String, Node), errorType: String => ValidationError) => {
+
+      val (name, node) = t
+
+      XMLUtils.searchNode(name)(node) match {
+        //empty Seq is an error
+        case Seq() => Left(errorType(s"did not find any nodes named $name"))
+        case x => Right(x)
+      }
+    }
+
+  /**
+    * getElems + onlyOne
+    * @return
+    */
+  def getElem: ValidateF[(String, Node), Node] =
+    (t: (String, Node), errorType: String => ValidationError) =>
+      getElems(t)(errorType).flatMap(onlyOne(_)(errorType))
+
   def hasSubNodes: ValidateF[(Node, String), NodeSeq] =
     //scala lacks automatic tuple unboxing so we have to do it manually
     //it also doesn't have variadic type parameters which would obviate the
