@@ -14,11 +14,12 @@ object Validate {
   def findBookNode(root: Node): ValidateF[Node, Node] =
     (root, errorType: String => ValidationError) => {
       def isBookNode(n: Node): Boolean = {
-        for {
-          _ <- hasAttribute((n, "version"))
-
-        }
+        n.label == "book" &&
+         getAttribute((n, "version")).isRight &&
+         hasNamespace((n, "gnc")).isRight
       }
+
+      findOnlyOne((isBookNode _, root))
     }
 
 
