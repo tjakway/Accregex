@@ -97,9 +97,6 @@ object NodeTests {
   }
 
   /**
-    * WARNING: this method does not distinguish between attributes that don't
-    * exist and attributes whose values are the empty string (it will
-    * consider empty attributes to not exist)
     * @return
     */
   def getAttribute: ValidateF[(Node, String), String] =
@@ -108,6 +105,7 @@ object NodeTests {
 
       //the keys in asAttrMap are correctly prefixed with namespaces
       //like you would expect
+      //but \@ will NOT handle prefixed attributes!
 
       node.attributes.asAttrMap.get(attrId) match {
         case None => Left(errorType(s"Could not find attribute $attrId in $node"))
