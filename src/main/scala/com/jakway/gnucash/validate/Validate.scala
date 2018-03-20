@@ -22,11 +22,12 @@ object Validate {
       findOnlyOne((isBookNode _, root))
     }
 
+  def isCountDataNode =
 
   def extractNumAccounts(book: Node): Either[ValidationError, Int] = {
     case class ExtractNumAccountsError(msg: String) extends ValidationError
+    implicit def errorType: String => ValidationError = ExtractNumAccountsError.apply
 
-    ???
   }
 
   def apply(root: Node) = {

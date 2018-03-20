@@ -106,13 +106,12 @@ object NodeTests {
     (t: (Node, String), errorType: String => ValidationError) => {
       val (node, attrId) = t
 
-      val text = node \@ attrId
+      //the keys in asAttrMap are correctly prefixed with namespaces
+      //like you would expect
 
-      if(text.trim.isEmpty) {
-        Left(errorType(s"Could not find attribute $attrId in $node"))
-      }
-      else {
-        Right(text)
+      node.attributes.asAttrMap.get(attrId) match {
+        case None => Left(errorType(s"Could not find attribute $attrId in $node"))
+        case Some(text) => Right(text)
       }
     }
 
