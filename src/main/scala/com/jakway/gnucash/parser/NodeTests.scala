@@ -108,7 +108,7 @@ object NodeTests {
   /**
     * @return the URL of that namespace if this node is within it
     */
-  def hasNamespace: ValidateF[(Node, String), String]
+  def hasNamespace: ValidateF[(Node, String), String] =
     (t: (Node, String), errorType: String => ValidationError) => {
       val (node, prefix) = t
 
