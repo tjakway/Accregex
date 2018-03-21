@@ -158,7 +158,7 @@ object NodeTests {
   def withAttribute: ValidateF[(Node, String), Node] =
     (t: (Node, String), errorType: String => ValidationError) => {
       for {
-        _ <- getAttribute(t)
+        _ <- getAttribute(t)(errorType)
       } yield (t._1)
     }
 
@@ -170,16 +170,14 @@ object NodeTests {
     (t: (Node, String, String), errorType: String => ValidationError) => {
       val (n, attr, expectedAttrValue) = t
 
-      for {
-        attrValue <- getAttribute((n, attr))
-      } yield {
-        if(attrValue == expectedAttrValue) {
-          Right(n)
-        } else {
-          Left(s"expected attribute $attr of $n to have value $expectedAttrValue but got $attrValue")
-        }
+        getAttribute((n, attr))(errorType).flatMap(attrValue => {
+          if(attrValue == expectedAttrValue) {
+            Right(n)
+          } else {
+            Left(errorType("expected attribute $attr of $n to have value $expectedAttrValue but got $attrValue"))
+          }
+        })
       }
-    }
 
   def findOnlyOne: ValidateF[(Node => Boolean, Node), Node] =
     (t: (Node => Boolean, Node), errorType: String => ValidationError) => {
