@@ -33,12 +33,12 @@ object NodeTests {
     * returns Left if no elems are found
     * @return
     */
-  def getElems: ValidateF[(String, Node), Seq[Node]] =
-    (t: (String, Node), errorType: String => ValidationError) => {
+  def getElems: ValidateF[(Node, String), Seq[Node]] =
+    (t: (Node, String), errorType: String => ValidationError) => {
 
-      val (name, node) = t
+      val (node, name) = t
 
-      XMLUtils.searchNode(name)(node) match {
+      XMLUtils.searchNode(_ == name)(node) match {
         //empty Seq is an error
         case Seq() => Left(errorType(s"did not find any nodes named $name"))
         case x => Right(x)
@@ -49,8 +49,8 @@ object NodeTests {
     * getElems + onlyOne
     * @return
     */
-  def getElem: ValidateF[(String, Node), Node] =
-    (t: (String, Node), errorType: String => ValidationError) =>
+  def getElem: ValidateF[(Node, String), Node] =
+    (t: (Node, String), errorType: String => ValidationError) =>
       getElems(t)(errorType).flatMap(onlyOne(_)(errorType))
 
   /**
@@ -148,6 +148,36 @@ object NodeTests {
       node.attributes.asAttrMap.get(attrId) match {
         case None => Left(errorType(s"Could not find attribute $attrId in $node"))
         case Some(text) => Right(text)
+      }
+    }
+
+  /**
+    * like getAttribute but return the Node instead of the text of the attribute
+    * @return
+    */
+  def withAttribute: ValidateF[(Node, String), Node] =
+    (t: (Node, String), errorType: String => ValidationError) => {
+      for {
+        _ <- getAttribute(t)
+      } yield (t._1)
+    }
+
+  /**
+    * @param t: (Node, attribute name, expected attribute text)
+    * @return the original node on success
+    */
+  def expectAttribute: ValidateF[(Node, String, String), Node] =
+    (t: (Node, String, String), errorType: String => ValidationError) => {
+      val (n, attr, expectedAttrValue) = t
+
+      for {
+        attrValue <- getAttribute((n, attr))
+      } yield {
+        if(attrValue == expectedAttrValue) {
+          Right(n)
+        } else {
+          Left(s"expected attribute $attr of $n to have value $expectedAttrValue but got $attrValue")
+        }
       }
     }
 

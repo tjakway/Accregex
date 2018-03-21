@@ -5,11 +5,12 @@ import com.jakway.util.XMLUtils
 import scala.util.Try
 import scala.xml.Node
 
-case class Account(version: Option[String],
+case class UnlinkedAccount(version: String,
                    id: String,
                    name: String,
                    accType: String,
-                   parent: Option[Account])
+                   description: Option[String],
+                   parentId: Option[String])
 
 class Parser {
   import NodeTests._
@@ -53,16 +54,39 @@ class Parser {
         .filterOrElse(_ == "transaction", Left()).isRight))
   }
 
-  def parseAccountNode(n: Node): Either[ValidationError, Account] = {
+  def parseAccountNode(n: Node): Either[ValidationError, UnlinkedAccount] = {
     case class ParseAccountNodeError(msg: String) extends ValidationError
     implicit def errorType: String => ValidationError = ParseAccountNodeError.apply
 
     for {
       _ <- hasNamespace((n, "gnc"))
-      v <- getAttribute((n, "version"))
-      _ <-
-    } yield {
+      version <- getAttribute((n, "version"))
 
+      accountName <- getElem((n, "name")).flatMap(getNodeText.apply)
+
+      //id node of type guid
+      idNode <- getElem((n, "id"))
+      _ <- expectAttribute((idNode, "type", "guid"))
+
+      id <- getNodeText(idNode)
+
+      accountType <- getElem((n, "type")).flatMap(getNodeText.apply)
+
+    } yield {
+      //retrieve the description if there is one
+      val description = getElem((n, "description")).flatMap(getNodeText.apply).toOption
+
+      //similarly get the parent (if there is one)
+      val parentId = for {
+        parent <- getElem((n, "parent"))
+        _ <- expectAttribute((parent, "type", "guid"))
+        parentNodeId <- getNodeText(parent)
+      } yield {
+        parentNodeId
+      }
+
+
+      UnlinkedAccount(version, id, accountName, accountType, description, parentId.toOption)
     }
   }
 
