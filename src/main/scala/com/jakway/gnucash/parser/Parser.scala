@@ -34,15 +34,19 @@ class Parser {
       hasNamespace((n, "gnc"))(_ => new ValidationError {}).isRight
   }
 
-  def extractNumAccounts(book: Node): Either[ValidationError, Int] = {
-    case class ExtractNumAccountsError(msg: String) extends ValidationError
-    implicit def errorType: String => ValidationError = ExtractNumAccountsError.apply
 
+  /**
+    * @param operand what we're counting (accounts or transactions)
+    * @param book
+    * @return
+    */
+  private def extractNumNode(operand: String, errorType: String => ValidationError)
+                            (book: Node): Either[ValidationError, Int] = {
 
     //find the right node and extract the text
-    val foundNode = onlyOne(XMLUtils.searchNode(isCountDataNode)(book)
-      .filter(n => expectAttribute((n, "cd:type", "account"))(errorType).isRight))
-      .flatMap(getNodeText.apply)
+    val foundNode = onlyOne(XMLUtils.searchNode(isCountDataNode)(book)(errorType)
+      .filter(n => expectAttribute((n, "cd:type", operand))(errorType).isRight))
+      .flatMap(getNodeText.apply _)
 
     //convert the text to an integer and return it
     foundNode match {
@@ -55,14 +59,15 @@ class Parser {
     }
   }
 
-  def extractNumTransactions(book: Node): Either[ValidationError, Int] = {
+  def extractNumAccounts: Node => Either[ValidationError, Int] = {
+    case class ExtractNumAccountsError(msg: String) extends ValidationError
+    extractNumNode("accounts", ExtractNumAccountsError)
+  }
+
+
+  def extractNumTransactions: Node => Either[ValidationError, Int] = {
     case class ExtractNumTransactionsError(msg: String) extends ValidationError
-    implicit def errorType: String => ValidationError = ExtractNumTransactionsError.apply
-
-
-    onlyOne(XMLUtils.searchNode(isCountDataNode)(book)
-      .filter(n => getAttribute((n, "cd:type"))
-        .filterOrElse(_ == "transaction", Left()).isRight))
+    extractNumNode("transactions", ExtractNumTransactionsError)
   }
 
   def parseAccountNode(n: Node): Either[ValidationError, UnlinkedAccount] = {
