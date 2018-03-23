@@ -37,19 +37,29 @@ class Parser {
 
   /**
     * @param operand what we're counting (accounts or transactions)
-    * @param book
     * @return
     */
-  private def extractNumNode(operand: String, errorType: String => ValidationError)
-                            (book: Node): Either[ValidationError, Int] = {
+  private def extractNumNode(operand: String): ValidateF[Node, Int] =
+    (book: Node, e: String => ValidationError) => {
+    implicit def errorType: String => ValidationError = e
 
     //find the right node and extract the text
-    val foundNode = onlyOne(XMLUtils.searchNode(isCountDataNode)(book)(errorType)
+    val foundNodes: Either[ValidationError, String] =
+      getElems((book, "count-data"))
+        .map { elems =>
+          elems
+            .filter(q => hasNamespace.apply((q, "gnc")).isRight &&
+              expectAttribute.apply((q, "cd:type", operand)).isRight)
+        }
+      .flatMap(onlyOne.apply)
+      .flatMap(getNodeText.apply)
+
+      /*onlyOne(XMLUtils.searchNode(isCountDataNode)(book)(errorType)
       .filter(n => expectAttribute((n, "cd:type", operand))(errorType).isRight))
-      .flatMap(getNodeText.apply _)
+      .flatMap(getNodeText.apply _)*/
 
     //convert the text to an integer and return it
-    foundNode match {
+    foundNodes match {
       case Right(node) => Try(node.toInt).toEither match {
         case Left(t) => Left(errorType(s"Could not convert text of node $book '$node' to an integer"))
         case Right(q) => Right(q)
@@ -61,13 +71,13 @@ class Parser {
 
   def extractNumAccounts: Node => Either[ValidationError, Int] = {
     case class ExtractNumAccountsError(msg: String) extends ValidationError
-    extractNumNode("accounts", ExtractNumAccountsError)
+    extractNumNode("accounts")(_)(ExtractNumAccountsError.apply _)
   }
 
 
   def extractNumTransactions: Node => Either[ValidationError, Int] = {
     case class ExtractNumTransactionsError(msg: String) extends ValidationError
-    extractNumNode("transactions", ExtractNumTransactionsError)
+    extractNumNode("transactions")(_)(ExtractNumTransactionsError.apply _)
   }
 
   def parseAccountNode(n: Node): Either[ValidationError, UnlinkedAccount] = {
