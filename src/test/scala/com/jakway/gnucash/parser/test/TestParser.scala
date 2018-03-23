@@ -25,3 +25,5 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
     parser.extractNumAccounts(book) shouldEqual Right(65)
   }
 }
+
+class TestParserRegDocXML extends TestParser("/reg_doc_example.gnucash")
