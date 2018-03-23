@@ -22,6 +22,7 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
 
 
   "The Parser" should "load the number of accounts" in {
+    //TODO: parameterize expected value
     parser.extractNumAccounts(book) shouldEqual Right(65)
   }
 }
