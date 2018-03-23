@@ -3,6 +3,7 @@ package com.jakway.gnucash.parser.test
 import com.jakway.gnucash.parser.{Parser, ValidationError}
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.util.{Failure, Success, Try}
 import scala.xml.{Node, XML}
 
 class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
@@ -12,13 +13,26 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
     * for errors before tests are run
     * @param msg
     */
-  case class TestParserLoadError(msg: String) extends ValidationError
+  case class TestParserLoadError(msg: String)
+    extends RuntimeException(msg)
+    with ValidationError
 
-  val regDocRoot = XML.load(getClass.getResource(regDocResource))
+  //val regDocRoot = XML.load(getClass.getResource(regDocResource))
 
+  def loadBookFromResource(r: String) = {
+    val xml = XML.load(getClass.getResource(regDocResource))
+    Try(parser.findBookNode(xml)(TestParserLoadError.apply _).right.get) match {
+      case Success(b) => b
+      case Failure(t) => {
+        val ex = TestParserLoadError(s"Failed to load resource $r, caused by $t")
+        ex.initCause(t)
+        throw ex
+      }
+    }
+  }
 
-  val book =
-    parser.findBookNode(regDocRoot)(TestParserLoadError.apply _).right.get
+  val book = loadBookFromResource(regDocResource)
+
 
 
   "The Parser" should "load the number of accounts" in {
