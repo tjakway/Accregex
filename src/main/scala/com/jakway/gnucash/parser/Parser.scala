@@ -30,8 +30,8 @@ class Parser {
     //check if it's a number
     Try(n.text.toInt).isSuccess &&
       //and has the expected attribute and namespace
-      getAttribute((n, "cd:type"))(_ => new ValidationError {}).isRight &&
-      hasNamespace((n, "gnc"))(_ => new ValidationError {}).isRight
+      getAttribute((n, "cd:type"))(new ValidationError(_)).isRight &&
+      hasNamespace((n, "gnc"))(new ValidationError(_)).isRight
   }
 
 
@@ -70,18 +70,18 @@ class Parser {
   }
 
   def extractNumAccounts: Node => Either[ValidationError, Int] = {
-    case class ExtractNumAccountsError(msg: String) extends ValidationError
+    case class ExtractNumAccountsError(override val msg: String) extends ValidationError(msg)
     extractNumNode("accounts")(_)(ExtractNumAccountsError.apply _)
   }
 
 
   def extractNumTransactions: Node => Either[ValidationError, Int] = {
-    case class ExtractNumTransactionsError(msg: String) extends ValidationError
+    case class ExtractNumTransactionsError(override val msg: String) extends ValidationError(msg)
     extractNumNode("transactions")(_)(ExtractNumTransactionsError.apply _)
   }
 
   def parseAccountNode(n: Node): Either[ValidationError, UnlinkedAccount] = {
-    case class ParseAccountNodeError(msg: String) extends ValidationError
+    case class ParseAccountNodeError(override val msg: String) extends ValidationError(msg)
     implicit def errorType: String => ValidationError = ParseAccountNodeError.apply
 
     for {

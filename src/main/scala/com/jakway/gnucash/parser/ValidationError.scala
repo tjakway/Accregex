@@ -1,10 +1,11 @@
 package com.jakway.gnucash.parser
 
-trait ValidationError
+class ValidationError(val msg: String)
+  extends RuntimeException(msg)
 
 object ValidationError {
-  def getMsg(t: Throwable): String = {
-    //TODO: get stack trace & msg
-    ???
+  def getOrThrow[A](e: Either[ValidationError, A]): A = e match {
+    case Right(a) => a
+    case Left(e) => throw e
   }
 }
