@@ -1,13 +1,11 @@
-package com.jakway.gnucash.test
+package com.jakway.gnucash.parser.test
 
-import com.jakway.gnucash.parser.{ValidationError, Parser}
-import com.jakway.util.XMLUtils
-import org.scalatest._
+import com.jakway.gnucash.parser.{Parser, ValidationError}
 
 import scala.xml.XML
 
 class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
-  import Parser._
+  val parser = new Parser
 
   /**
     * for errors before tests are run
@@ -18,9 +16,9 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
   val regDocRoot = XML.load(getClass.getResource(regDocResource))
 
 
-  val book = findBookNode(regDocRoot)(TestParserLoadError).right.get
+  val book = parser.findBookNode(regDocRoot)(TestParserLoadError).right.get
 
   "The Parser" should "load the number of accounts" in {
-    extractNumAccounts()
+    parser.extractNumAccounts(book) shouldEqual Right(65)
   }
 }

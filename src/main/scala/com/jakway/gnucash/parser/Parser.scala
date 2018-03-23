@@ -15,7 +15,7 @@ case class UnlinkedAccount(version: String,
 class Parser {
   import NodeTests._
 
-  private def findBookNode(root: Node): ValidateF[Node, Node] =
+  private[parser] def findBookNode(root: Node): ValidateF[Node, Node] =
     (root, errorType: String => ValidationError) => {
       def isBookNode(n: Node): Boolean = {
         n.label == "book" &&
