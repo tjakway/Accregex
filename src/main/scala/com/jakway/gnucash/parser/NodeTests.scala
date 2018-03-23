@@ -38,7 +38,7 @@ object NodeTests {
 
       val (node, name) = t
 
-      XMLUtils.searchNode(_ == name)(node) match {
+      XMLUtils.searchNode(_.label == name)(node) match {
         //empty Seq is an error
         case Seq() => Left(errorType(s"did not find any nodes named $name"))
         case x => Right(x)
@@ -120,7 +120,7 @@ object NodeTests {
       val nsURI = node.scope.getURI(prefix)
 
       //if it's null that namespace doesn't exist
-      val nsExists = nsURI == null
+      val nsExists = nsURI != null
 
       if(nsExists) {
         //check if this node has that namespace

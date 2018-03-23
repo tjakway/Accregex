@@ -18,3 +18,10 @@ private[parser] abstract class ValidateF[I,O] {
     validate(i, errorType)
   }
 }
+
+object ValidateF {
+  def getOrThrow[A](e: Either[ValidationError, A]): A = e match {
+    case Right(a) => a
+    case Left(e) => throw e
+  }
+}
