@@ -71,13 +71,13 @@ class Parser {
 
   def extractNumAccounts: Node => Either[ValidationError, Int] = {
     case class ExtractNumAccountsError(override val msg: String) extends ValidationError(msg)
-    extractNumNode("accounts")(_)(ExtractNumAccountsError.apply _)
+    extractNumNode("account")(_)(ExtractNumAccountsError.apply _)
   }
 
 
   def extractNumTransactions: Node => Either[ValidationError, Int] = {
     case class ExtractNumTransactionsError(override val msg: String) extends ValidationError(msg)
-    extractNumNode("transactions")(_)(ExtractNumTransactionsError.apply _)
+    extractNumNode("transaction")(_)(ExtractNumTransactionsError.apply _)
   }
 
   def parseAccountNode(n: Node): Either[ValidationError, UnlinkedAccount] = {

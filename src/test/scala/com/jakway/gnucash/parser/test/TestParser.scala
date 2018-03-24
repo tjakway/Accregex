@@ -1,11 +1,13 @@
 package com.jakway.gnucash.parser.test
 
 import com.jakway.gnucash.parser.{NodeTests, Parser, ValidateF, ValidationError}
+import com.jakway.util.XMLUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.xml.{Node, XML}
 
 class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
+  import NodeTests._
   val parser = new Parser
 
   /**
@@ -23,10 +25,26 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
   val book =
     parser.findBookNode(regDocRoot)(TestParserLoadError.apply _).right.get
 
+  "XMLUtils.searchNode" should "find the 3 count-data nodes" in {
+    val foundNodes = XMLUtils.searchNode(_.label == "count-data")(book)
+    foundNodes.length shouldEqual 3
+    foundNodes.map(_.text.toInt).sorted shouldEqual Seq(1, 2, 65)
+  }
+
+  "The Parser" should "extract the book node" in {
+    book.label shouldEqual "book"
+    hasNamespace((book, "gnc")).isRight shouldEqual true
+    expectAttribute((book, "version", "2.0.0")).isRight shouldEqual true
+  }
 
   "The Parser" should "load the number of accounts" in {
     //TODO: parameterize expected value
     parser.extractNumAccounts(book) shouldEqual Right(65)
+  }
+
+  "The Parser" should "load the number of transactions" in {
+    //TODO: parameterize expected value
+    parser.extractNumTransactions(book) shouldEqual Right(2)
   }
 
   "NodeTests" should "detect namespaces" in {
@@ -39,7 +57,7 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
       ValidateF.getOrThrow(NodeTests.getElem((testNode, "bar")))
     }
 
-    NodeTests.hasNamespace((e, "foo"))(x => new TestParserError("wrong namespace: " + x)) shouldEqual
+    hasNamespace((e, "foo"))(x => new TestParserError("wrong namespace: " + x)) shouldEqual
       Right(nsUrl)
   }
 }
