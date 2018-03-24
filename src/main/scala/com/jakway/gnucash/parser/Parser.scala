@@ -120,7 +120,11 @@ class Parser {
     case class ParseAccountNodesError(override val msg: String) extends ValidationError(msg)
     implicit def errorType: String => ValidationError = ParseAccountNodesError.apply
 
-    getElems((n, "account")).flatMap { accs =>
+    getElems((n, "account"))
+      //filter out any nodes that don't have the gnc namespace
+      .map(_.filter(n => hasNamespace((n, "gnc")).isRight))
+
+      .flatMap { accs =>
       val empty: Either[ValidationError, Seq[UnlinkedAccount]] = Right(Seq())
 
       //parse all account nodes and fail early if any don't succeed
