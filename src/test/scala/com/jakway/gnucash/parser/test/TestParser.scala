@@ -71,7 +71,7 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
                         "ROOT",
                         None, None)
 
-    accs.right.get.filter(_.parentId.isEmpty) shouldEqual Seq(rootAccount)
+    accs.map(_.filter(_.parentId.isEmpty)) shouldEqual Right(Seq(rootAccount))
   }
 }
 
