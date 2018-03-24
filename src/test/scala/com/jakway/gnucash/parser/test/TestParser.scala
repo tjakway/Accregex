@@ -63,7 +63,6 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
 
   "The Parser" should "parse the root account node" in {
     val accs = parser.parseAccountNodes(regDocRoot)
-    accs.isRight shouldEqual true
 
     //the root account in reg_doc_example.gnucash
     val rootAccount = UnlinkedAccount("2.0.0",
