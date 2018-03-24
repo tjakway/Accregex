@@ -33,16 +33,23 @@ object NodeTests {
     * returns Left if no elems are found
     * @return
     */
-  def getElems: ValidateF[(Node, String), Seq[Node]] =
-    (t: (Node, String), errorType: String => ValidationError) => {
+  def queryElems: ValidateF[(Node, Node => Boolean), Seq[Node]] =
+    (t: (Node, Node => Boolean), errorType: String => ValidationError) => {
 
-      val (node, name) = t
+      val (node, query) = t
 
-      XMLUtils.searchNode(_.label == name)(node) match {
+      XMLUtils.searchNode(query)(node) match {
         //empty Seq is an error
-        case Seq() => Left(errorType(s"did not find any nodes named $name"))
+        case Seq() => Left(errorType(s"did not find any nodes matching query"))
         case x => Right(x)
       }
+    }
+
+  def getElems: ValidateF[(Node, String), Seq[Node]] =
+    (t: (Node, String), errorType: String => ValidationError) => {
+      val (node, name) = t
+
+      queryElems((node, _.label == name))(errorType)
     }
 
   /**
@@ -52,6 +59,12 @@ object NodeTests {
   def getElem: ValidateF[(Node, String), Node] =
     (t: (Node, String), errorType: String => ValidationError) =>
       getElems(t)(errorType).flatMap(onlyOne(_)(errorType))
+
+
+  def queryElem: ValidateF[(Node, Node => Boolean), Node] =
+    (t: (Node, Node => Boolean), errorType: String => ValidationError) =>
+      queryElems(t)(errorType).flatMap(onlyOne(_)(errorType))
+
 
   /**
     * @return the (trimmed) text of the Node or Left if there isn't any
