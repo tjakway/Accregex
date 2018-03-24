@@ -1,6 +1,6 @@
 package com.jakway.gnucash.parser.test
 
-import com.jakway.gnucash.parser.{NodeTests, Parser, ValidateF, ValidationError}
+import com.jakway.gnucash.parser._
 import com.jakway.util.XMLUtils
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -59,6 +59,20 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
 
     hasNamespace((e, "foo"))(x => new TestParserError("wrong namespace: " + x)) shouldEqual
       Right(nsUrl)
+  }
+
+  "The Parser" should "parse the root account node" in {
+    val accs = parser.parseAccountNodes(regDocRoot)
+    accs.isRight shouldEqual true
+
+    //the root account in reg_doc_example.gnucash
+    val rootAccount = UnlinkedAccount("2.0.0",
+                        "f52c28f32edd309e768494995470343b",
+                        "Root Account",
+                        "ROOT",
+                        None, None)
+
+    accs.right.get.filter(_.parentId.isEmpty) shouldEqual Seq(rootAccount)
   }
 }
 

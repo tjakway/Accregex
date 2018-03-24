@@ -116,4 +116,25 @@ class Parser {
     }
   }
 
+  def parseAccountNodes(n: Node): Either[ValidationError, Seq[UnlinkedAccount]] = {
+    case class ParseAccountNodesError(override val msg: String) extends ValidationError(msg)
+    implicit def errorType: String => ValidationError = ParseAccountNodesError.apply
+
+    getElems((n, "account")).flatMap { accs =>
+      val empty: Either[ValidationError, Seq[UnlinkedAccount]] = Right(Seq())
+
+      //parse all account nodes and fail early if any don't succeed
+      accs.foldLeft(empty) {
+        //stop parsing the seq
+        case (Left(err), thisNode) => Left(err)
+
+        //parse the next item in the seq
+        case (Right(acc), thisNode) => parseAccountNode(thisNode) match {
+          case Right(a) => Right(acc.+:(a))
+          case Left(err) => Left(err)
+        }
+      }
+    }
+  }
+
 }
