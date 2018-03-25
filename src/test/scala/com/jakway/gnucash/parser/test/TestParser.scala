@@ -121,7 +121,8 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
         </gnc-v2>
 
 
-    parser.parseAccountNode(openingBalance.child(0)).isRight shouldEqual true
+    val openingBalanceAccountNode = onlyOne(openingBalance.filter(_.label != "#PCDATA")).toOption.get
+    parser.parseAccountNode(openingBalanceAccountNode).isRight shouldEqual true
   }
 }
 
