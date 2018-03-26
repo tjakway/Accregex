@@ -154,8 +154,8 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
 
     root.parent shouldEqual None
 
-    liabilities.parent shouldEqual root
-    accountsPayable.parent shouldEqual liabilities
+    liabilities.parent shouldEqual Some(root)
+    accountsPayable.parent shouldEqual Some(liabilities)
 
 
   }
