@@ -198,6 +198,8 @@ object Parser {
       }
     }
 
+    accounts.map(lookupOrInsert)
+
     val res = linkedAccountsMap.values
 
     //make sure there's only 1 unlinked account
