@@ -14,11 +14,10 @@ object ValidationError {
     * definition a parameter with default = new Throwable()
     * @param msg
     * @param cause
-    * @tparam A
     * @return
     */
-  def fromCause[A <: ValidationError](msg: String, cause: Throwable): A = {
-    return new A(msg) {
+  def fromCause(msg: String, cause: Throwable): ValidationError = {
+    return new ValidationError(msg) {
       override val stackTrace: String = StackTraceString.apply(cause)
     }
   }

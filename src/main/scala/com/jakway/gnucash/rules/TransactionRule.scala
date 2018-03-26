@@ -2,7 +2,7 @@ package com.jakway.gnucash.rules
 
 import java.util.regex.PatternSyntaxException
 
-import com.jakway.gnucash.parser.{LinkedAccount, ValidationError}
+import com.jakway.gnucash.parser.{AccountNameParser, LinkedAccount, ValidationError}
 
 import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
@@ -20,7 +20,7 @@ case class LinkedTransactionRule(pattern: Regex,
 
 
 object UnlinkedTransactionRule {
-  def link(accounts: Seq[LinkedAccount])
+  def link(accountNameParser: AccountNameParser)
           (rule: UnlinkedTransactionRule):
           Either[ValidationError, LinkedTransactionRule] = {
     case class LinkTransactionRuleError(override val msg: String) extends ValidationError(msg)
@@ -39,9 +39,9 @@ object UnlinkedTransactionRule {
 
       Try(r.r) match {
         case Success(rgx) => Right(rgx)
-        case Failure(PatternSyntaxException) => Left(errorType(rgxMsg))
+        case Failure(_: PatternSyntaxException) => Left(errorType(rgxMsg))
         case Failure(t) => Left(
-          ValidationError.fromCause[LinkTransactionRuleError](unknownErrorMsg, t))
+          ValidationError.fromCause(unknownErrorMsg, t))
       }
     }
 
@@ -50,9 +50,10 @@ object UnlinkedTransactionRule {
         for {
           priorityNum <- isNumeric(priority)
           rgx <- compileRegex(pattern)
-
+          src <- accountNameParser.findReferencedAccount(sourceAccount)
+          dst <- accountNameParser.findReferencedAccount(destAccount)
         } yield {
-
+          LinkedTransactionRule(rgx, priorityNum, src, dst)
         }
       }
     }
