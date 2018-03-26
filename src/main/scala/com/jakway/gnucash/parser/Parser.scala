@@ -88,11 +88,11 @@ class Parser {
       _ <- hasNamespace((n, "gnc"))
       version <- getAttribute((n, "version"))
 
-      account <- getElem((n, "name"))
-      accountName <- getNodeText(account)
+      accountNameNode <- getElem((n, "name"))
+      accountName <- getNodeText(accountNameNode)
 
       //id node of type guid
-      idNode <- queryElem((account, { x =>
+      idNode <- queryElem((n, { x =>
         x.label == "id" &&
         expectAttribute((x, "type", "guid")).isRight &&
         hasNamespace((x, "act")).isRight

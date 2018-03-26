@@ -24,8 +24,8 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
 
   object RegDocNodes {
     object OpeningBalancesAccount {
-      val node =
-        <gnc-v2
+      lazy val node = {
+        val n = <gnc-v2
         xmlns:gnc="http://www.gnucash.org/XML/gnc"
         xmlns:act="http://www.gnucash.org/XML/act"
         xmlns:book="http://www.gnucash.org/XML/book"
@@ -68,6 +68,10 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
             <act:parent type="guid">3bceb6ba629ba0e51430abcea01bc95f</act:parent>
           </gnc:account>
         </gnc-v2>
+
+        onlyOne(n.child.filter(q => q.label == "account" && hasNamespace((q, "gnc")).isRight ))
+          .toOption.get
+      }
 
       val expected = UnlinkedAccount("2.0.0",
         "99fa355648ceb345777b6c968f46f6aa",
@@ -131,10 +135,10 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
   }
 
   "The Parser" should "parse the opening balance node" in {
-    import RegDocNodes.OpeningBalancesAccount._
+    import RegDocNodes._
 
-    val openingBalanceAccountNode = onlyOne(node.filter(_.label != "#PCDATA")).toOption.get
-    parser.parseAccountNode(openingBalanceAccountNode) shouldEqual Right(expected)
+    val n = parser.parseAccountNode(OpeningBalancesAccount.node)
+    n shouldEqual Right(OpeningBalancesAccount.expected)
   }
 }
 
