@@ -10,7 +10,18 @@ case class UnlinkedAccount(version: String,
                    name: String,
                    accType: String,
                    description: Option[String],
-                   parentId: Option[String])
+                   parentId: Option[String]) {
+  def link(parent: Option[LinkedAccount]) = {
+    LinkedAccount(version, id, name, accType, description, parent)
+  }
+}
+
+case class LinkedAccount(version: String,
+                   id: String,
+                   name: String,
+                   accType: String,
+                   description: Option[String],
+                   parentId: Option[LinkedAccount])
 
 class Parser {
   import NodeTests._
@@ -143,6 +154,58 @@ class Parser {
           case Left(err) => Left(err)
         }
       }
+    }
+  }
+
+  def linkAccounts(accounts: Seq[UnlinkedAccount]): Either[ValidationError, Seq[LinkedAccount]] = {
+    case class LinkAccountsError(override val msg: String) extends ValidationError(msg)
+    implicit def errorType: String => ValidationError = LinkAccountsError.apply
+
+    import scala.collection.mutable
+
+    //make a map of GUID -> Account
+    val unlinkedAccountsMap: Map[String, UnlinkedAccount] = accounts
+      .map(a => (a.id, a))
+      .toMap
+
+    val linkedAccountsMap: mutable.Map[String, LinkedAccount] = mutable.Map.empty
+
+    //recursively construct the accounts tree by looking up each parent node and caching
+    //the results in a Map
+    def lookupOrInsert(uacc: UnlinkedAccount): LinkedAccount = uacc.parentId match {
+      case Some(id) => {
+        val p = linkedAccountsMap
+          .get(id)
+          .getOrElse(lookupOrInsert(unlinkedAccountsMap
+            .get(id)
+            .getOrElse(
+              throw new LinkAccountsError("lookups should never fail in unlinkedAccountsMap"))))
+
+        linkedAccountsMap.put(id, p)
+
+        p
+      }
+      case None => {
+        //handle the root account specially so it can be looked up in the map
+        val linkedRoot = uacc.link(None)
+        linkedAccountsMap.put(uacc.id, linkedRoot)
+        linkedRoot
+      }
+    }
+
+    val res = linkedAccountsMap.values
+
+    //make sure there's only 1 unlinked account
+    //i.e. it should be a tree, not a forest
+    val rootNodes = res
+      .filter(_.parentId.isEmpty)
+      .toSeq
+
+    if(rootNodes.length == 1) {
+      Right(res.toSeq)
+    } else {
+      Left(errorType("Found >1 root node in linkAccounts (the account tree should be a _tree_, not" +
+        s" a forest): $rootNodes"))
     }
   }
 
