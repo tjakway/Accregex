@@ -157,6 +157,11 @@ class Parser {
     }
   }
 
+
+}
+
+object Parser {
+
   def linkAccounts(accounts: Seq[UnlinkedAccount]): Either[ValidationError, Seq[LinkedAccount]] = {
     case class LinkAccountsError(override val msg: String) extends ValidationError(msg)
     implicit def errorType: String => ValidationError = LinkAccountsError.apply
@@ -208,5 +213,4 @@ class Parser {
         s" a forest): $rootNodes"))
     }
   }
-
 }
