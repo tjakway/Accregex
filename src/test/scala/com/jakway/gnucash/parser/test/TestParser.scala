@@ -22,6 +22,62 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
   val regDocRoot = XML.load(getClass.getResource(regDocResource))
 
 
+  object RegDocNodes {
+    object OpeningBalancesAccount {
+      val node =
+        <gnc-v2
+        xmlns:gnc="http://www.gnucash.org/XML/gnc"
+        xmlns:act="http://www.gnucash.org/XML/act"
+        xmlns:book="http://www.gnucash.org/XML/book"
+        xmlns:cd="http://www.gnucash.org/XML/cd"
+        xmlns:cmdty="http://www.gnucash.org/XML/cmdty"
+        xmlns:price="http://www.gnucash.org/XML/price"
+        xmlns:slot="http://www.gnucash.org/XML/slot"
+        xmlns:split="http://www.gnucash.org/XML/split"
+        xmlns:sx="http://www.gnucash.org/XML/sx"
+        xmlns:trn="http://www.gnucash.org/XML/trn"
+        xmlns:ts="http://www.gnucash.org/XML/ts"
+        xmlns:fs="http://www.gnucash.org/XML/fs"
+        xmlns:bgt="http://www.gnucash.org/XML/bgt"
+        xmlns:recurrence="http://www.gnucash.org/XML/recurrence"
+        xmlns:lot="http://www.gnucash.org/XML/lot"
+        xmlns:job="http://www.gnucash.org/XML/job"
+        xmlns:invoice="http://www.gnucash.org/XML/invoice"
+        xmlns:addr="http://www.gnucash.org/XML/addr"
+        xmlns:cust="http://www.gnucash.org/XML/cust"
+        xmlns:billterm="http://www.gnucash.org/XML/billterm"
+        xmlns:bt-days="http://www.gnucash.org/XML/bt-days"
+        xmlns:bt-prox="http://www.gnucash.org/XML/bt-prox"
+        xmlns:taxtable="http://www.gnucash.org/XML/taxtable"
+        xmlns:tte="http://www.gnucash.org/XML/tte"
+        xmlns:order="http://www.gnucash.org/XML/order"
+        xmlns:employee="http://www.gnucash.org/XML/employee"
+        xmlns:entry="http://www.gnucash.org/XML/entry"
+        xmlns:owner="http://www.gnucash.org/XML/owner"
+        xmlns:vendor="http://www.gnucash.org/XML/vendor">
+          <gnc:account version="2.0.0">
+            <act:name>Opening Balances</act:name>
+            <act:id type="guid">99fa355648ceb345777b6c968f46f6aa</act:id>
+            <act:type>EQUITY</act:type>
+            <act:commodity>
+              <cmdty:space>ISO4217</cmdty:space>
+              <cmdty:id>USD</cmdty:id>
+            </act:commodity>
+            <act:commodity-scu>100</act:commodity-scu>
+            <act:description>Opening Balances</act:description>
+            <act:parent type="guid">3bceb6ba629ba0e51430abcea01bc95f</act:parent>
+          </gnc:account>
+        </gnc-v2>
+
+      val expected = UnlinkedAccount("2.0.0",
+        "99fa355648ceb345777b6c968f46f6aa",
+        "Opening Balances",
+        "EQUITY",
+        Some("Opening Balances"),
+        Some("3bceb6ba629ba0e51430abcea01bc95f"))
+    }
+  }
+
   val book =
     parser.findBookNode(regDocRoot)(TestParserLoadError.apply _).right.get
 
@@ -75,54 +131,10 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
   }
 
   "The Parser" should "parse the opening balance node" in {
-    val openingBalance =
-      <gnc-v2
-        xmlns:gnc="http://www.gnucash.org/XML/gnc"
-        xmlns:act="http://www.gnucash.org/XML/act"
-        xmlns:book="http://www.gnucash.org/XML/book"
-        xmlns:cd="http://www.gnucash.org/XML/cd"
-        xmlns:cmdty="http://www.gnucash.org/XML/cmdty"
-        xmlns:price="http://www.gnucash.org/XML/price"
-        xmlns:slot="http://www.gnucash.org/XML/slot"
-        xmlns:split="http://www.gnucash.org/XML/split"
-        xmlns:sx="http://www.gnucash.org/XML/sx"
-        xmlns:trn="http://www.gnucash.org/XML/trn"
-        xmlns:ts="http://www.gnucash.org/XML/ts"
-        xmlns:fs="http://www.gnucash.org/XML/fs"
-        xmlns:bgt="http://www.gnucash.org/XML/bgt"
-        xmlns:recurrence="http://www.gnucash.org/XML/recurrence"
-        xmlns:lot="http://www.gnucash.org/XML/lot"
-        xmlns:job="http://www.gnucash.org/XML/job"
-        xmlns:invoice="http://www.gnucash.org/XML/invoice"
-        xmlns:addr="http://www.gnucash.org/XML/addr"
-        xmlns:cust="http://www.gnucash.org/XML/cust"
-        xmlns:billterm="http://www.gnucash.org/XML/billterm"
-        xmlns:bt-days="http://www.gnucash.org/XML/bt-days"
-        xmlns:bt-prox="http://www.gnucash.org/XML/bt-prox"
-        xmlns:taxtable="http://www.gnucash.org/XML/taxtable"
-        xmlns:tte="http://www.gnucash.org/XML/tte"
-        xmlns:order="http://www.gnucash.org/XML/order"
-        xmlns:employee="http://www.gnucash.org/XML/employee"
-        xmlns:entry="http://www.gnucash.org/XML/entry"
-        xmlns:owner="http://www.gnucash.org/XML/owner"
-        xmlns:vendor="http://www.gnucash.org/XML/vendor">
-          <gnc:account version="2.0.0">
-        <act:name>Opening Balances</act:name>
-        <act:id type="guid">99fa355648ceb345777b6c968f46f6aa</act:id>
-        <act:type>EQUITY</act:type>
-        <act:commodity>
-          <cmdty:space>ISO4217</cmdty:space>
-          <cmdty:id>USD</cmdty:id>
-        </act:commodity>
-        <act:commodity-scu>100</act:commodity-scu>
-        <act:description>Opening Balances</act:description>
-        <act:parent type="guid">3bceb6ba629ba0e51430abcea01bc95f</act:parent>
-      </gnc:account>
-        </gnc-v2>
+    import RegDocNodes.OpeningBalancesAccount._
 
-
-    val openingBalanceAccountNode = onlyOne(openingBalance.filter(_.label != "#PCDATA")).toOption.get
-    parser.parseAccountNode(openingBalanceAccountNode).isRight shouldEqual true
+    val openingBalanceAccountNode = onlyOne(node.filter(_.label != "#PCDATA")).toOption.get
+    parser.parseAccountNode(openingBalanceAccountNode) shouldEqual Right(expected)
   }
 }
 
