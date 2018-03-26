@@ -21,7 +21,7 @@ case class LinkedAccount(version: String,
                    name: String,
                    accType: String,
                    description: Option[String],
-                   parentId: Option[LinkedAccount])
+                   parent: Option[LinkedAccount])
 
 class Parser {
   import NodeTests._
@@ -203,7 +203,7 @@ object Parser {
     //make sure there's only 1 unlinked account
     //i.e. it should be a tree, not a forest
     val rootNodes = res
-      .filter(_.parentId.isEmpty)
+      .filter(_.parent.isEmpty)
       .toSeq
 
     if(rootNodes.length == 1) {

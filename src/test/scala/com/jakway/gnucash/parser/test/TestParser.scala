@@ -140,6 +140,25 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
     val n = parser.parseAccountNode(OpeningBalancesAccount.node)
     n shouldEqual Right(OpeningBalancesAccount.expected)
   }
+
+  "The Parser" should "link accounts properly" in {
+    val accs = parser
+      .parseAccountNodes(regDocRoot)
+      .flatMap(Parser.linkAccounts)
+      .right.get
+
+    val liabilities = accs.filter(_.name == "Liabilities").head
+    val accountsPayable = accs.filter(_.name == "Accounts Payable").head
+
+    val root = accs.filter(_.name == "Root Account").head
+
+    root.parent shouldEqual None
+
+    liabilities.parent shouldEqual root
+    accountsPayable.parent shouldEqual liabilities
+
+
+  }
 }
 
 class TestParserRegDocXML extends TestParser("/reg_doc_example.gnucash")
