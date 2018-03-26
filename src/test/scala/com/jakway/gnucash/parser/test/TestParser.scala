@@ -91,22 +91,6 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
     foundNodes.map(_.text.toInt).sorted shouldEqual Seq(1, 2, 65)
   }
 
-  "The Parser" should "extract the book node" in {
-    book.label shouldEqual "book"
-    hasNamespace((book, "gnc")).isRight shouldEqual true
-    expectAttribute((book, "version", "2.0.0")).isRight shouldEqual true
-  }
-
-  "The Parser" should "load the number of accounts" in {
-    //TODO: parameterize expected value
-    parser.extractNumAccounts(book) shouldEqual Right(65)
-  }
-
-  "The Parser" should "load the number of transactions" in {
-    //TODO: parameterize expected value
-    parser.extractNumTransactions(book) shouldEqual Right(2)
-  }
-
   "NodeTests" should "detect namespaces" in {
     val nsUrl = "http://example.com/namespace"
     val e: Node = {
@@ -134,14 +118,31 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
     accs.map(_.filter(_.parentId.isEmpty)) shouldEqual Right(Seq(rootAccount))
   }
 
-  "The Parser" should "parse the opening balance node" in {
+
+  it should "extract the book node" in {
+    book.label shouldEqual "book"
+    hasNamespace((book, "gnc")).isRight shouldEqual true
+    expectAttribute((book, "version", "2.0.0")).isRight shouldEqual true
+  }
+
+  it should "load the number of accounts" in {
+    //TODO: parameterize expected value
+    parser.extractNumAccounts(book) shouldEqual Right(65)
+  }
+
+  it should "load the number of transactions" in {
+    //TODO: parameterize expected value
+    parser.extractNumTransactions(book) shouldEqual Right(2)
+  }
+
+  it should "parse the opening balance node" in {
     import RegDocNodes._
 
     val n = parser.parseAccountNode(OpeningBalancesAccount.node)
     n shouldEqual Right(OpeningBalancesAccount.expected)
   }
 
-  "The Parser" should "link accounts properly" in {
+  it should "link accounts properly" in {
     val accs = parser
       .parseAccountNodes(regDocRoot)
       .flatMap(Parser.linkAccounts)
