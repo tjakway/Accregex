@@ -23,6 +23,8 @@ case class LinkedAccount(version: String,
                    description: Option[String],
                    parent: Option[LinkedAccount])
 
+case class Transaction(version: String, id: String)
+
 class Parser {
   import NodeTests._
 

@@ -9,4 +9,17 @@ class ValidationError(val msg: String)
 }
 
 object ValidationError {
+  /**
+    * TODO: alternatively, make the Throwable argument to StackTraceString.apply in the class
+    * definition a parameter with default = new Throwable()
+    * @param msg
+    * @param cause
+    * @tparam A
+    * @return
+    */
+  def fromCause[A <: ValidationError](msg: String, cause: Throwable): A = {
+    return new A(msg) {
+      override val stackTrace: String = StackTraceString.apply(cause)
+    }
+  }
 }
