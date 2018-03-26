@@ -188,7 +188,7 @@ object Parser {
           case Some(id) => {
             linkedAccountsMap.get(id) match {
               //we've cached this value in the map, return it
-              case Some(found) => found
+              case Some(found) => uacc.link(Some(found))
               case None => {
                 //recurse to find the parent
                 val parentRes = lookupOrInsert(unlinkedAccountsMap
@@ -216,9 +216,8 @@ object Parser {
         }
       }
 
-      accounts.map(lookupOrInsert)
 
-      val res = linkedAccountsMap.values
+      val res = accounts.map(lookupOrInsert)
 
       //make sure there's only 1 unlinked account
       //i.e. it should be a tree, not a forest
