@@ -105,3 +105,16 @@ class Loader(val srcToParse: String) {
 
 }
 
+
+object Loader {
+  def loadFromFile(path: String): Either[ValidationError, Seq[UnlinkedTransactionRule]] = {
+    case class TransactionLoaderFileError(override val msg: String)
+      extends ValidationError(msg)
+
+    new Loader(path).parse
+  }
+
+  def loadFromFile(path: java.io.File): Either[ValidationError, Seq[UnlinkedTransactionRule]] =
+    loadFromFile(path.toString)
+
+}
