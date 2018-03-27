@@ -132,36 +132,12 @@ class Loader(val srcToParse: String) {
           case (_, x) => Left(errorType(s"Expected object child of $json but got $x")): AccumulatorType
         }
 
-        accumulateEithers(json.children.map(_.children.foldLeft(empty)(accF)))
+        ValidationError.accumulateEithers(json.children.map(_.children.foldLeft(empty)(accF)))
       }
     }
 
   }
 
-  /**
-    * accumulate Rights into 1 Seq unless an error occurs
-    * in which case accumulate all errors
-    * @param in
-    * @tparam A
-    * @tparam B
-    * @return
-    */
-  def accumulateEithers[A, B](in: Seq[Either[A, Seq[B]]]):
-    Either[Seq[A], Seq[B]] = {
-    val empty: Either[Seq[A], Seq[B]] = Right(Seq())
-
-    def f(accs: Either[Seq[A], Seq[B]], thisElem: Either[A, Seq[B]]):
-      Either[Seq[A], Seq[B]] = (accs, thisElem) match {
-
-      case (Left(acc), Left(q)) => Left(acc.+:(q))
-      case (_, Left(q)) => Left(Seq(q))
-      case (Right(acc), Right(q)) => Right(acc ++ q)
-      //ignore Right's on error
-      case (Left(r), _) => Left(r)
-    }
-
-    in.foldLeft(empty)(f)
-  }
 
 }
 
