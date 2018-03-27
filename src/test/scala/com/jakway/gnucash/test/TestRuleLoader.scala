@@ -7,6 +7,8 @@ import org.scalatest.{FlatSpec, Matchers}
 class TestRuleLoader extends FlatSpec with Matchers {
   import org.json4s._
 
+  implicit val formats = DefaultFormats
+
   object TestObjects {
     import org.json4s.JsonDSL._
 
@@ -21,7 +23,7 @@ class TestRuleLoader extends FlatSpec with Matchers {
     val oneRuleExpected = Seq(UnlinkedTransactionRule(
       ".*", 1.toDouble.toString, "bar", "baz"))
 
-    val oneRuleCommented = insertComments("foo")(pretty(render(oneRuleJson)))
+    lazy val oneRuleCommented = insertComments("//examplecomment")(pretty(render(oneRuleJson)))
 
   }
   import TestObjects._
@@ -30,12 +32,16 @@ class TestRuleLoader extends FlatSpec with Matchers {
     val ljs = js.lines
 
     //insert a comment in the middle of the Json
-    val middle = ljs.take(ljs.length / 2) ++ Seq(comment) ++ ljs.drop(ljs.length / 2)
 
-    val beginning = Seq(comment) ++ ljs
-    val end = ljs ++ Seq(comment)
+    val as = js.lines.take(ljs.length / 2)
+    val bs = js.lines.drop(ljs.length / 2)
 
-    Seq(beginning, middle, end).map(_.toString)
+    val middle = as ++ Seq(comment) ++ bs
+
+    val beginning = Seq(comment) ++ js.lines
+    val end = js.lines ++ Seq(comment)
+
+    Seq(beginning, middle, end.toSeq).map(_.reduce(_ ++ "\n" ++ _))
   }
 
   "The Transaction Rule Loader" should "load a single transaction" in {
@@ -44,6 +50,8 @@ class TestRuleLoader extends FlatSpec with Matchers {
   }
 
   it should "handle comments" in {
-    oneRuleCommented.map(new Loader(_).parse) shouldEqual (0 to 3).map(_ => Right(oneRuleExpected))
+    println(pretty(render(oneRuleJson)))
+    println(oneRuleCommented.toString())
+    oneRuleCommented.map(new Loader(_).parse) shouldEqual (0 to 2).toList.map(_ => Right(oneRuleExpected))
   }
 }
