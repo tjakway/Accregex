@@ -85,7 +85,7 @@ class Loader(val srcToParse: String) {
   def parse: Either[Seq[ValidationError], Seq[UnlinkedTransactionRule]] = {
     import org.json4s._
 
-    val json = org.json4s.native.JsonMethods.parse(srcToParse)
+    val jsonOpt = org.json4s.native.JsonMethods.parseOpt(srcToParse)
 
     type AccumulatorType = Either[ValidationError, Seq[UnlinkedTransactionRule]]
     val empty: Either[ValidationError, Seq[UnlinkedTransactionRule]] =
@@ -100,7 +100,16 @@ class Loader(val srcToParse: String) {
       case (_, x) => Left(errorType(s"Expected object child of $json but got $x")): AccumulatorType
     }
 
-    accumulateEithers(json.children.map(_.children.foldLeft(empty)(accF)))
+    jsonOpt match {
+      case None => {
+        case class JsonParseError(override val msg: String)
+          extends TransactionRuleLoaderError(msg)
+
+        Left(Seq(JsonParseError(s"Could not parse $srcToParse as JSON")))
+      }
+      case Some(json) => accumulateEithers(json.children.map(_.children.foldLeft(empty)(accF)))
+    }
+
   }
 
   /**
