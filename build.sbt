@@ -10,9 +10,6 @@ libraryDependencies ++=
       "ch.qos.logback"  %  "logback-classic"    % "1.2.1",
       "com.github.scopt" %% "scopt" % "3.5.0",
 
-    
-      //for config loading:
-      "com.typesafe" % "config" % "1.3.2",
 
       //scala XML standard library
       //https://mvnrepository.com/artifact/org.scala-lang.modules/scala-xml
