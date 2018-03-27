@@ -18,8 +18,8 @@ class TestRuleLoader extends FlatSpec with Matchers {
         ("destAccount" -> "baz"))
       )
 
-    val oneRuleExpected = UnlinkedTransactionRule(
-      ".*", "1", "bar", "baz")
+    val oneRuleExpected = Seq(UnlinkedTransactionRule(
+      ".*", 1.toDouble.toString, "bar", "baz"))
   }
   import TestObjects._
 
