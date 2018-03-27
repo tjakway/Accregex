@@ -18,8 +18,9 @@ case class LinkedTransactionRule(pattern: Regex,
                                  destAccount: LinkedAccount)
 
 
-
 object UnlinkedTransactionRule {
+  val defaultPriority = 0
+
   def link(accountNameParser: AccountNameParser)
           (rule: UnlinkedTransactionRule):
           Either[ValidationError, LinkedTransactionRule] = {

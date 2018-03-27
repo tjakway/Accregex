@@ -13,7 +13,10 @@ libraryDependencies ++=
 
       //scala XML standard library
       //https://mvnrepository.com/artifact/org.scala-lang.modules/scala-xml
-      "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
+      "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
+
+      //transaction rule parsing
+      "org.json4s" %% "json4s-native" % "3.5.3",
 
       //scalatest
       //see http://www.scalatest.org/install
