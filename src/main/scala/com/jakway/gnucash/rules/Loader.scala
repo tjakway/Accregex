@@ -18,8 +18,9 @@ class Loader(val srcToParse: String) {
   def parsePriority(obj: JObject): Either[ValidationError, Double] = {
     import org.json4s.Formats
     import org.json4s.DefaultFormats
+    implicit val formats = DefaultFormats
 
-    obj.extractOpt[String] match {
+    (obj \ "priority").extractOpt[String] match {
       //if the user entered a priority...
       case Some(priorityStr) => {
         //try to parse it as a number
@@ -61,7 +62,7 @@ class Loader(val srcToParse: String) {
     extractedValue.flatMap(v => Try(v.asInstanceOf[A]) match {
       case Success(q) => Right(q)
       case Failure(ex) => {
-        Left(errorType(s"Could not convert $extractedValue to an instance of ${classOf[A].getName}," +
+        Left(errorType(s"Could not convert $extractedValue to an instance of the specified type," +
           s" exception thrown: $ex"))
       }
     })
@@ -69,7 +70,7 @@ class Loader(val srcToParse: String) {
 
   def parseRule(obj: JObject): Either[ValidationError, UnlinkedTransactionRule] = {
 
-    def extract[A](key: String) = getKey[String, Any, A](obj.values)
+    def extract[A](key: String) = getKey[String, Any, A](obj.values)(key)
 
     for {
       pattern <- extract[String]("pattern")
@@ -81,24 +82,27 @@ class Loader(val srcToParse: String) {
     }
   }
 
-  def parse: Either[TransactionRuleLoaderError, Seq[UnlinkedTransactionRule]] = {
+  def parse: Either[ValidationError, Seq[UnlinkedTransactionRule]] = {
     import org.json4s._
-    import org.json4s.native.JsonMethods._
 
-    val json = parse(srcToParse)
+    val json = org.json4s.native.JsonMethods.parse(srcToParse)
 
-    type AccumulatorType = Either[TransactionRuleLoaderError, Seq[UnlinkedTransactionRule]]
-    val empty: Either[TransactionRuleLoaderError, Seq[UnlinkedTransactionRule]] =
+    type AccumulatorType = Either[ValidationError, Seq[UnlinkedTransactionRule]]
+    val empty: Either[ValidationError, Seq[UnlinkedTransactionRule]] =
       Right(Seq())
 
-    json.children.foldLeft(empty)(c => c match {
-      case (m: AccumulatorType, _) => m
+    def accF(a: AccumulatorType, b: JValue): AccumulatorType = (a, b) match {
       case (Right(acc), obj@JObject(_)) => parseRule(obj) match {
-        case Left(r) => r
+        case Left(r) => Left(r)
         case Right(q) => Right(acc.+:(q))
       }
+      case (Left(q), _) => Left(q)
       case (_, x) => Left(errorType(s"Expected object child of $json but got $x")): AccumulatorType
-    })
+    }
+
+
+    json.children.foldLeft(empty)(accF)
+
   }
 
 
