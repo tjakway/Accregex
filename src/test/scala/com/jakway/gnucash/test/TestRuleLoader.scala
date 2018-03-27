@@ -21,8 +21,8 @@ class TestRuleLoader extends FlatSpec with Matchers {
         ("destAccount" -> "baz"))
       )
 
-    val oneRuleExpected = Seq(UnlinkedTransactionRule(
-      ".*", 1.toDouble.toString, "bar", "baz"))
+    val oneRuleExpected = UnlinkedTransactionRule(
+      ".*", 1.toDouble.toString, "bar", "baz")
 
     lazy val oneRuleCommented = insertComments("//examplecomment")(pretty(render(oneRuleJson)))
 
@@ -30,14 +30,15 @@ class TestRuleLoader extends FlatSpec with Matchers {
   import TestObjects._
 
   def insertComments(comment: String)(js: String): Seq[String] = {
-    val ljs = js.lines
 
     //insert a comment in the middle of the Json
-
-    val as = js.lines.take(ljs.length / 2)
-    val bs = js.lines.drop(ljs.length / 2)
+    val as = js.lines.take(js.lines.length / 2)
+    val bs = js.lines.drop(js.lines.length / 2)
+    assert(as != bs)
 
     val middle = as ++ Seq(comment) ++ bs
+
+    assert(middle != js.lines)
 
     val beginning = Seq(comment) ++ js.lines
     val end = js.lines ++ Seq(comment)
@@ -47,14 +48,11 @@ class TestRuleLoader extends FlatSpec with Matchers {
 
   "The Transaction Rule Loader" should "load a single transaction" in {
     new Loader(compact(render(oneRuleJson))).parse shouldEqual
-      Right(oneRuleExpected)
+      Right(Seq(oneRuleExpected))
   }
 
   it should "handle comments" in {
-    println(pretty(render(oneRuleJson)))
-    println(oneRuleCommented.toString())
-
     val actual = ValidationError.accumulateEithers(oneRuleCommented.map(new Loader(_).parse))
-    actual shouldEqual (0 to 2).toList.map(_ => Right(oneRuleExpected))
+    actual shouldEqual Right((0 to 2).toList.map(_ => oneRuleExpected))
   }
 }
