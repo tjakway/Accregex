@@ -16,6 +16,7 @@ class TransactionRuleLoaderError(override val msg: String)
   * @param srcToParse JSON source to parse--DO NOT PASS A FILE
   */
 class Loader(val srcToParse: String) {
+  import Loader._
   implicit def errorType: String => ValidationError = new TransactionRuleLoaderError(_)
 
   def parsePriority(obj: JObject): Either[ValidationError, Double] = {
@@ -85,33 +86,6 @@ class Loader(val srcToParse: String) {
     }
   }
 
-  /**
-    * json parser with custom options to allow parsing comments
-    * (need to use Jackson for this)
-    * @return
-    */
-  private def jsonParser: String => Option[JValue] = {
-    object ExtJsonParser extends org.json4s.jackson.JsonMethods {
-      override def mapper: ObjectMapper = {
-        //see https://github.com/codahale/jerkson/blob/master/src/main/scala/com/codahale/jerkson/Json.scala#L18
-        //and https://github.com/json4s/json4s/issues/15
-        val m = super.mapper
-          .enable(JsonParser.Feature.ALLOW_COMMENTS)
-          .enable(JsonParser.Feature.ALLOW_YAML_COMMENTS)
-          .enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
-          .enable(JsonParser.Feature.AUTO_CLOSE_SOURCE)
-
-        assert(m.isEnabled(JsonParser.Feature.ALLOW_COMMENTS))
-        assert(m.isEnabled(JsonParser.Feature.ALLOW_YAML_COMMENTS))
-        assert(m.isEnabled(JsonParser.Feature.STRICT_DUPLICATE_DETECTION))
-        assert(m.isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE))
-
-        m
-      }
-    }
-
-    ExtJsonParser.parseOpt(_, false, false)
-  }
 
   def parse: Either[Seq[ValidationError], Seq[UnlinkedTransactionRule]] = {
     import org.json4s._
@@ -165,4 +139,33 @@ object Loader {
   def loadFromFile(path: java.io.File): Either[Seq[ValidationError], Seq[UnlinkedTransactionRule]] =
     loadFromFile(path.toString)
 
+
+
+  /**
+    * json parser with custom options to allow parsing comments
+    * (need to use Jackson for this)
+    * @return
+    */
+  def jsonParser: String => Option[JValue] =
+    ExtJsonParser.parseOpt(_, false, false)
+
+  object ExtJsonParser extends org.json4s.jackson.JsonMethods {
+    override def mapper: ObjectMapper = {
+      //see https://github.com/codahale/jerkson/blob/master/src/main/scala/com/codahale/jerkson/Json.scala#L18
+      //and https://github.com/json4s/json4s/issues/15
+      val m = super.mapper
+        .copy()
+        .enable(JsonParser.Feature.ALLOW_COMMENTS)
+        .enable(JsonParser.Feature.ALLOW_YAML_COMMENTS)
+        .enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
+        .enable(JsonParser.Feature.AUTO_CLOSE_SOURCE)
+
+      assert(m.isEnabled(JsonParser.Feature.ALLOW_COMMENTS))
+      assert(m.isEnabled(JsonParser.Feature.ALLOW_YAML_COMMENTS))
+      assert(m.isEnabled(JsonParser.Feature.STRICT_DUPLICATE_DETECTION))
+      assert(m.isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE))
+
+      m
+    }
+  }
 }
