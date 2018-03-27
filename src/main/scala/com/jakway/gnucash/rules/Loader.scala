@@ -82,7 +82,7 @@ class Loader(val srcToParse: String) {
     }
   }
 
-  def parse: Either[ValidationError, Seq[UnlinkedTransactionRule]] = {
+  def parse: Either[Seq[ValidationError], Seq[UnlinkedTransactionRule]] = {
     import org.json4s._
 
     val json = org.json4s.native.JsonMethods.parse(srcToParse)
@@ -100,9 +100,33 @@ class Loader(val srcToParse: String) {
       case (_, x) => Left(errorType(s"Expected object child of $json but got $x")): AccumulatorType
     }
 
-    json.children.foldLeft(empty)(accF)
+    accumulateEithers(json.children.map(_.children.foldLeft(empty)(accF)))
   }
 
+  /**
+    * accumulate Rights into 1 Seq unless an error occurs
+    * in which case accumulate all errors
+    * @param in
+    * @tparam A
+    * @tparam B
+    * @return
+    */
+  def accumulateEithers[A, B](in: Seq[Either[A, Seq[B]]]):
+    Either[Seq[A], Seq[B]] = {
+    val empty: Either[Seq[A], Seq[B]] = Right(Seq())
+
+    def f(accs: Either[Seq[A], Seq[B]], thisElem: Either[A, Seq[B]]):
+      Either[Seq[A], Seq[B]] = (accs, thisElem) match {
+
+      case (Left(acc), Left(q)) => Left(acc.+:(q))
+      case (_, Left(q)) => Left(Seq(q))
+      case (Right(acc), Right(q)) => Right(acc ++ q)
+      //ignore Right's on error
+      case (Left(r), _) => Left(r)
+    }
+
+    in.foldLeft(empty)(f)
+  }
 
 }
 
@@ -111,14 +135,14 @@ object Loader {
   //root object is "accregex"
   val jsonRoot = Config.progName
 
-  def loadFromFile(path: String): Either[ValidationError, Seq[UnlinkedTransactionRule]] = {
+  def loadFromFile(path: String): Either[Seq[ValidationError], Seq[UnlinkedTransactionRule]] = {
     case class TransactionLoaderFileError(override val msg: String)
       extends ValidationError(msg)
 
     new Loader(path).parse
   }
 
-  def loadFromFile(path: java.io.File): Either[ValidationError, Seq[UnlinkedTransactionRule]] =
+  def loadFromFile(path: java.io.File): Either[Seq[ValidationError], Seq[UnlinkedTransactionRule]] =
     loadFromFile(path.toString)
 
 }
