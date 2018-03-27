@@ -17,6 +17,8 @@ libraryDependencies ++=
 
       //transaction rule parsing
       "org.json4s" %% "json4s-native" % "3.5.3",
+      //need it for producing JSON from the DSL
+      "org.json4s" %% "json4s-jackson" % "3.5.3" % "test",
 
       //scalatest
       //see http://www.scalatest.org/install

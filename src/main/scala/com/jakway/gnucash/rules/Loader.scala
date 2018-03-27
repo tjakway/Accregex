@@ -1,5 +1,6 @@
 package com.jakway.gnucash.rules
 
+import com.jakway.gnucash.Config
 import com.jakway.gnucash.parser.ValidationError
 import org.json4s.JObject
 
@@ -107,6 +108,9 @@ class Loader(val srcToParse: String) {
 
 
 object Loader {
+  //root object is "accregex"
+  val jsonRoot = Config.progName
+
   def loadFromFile(path: String): Either[ValidationError, Seq[UnlinkedTransactionRule]] = {
     case class TransactionLoaderFileError(override val msg: String)
       extends ValidationError(msg)
