@@ -1,8 +1,7 @@
 package com.jakway.gnucash.rules
 
 import com.jakway.gnucash.parser.ValidationError
-import org.json4s.{JObject, JsonAST}
-import org.json4s.JsonAST.{JField, JString}
+import org.json4s.JObject
 
 import scala.util.{Failure, Success, Try}
 
@@ -100,9 +99,7 @@ class Loader(val srcToParse: String) {
       case (_, x) => Left(errorType(s"Expected object child of $json but got $x")): AccumulatorType
     }
 
-
     json.children.foldLeft(empty)(accF)
-
   }
 
 
