@@ -91,14 +91,6 @@ class Loader(val srcToParse: String) {
     val empty: Either[ValidationError, Seq[UnlinkedTransactionRule]] =
       Right(Seq())
 
-    def accF(a: AccumulatorType, b: JValue): AccumulatorType = (a, b) match {
-      case (Right(acc), obj@JObject(_)) => parseRule(obj) match {
-        case Left(r) => Left(r)
-        case Right(q) => Right(acc.+:(q))
-      }
-      case (Left(q), _) => Left(q)
-      case (_, x) => Left(errorType(s"Expected object child of $json but got $x")): AccumulatorType
-    }
 
     jsonOpt match {
       case None => {
@@ -107,7 +99,19 @@ class Loader(val srcToParse: String) {
 
         Left(Seq(JsonParseError(s"Could not parse $srcToParse as JSON")))
       }
-      case Some(json) => accumulateEithers(json.children.map(_.children.foldLeft(empty)(accF)))
+      case Some(json) => {
+
+        def accF(a: AccumulatorType, b: JValue): AccumulatorType = (a, b) match {
+          case (Right(acc), obj@JObject(_)) => parseRule(obj) match {
+            case Left(r) => Left(r)
+            case Right(q) => Right(acc.+:(q))
+          }
+          case (Left(q), _) => Left(q)
+          case (_, x) => Left(errorType(s"Expected object child of $json but got $x")): AccumulatorType
+        }
+
+        accumulateEithers(json.children.map(_.children.foldLeft(empty)(accF)))
+      }
     }
 
   }
