@@ -1,8 +1,11 @@
 package com.jakway.gnucash.rules
 
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.jakway.gnucash.Config
 import com.jakway.gnucash.parser.ValidationError
 import org.json4s.JObject
+import org.json4s.JsonAST.JValue
 
 import scala.util.{Failure, Success, Try}
 
@@ -82,10 +85,29 @@ class Loader(val srcToParse: String) {
     }
   }
 
+  /**
+    * json parser with custom options to allow parsing comments
+    * (need to use Jackson for this)
+    * @return
+    */
+  private def jsonParser: String => Option[JValue] = {
+    object ExtJsonParser extends org.json4s.jackson.JsonMethods {
+      override def mapper: ObjectMapper = {
+        //see https://github.com/codahale/jerkson/blob/master/src/main/scala/com/codahale/jerkson/Json.scala#L18
+        //and https://github.com/json4s/json4s/issues/15
+        val m = super.mapper
+        m.enable(JsonParser.Feature.ALLOW_COMMENTS)
+        m
+      }
+    }
+
+    ExtJsonParser.parseOpt(_, false, false)
+  }
+
   def parse: Either[Seq[ValidationError], Seq[UnlinkedTransactionRule]] = {
     import org.json4s._
 
-    val jsonOpt = org.json4s.native.JsonMethods.parseOpt(srcToParse)
+    val jsonOpt = jsonParser(srcToParse)
 
     type AccumulatorType = Either[ValidationError, Seq[UnlinkedTransactionRule]]
     val empty: Either[ValidationError, Seq[UnlinkedTransactionRule]] =
