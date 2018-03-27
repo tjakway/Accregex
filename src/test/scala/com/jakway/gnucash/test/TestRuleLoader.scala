@@ -26,6 +26,28 @@ class TestRuleLoader extends FlatSpec with Matchers {
 
     lazy val oneRuleCommented = insertComments("//examplecomment")(pretty(render(oneRuleJson)))
 
+
+    val multipleRules = (Loader.jsonRoot ->
+      ("qjdfss" ->
+        ("pattern" -> "\\s+") ~
+        ("priority" -> 2433) ~
+        ("sourceAccount" -> "sklje") ~
+        ("destAccount" -> "qjeeew")) ~
+      ("wes" ->
+        ("pattern" -> "\\d*") ~
+        ("priority" -> 30) ~
+        ("sourceAccount" -> "xxzl") ~
+        ("destAccount" -> "jy422"))
+      )
+
+    val multipleRulesExpected = Seq(
+      UnlinkedTransactionRule("\\s+", 2433.toDouble.toString, "sklje", "qjeeew"),
+      UnlinkedTransactionRule("\\d*", 30.toDouble.toString, "xxzl", "jy422"))
+
+    lazy val multipleRulesCommented = {
+      val randomStr: String = (0 to Math.random().floor.toInt).map(_ => Math.random()).toString()
+      insertComments("//" + randomStr)(pretty(render(multipleRules)))
+    }
   }
   import TestObjects._
 
@@ -54,5 +76,13 @@ class TestRuleLoader extends FlatSpec with Matchers {
   it should "handle comments" in {
     val actual = ValidationError.accumulateEithers(oneRuleCommented.map(new Loader(_).parse))
     actual shouldEqual Right((0 to 2).toList.map(_ => oneRuleExpected))
+  }
+
+  it should "handle comments in multiple rules" in {
+    //need to sort them to compare them properly so put them in a set
+    val actual = ValidationError.accumulateEithers(multipleRulesCommented.map(new Loader(_).parse))
+      .right.map(_.toSet)
+    actual shouldEqual
+      Right((0 to 2).toList.flatMap(_ => multipleRulesExpected).toSet)
   }
 }
