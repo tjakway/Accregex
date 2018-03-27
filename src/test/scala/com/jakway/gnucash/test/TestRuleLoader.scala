@@ -1,5 +1,6 @@
 package com.jakway.gnucash.test
 
+import com.jakway.gnucash.parser.ValidationError
 import com.jakway.gnucash.rules.{Loader, UnlinkedTransactionRule}
 import org.json4s.jackson.JsonMethods._
 import org.scalatest.{FlatSpec, Matchers}
@@ -52,6 +53,8 @@ class TestRuleLoader extends FlatSpec with Matchers {
   it should "handle comments" in {
     println(pretty(render(oneRuleJson)))
     println(oneRuleCommented.toString())
-    oneRuleCommented.map(new Loader(_).parse) shouldEqual (0 to 2).toList.map(_ => Right(oneRuleExpected))
+
+    val actual = ValidationError.accumulateEithers(oneRuleCommented.map(new Loader(_).parse))
+    actual shouldEqual (0 to 2).toList.map(_ => Right(oneRuleExpected))
   }
 }

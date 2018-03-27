@@ -96,7 +96,16 @@ class Loader(val srcToParse: String) {
         //see https://github.com/codahale/jerkson/blob/master/src/main/scala/com/codahale/jerkson/Json.scala#L18
         //and https://github.com/json4s/json4s/issues/15
         val m = super.mapper
-        m.enable(JsonParser.Feature.ALLOW_COMMENTS)
+          .enable(JsonParser.Feature.ALLOW_COMMENTS)
+          .enable(JsonParser.Feature.ALLOW_YAML_COMMENTS)
+          .enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
+          .enable(JsonParser.Feature.AUTO_CLOSE_SOURCE)
+
+        assert(m.isEnabled(JsonParser.Feature.ALLOW_COMMENTS))
+        assert(m.isEnabled(JsonParser.Feature.ALLOW_YAML_COMMENTS))
+        assert(m.isEnabled(JsonParser.Feature.STRICT_DUPLICATE_DETECTION))
+        assert(m.isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE))
+
         m
       }
     }
