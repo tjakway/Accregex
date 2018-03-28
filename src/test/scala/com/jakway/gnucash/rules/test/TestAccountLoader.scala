@@ -151,8 +151,16 @@ class TestAccountNameParser(val regDocRoot: Node) extends FlatSpec with Matchers
   lazy val testObjects = new TestObjects(regDocRoot)
   lazy val nameParser = new AccountNameParser(testObjects.linkedAccounts.values.toSeq)
 
-  "AccountNameParser" should "disambiguate a top-level account" in {
+  //the user should NOT be able to reference the root account by name because
+  //it's an "ephemeral" account (not visible in the account tree in GNUCash)
+  "AccountNameParser" should "not disambiguate a top-level account" in {
     nameParser
-      .findReferencedAccount(testObjects.rootAccountName) shouldEqual Right(testObjects.Linked.rootAccount)
+      .findReferencedAccount(testObjects.rootAccountName).isLeft shouldEqual true
+  }
+
+  it should "disambiguate a second-level account" in {
+    val str = "Assets"
+
+    nameParser.findReferencedAccount(str) shouldEqual Right(testObjects.Linked.assetAccount)
   }
 }
