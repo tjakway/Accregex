@@ -32,6 +32,12 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
 
   object TestObjects {
     val rootAccountId = "f52c28f32edd309e768494995470343b"
+    val rootAccount = UnlinkedAccount("2.0.0",
+      rootAccountId,
+      "Root Account",
+      "ROOT",
+      None,
+      None)
 
     val assetAccountId = "90313cf9a5c83a232cb040ba2fe315be"
     val assetAccount = UnlinkedAccount("2.0.0",
@@ -53,13 +59,17 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
   }
   import TestObjects._
 
+  /**
+    * tests of the unlinkedAccounts test object
+    */
+
   //make sure the regDocRoot param has unlinked accounts we can parse successfully
-  "linkAccounts" should "be passed valid unlinked accounts" in {
+  "linkAccounts.unlinkedAccounts" should "have valid unlinked accounts" in {
     //force the lazy value and make sure it isn't empty
     unlinkedAccounts.isEmpty shouldEqual false
   }
 
-  it should "be passed an assets account and a current assets account" in {
+  it should "have an assets account and a current assets account" in {
     unlinkedAccounts.get(assetAccountId) shouldEqual Some(assetAccount)
     unlinkedAccounts.get(currentAssetsAccountId) shouldEqual Some(currentAssetsAccount)
   }
@@ -68,7 +78,30 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
     unlinkedAccounts.values.toSet.intersect(unlinkedAccountsTestObjects.toSet) shouldEqual unlinkedAccountsTestObjects.toSet
   }
 
-  it should "link top-level accounts" in {
+  it should "contain the root account" in {
+    unlinkedAccounts.get(rootAccountId) shouldEqual Some(rootAccount)
+  }
+
+  //test parentId 2 levels down
+  it should "correctly nest currentAssets parentId" in {
+    unlinkedAccounts.get(currentAssetsAccountId).flatMap(_.parentId) shouldEqual Some(assetAccountId)
+  }
+
+  //test parentId 1 level down
+  it should "correctly nest Assets parent id" in {
+    unlinkedAccounts.get(assetAccountId).flatMap(_.parentId) shouldEqual Some(rootAccountId)
+  }
+
+  //root account shouldn't have a parentId
+  it should "correctly handle the root account's parentId" in {
+    unlinkedAccounts.get(rootAccountId).flatMap(_.parentId) shouldEqual None
+  }
+
+  /**
+    * Parser.linkAccounts tests
+    */
+
+  "linkAccounts" should "link top-level accounts" in {
 
   }
 }
