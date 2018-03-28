@@ -59,12 +59,12 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
     unlinkedAccounts.isEmpty shouldEqual false
   }
 
-  "linkAccounts" should "be passed an assets account and a current assets account" in {
+  it should "be passed an assets account and a current assets account" in {
     unlinkedAccounts.get(assetAccountId) shouldEqual Some(assetAccount)
     unlinkedAccounts.get(currentAssetsAccountId) shouldEqual Some(currentAssetsAccount)
   }
 
-  "linkAccounts" should "contain the expected unlinked accounts" in {
+  it should "contain the expected unlinked accounts" in {
     unlinkedAccounts.values.toSet.union(unlinkedAccountsTestObjects.toSet) shouldEqual unlinkedAccountsTestObjects.toSet
   }
 
