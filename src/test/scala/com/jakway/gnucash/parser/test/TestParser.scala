@@ -162,4 +162,3 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
   }
 }
 
-class TestParserRegDocXML extends TestParser("/reg_doc_example.gnucash")

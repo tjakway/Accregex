@@ -1,4 +1,4 @@
-package com.jakway.gnucash.test
+package com.jakway.gnucash.rules.test
 
 import com.jakway.gnucash.parser.ValidationError
 import com.jakway.gnucash.rules.{Loader, UnlinkedTransactionRule}
