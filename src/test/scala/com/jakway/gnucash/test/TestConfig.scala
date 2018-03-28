@@ -17,6 +17,8 @@ object TestResources {
 }
 import TestResources._
 
+
+//test class instantiations
 class TestLinkAccountsRegDocXML extends TestLinkAccounts(regDocRoot)
 
 class TestParserRegDocXML extends TestParser(regDocRoot)
