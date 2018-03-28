@@ -25,10 +25,33 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
   lazy val unlinkedAccounts: Map[String, UnlinkedAccount] =
     new Parser()
       .parseAccountNodes(regDocRoot)
-      .map(accs => accs.map(a => (a.name, a)))
+      .map(accs => accs.map(a => (a.id, a)))
       .map(_.toMap)
       .getOrElse(throw TestLinkAccountsLoadError("Error while loading " +
           "TestLinkAccounts.unlinkedAccounts"))
+
+  object TestObjects {
+    val rootAccountId = "f52c28f32edd309e768494995470343b"
+
+    val assetAccountId = "90313cf9a5c83a232cb040ba2fe315be"
+    val assetAccount = UnlinkedAccount("2.0.0",
+      assetAccountId,
+      "Assets",
+      "ASSET",
+      Some("Assets"),
+      Some(rootAccountId))
+
+    val currentAssetsAccountId = "794a0c0fac9d75f85cf7c99141c9caac"
+    val currentAssetsAccount = UnlinkedAccount("2.0.0",
+      currentAssetsAccountId,
+      "Current Assets",
+      "ASSET",
+      Some("Current Assets"),
+      Some(assetAccountId))
+
+    val unlinkedAccountsTestObjects = Seq(assetAccount, currentAssetsAccount)
+  }
+  import TestObjects._
 
   //make sure the regDocRoot param has unlinked accounts we can parse successfully
   "linkAccounts" should "be passed valid unlinked accounts" in {
@@ -36,7 +59,16 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
     unlinkedAccounts.isEmpty shouldEqual false
   }
 
-  "linkAccounts" should "link top-level accounts" in {
+  "linkAccounts" should "be passed an assets account and a current assets account" in {
+    unlinkedAccounts.get(assetAccountId) shouldEqual Some(assetAccount)
+    unlinkedAccounts.get(currentAssetsAccountId) shouldEqual Some(currentAssetsAccount)
+  }
+
+  "linkAccounts" should "contain the expected unlinked accounts" in {
+    unlinkedAccounts.values.toSet.union(unlinkedAccountsTestObjects.toSet) shouldEqual unlinkedAccountsTestObjects.toSet
+  }
+
+  it should "link top-level accounts" in {
 
   }
 }
