@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 import scala.xml.{Node, XML}
 
-class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
+class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
   import NodeTests._
   val parser = new Parser
 
@@ -18,8 +18,6 @@ class TestParser(val regDocResource: String) extends FlatSpec with Matchers {
   case class TestParserLoadError(override val msg: String) extends TestParserError(msg)
 
   implicit def errorType: String => ValidationError = new TestParserError(_)
-
-  val regDocRoot = XML.load(getClass.getResource(regDocResource))
 
 
   object RegDocNodes {
