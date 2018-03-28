@@ -65,7 +65,7 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
   }
 
   it should "contain the expected unlinked accounts" in {
-    unlinkedAccounts.values.toSet.union(unlinkedAccountsTestObjects.toSet) shouldEqual unlinkedAccountsTestObjects.toSet
+    unlinkedAccounts.values.toSet.intersect(unlinkedAccountsTestObjects.toSet) shouldEqual unlinkedAccountsTestObjects.toSet
   }
 
   it should "link top-level accounts" in {
