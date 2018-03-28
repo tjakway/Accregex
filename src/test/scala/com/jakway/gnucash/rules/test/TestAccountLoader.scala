@@ -1,6 +1,6 @@
 package com.jakway.gnucash.rules.test
 
-import com.jakway.gnucash.parser.{Parser, UnlinkedAccount, ValidationError}
+import com.jakway.gnucash.parser.{AccountNameParser, Parser, UnlinkedAccount, ValidationError}
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.xml.Node
@@ -25,32 +25,35 @@ class TestObjects(val regDocRoot: Node) {
       "TestLinkAccounts.linkedAccounts"))
 
   val rootAccountId = "f52c28f32edd309e768494995470343b"
+  val rootAccountName = "Root Account"
 
-  val assetAccountId = "90313cf9a5c83a232cb040ba2fe315be"
+  val assetsAccountId = "90313cf9a5c83a232cb040ba2fe315be"
+  val assetsAccountName = "Assets"
 
   val currentAssetsAccountId = "794a0c0fac9d75f85cf7c99141c9caac"
+  val currentAssetsName = "Current Assets"
 
   object Unlinked {
     val rootAccount = UnlinkedAccount("2.0.0",
       rootAccountId,
-      "Root Account",
+      rootAccountName,
       "ROOT",
       None,
       None)
 
     val assetAccount = UnlinkedAccount("2.0.0",
-      assetAccountId,
-      "Assets",
+      assetsAccountId,
+      assetsAccountName,
       "ASSET",
       Some("Assets"),
       Some(rootAccountId))
 
     val currentAssetsAccount = UnlinkedAccount("2.0.0",
       currentAssetsAccountId,
-      "Current Assets",
+      currentAssetsName,
       "ASSET",
       Some("Current Assets"),
-      Some(assetAccountId))
+      Some(assetsAccountId))
 
     val unlinkedAccountsTestObjects = Seq(rootAccount, assetAccount, currentAssetsAccount)
   }
@@ -65,11 +68,6 @@ class TestObjects(val regDocRoot: Node) {
 }
 
 
-class TestAccountNameParser extends FlatSpec with Matchers {
-  "AccountNameParser" should "disambiguate a top-level account" in {
-
-  }
-}
 
 class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
 
@@ -93,7 +91,7 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
   }
 
   it should "have an assets account and a current assets account" in {
-    testObjects.unlinkedAccounts.get(testObjects.assetAccountId) shouldEqual Some(testObjects.Unlinked.assetAccount)
+    testObjects.unlinkedAccounts.get(testObjects.assetsAccountId) shouldEqual Some(testObjects.Unlinked.assetAccount)
     testObjects.unlinkedAccounts.get(testObjects.currentAssetsAccountId) shouldEqual Some(testObjects.Unlinked.currentAssetsAccount)
   }
 
@@ -108,12 +106,12 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
 
   //test parentId 2 levels down
   it should "correctly nest currentAssets parentId" in {
-    testObjects.unlinkedAccounts.get(testObjects.currentAssetsAccountId).flatMap(_.parentId) shouldEqual Some(testObjects.assetAccountId)
+    testObjects.unlinkedAccounts.get(testObjects.currentAssetsAccountId).flatMap(_.parentId) shouldEqual Some(testObjects.assetsAccountId)
   }
 
   //test parentId 1 level down
   it should "correctly nest Assets parent id" in {
-    testObjects.unlinkedAccounts.get(testObjects.assetAccountId).flatMap(_.parentId) shouldEqual Some(testObjects.rootAccountId)
+    testObjects.unlinkedAccounts.get(testObjects.assetsAccountId).flatMap(_.parentId) shouldEqual Some(testObjects.rootAccountId)
   }
 
   //root account shouldn't have a parentId
@@ -131,7 +129,7 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
   }
 
   "linkAccounts" should "link the asset account" in {
-    testObjects.linkedAccounts.get(testObjects.assetAccountId) shouldEqual Some(testObjects.Linked.assetAccount)
+    testObjects.linkedAccounts.get(testObjects.assetsAccountId) shouldEqual Some(testObjects.Linked.assetAccount)
   }
 
   "linkAccounts" should "link the current assets account" in {
@@ -145,3 +143,16 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
 }
 
 
+class TestAccountNameParser(val regDocRoot: Node) extends FlatSpec with Matchers {
+  case class TestAccountNameParserError(override val msg: String)
+    extends ValidationError(msg)
+  implicit def errorType: String => ValidationError = TestAccountNameParserError.apply
+
+  lazy val testObjects = new TestObjects(regDocRoot)
+  lazy val nameParser = new AccountNameParser(testObjects.linkedAccounts.values.toSeq)
+
+  "AccountNameParser" should "disambiguate a top-level account" in {
+    nameParser
+      .findReferencedAccount(testObjects.rootAccountName) shouldEqual Right(testObjects.Linked.rootAccount)
+  }
+}
