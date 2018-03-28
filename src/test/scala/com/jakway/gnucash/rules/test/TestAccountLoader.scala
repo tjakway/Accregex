@@ -30,32 +30,52 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
       .getOrElse(throw TestLinkAccountsLoadError("Error while loading " +
           "TestLinkAccounts.unlinkedAccounts"))
 
+  lazy val linkedAccounts = Parser
+    .linkAccounts(unlinkedAccounts.values.toSeq)
+    .map(_.map(a => (a.id, a)))
+    .map(_.toMap)
+    .getOrElse(throw TestLinkAccountsLoadError("Error while loading " +
+      "TestLinkAccounts.linkedAccounts"))
+
   object TestObjects {
     val rootAccountId = "f52c28f32edd309e768494995470343b"
-    val rootAccount = UnlinkedAccount("2.0.0",
-      rootAccountId,
-      "Root Account",
-      "ROOT",
-      None,
-      None)
 
     val assetAccountId = "90313cf9a5c83a232cb040ba2fe315be"
-    val assetAccount = UnlinkedAccount("2.0.0",
-      assetAccountId,
-      "Assets",
-      "ASSET",
-      Some("Assets"),
-      Some(rootAccountId))
 
     val currentAssetsAccountId = "794a0c0fac9d75f85cf7c99141c9caac"
-    val currentAssetsAccount = UnlinkedAccount("2.0.0",
-      currentAssetsAccountId,
-      "Current Assets",
-      "ASSET",
-      Some("Current Assets"),
-      Some(assetAccountId))
 
-    val unlinkedAccountsTestObjects = Seq(assetAccount, currentAssetsAccount)
+    object Unlinked {
+      val rootAccount = UnlinkedAccount("2.0.0",
+        rootAccountId,
+        "Root Account",
+        "ROOT",
+        None,
+        None)
+
+      val assetAccount = UnlinkedAccount("2.0.0",
+        assetAccountId,
+        "Assets",
+        "ASSET",
+        Some("Assets"),
+        Some(rootAccountId))
+
+      val currentAssetsAccount = UnlinkedAccount("2.0.0",
+        currentAssetsAccountId,
+        "Current Assets",
+        "ASSET",
+        Some("Current Assets"),
+        Some(assetAccountId))
+
+      val unlinkedAccountsTestObjects = Seq(rootAccount, assetAccount, currentAssetsAccount)
+    }
+
+    object Linked {
+      val rootAccount = Unlinked.rootAccount.link(None)
+      val assetAccount = Unlinked.assetAccount.link(Some(rootAccount))
+      val currentAssetsAccount = Unlinked.currentAssetsAccount.link(Some(assetAccount))
+
+      val linkedAccountsTestObjects = Seq(rootAccount, assetAccount, currentAssetsAccount)
+    }
   }
   import TestObjects._
 
@@ -70,16 +90,17 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
   }
 
   it should "have an assets account and a current assets account" in {
-    unlinkedAccounts.get(assetAccountId) shouldEqual Some(assetAccount)
-    unlinkedAccounts.get(currentAssetsAccountId) shouldEqual Some(currentAssetsAccount)
+    unlinkedAccounts.get(assetAccountId) shouldEqual Some(Unlinked.assetAccount)
+    unlinkedAccounts.get(currentAssetsAccountId) shouldEqual Some(Unlinked.currentAssetsAccount)
   }
 
   it should "contain the expected unlinked accounts" in {
-    unlinkedAccounts.values.toSet.intersect(unlinkedAccountsTestObjects.toSet) shouldEqual unlinkedAccountsTestObjects.toSet
+    unlinkedAccounts.values.toSet.intersect(
+      Unlinked.unlinkedAccountsTestObjects.toSet) shouldEqual Unlinked.unlinkedAccountsTestObjects.toSet
   }
 
   it should "contain the root account" in {
-    unlinkedAccounts.get(rootAccountId) shouldEqual Some(rootAccount)
+    unlinkedAccounts.get(rootAccountId) shouldEqual Some(Unlinked.rootAccount)
   }
 
   //test parentId 2 levels down
@@ -101,9 +122,26 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
     * Parser.linkAccounts tests
     */
 
-  "linkAccounts" should "link top-level accounts" in {
 
+  "linkAccounts" should "link the root account" in {
+    linkedAccounts.get(rootAccountId) shouldEqual Some(Linked.rootAccount)
   }
+
+  "linkAccounts" should "link the asset account" in {
+    linkedAccounts.get(assetAccountId) shouldEqual Some(Linked.assetAccount)
+  }
+
+  "linkAccounts" should "link the current assets account" in {
+    linkedAccounts.get(currentAssetsAccountId) shouldEqual Some(Linked.currentAssetsAccount)
+  }
+
+  "linkAccounts" should "construct a walkable tree from the current assets account" in {
+     linkedAccounts.get(currentAssetsAccountId)
+       .flatMap(_.parent.flatMap(_.parent)) shouldEqual Some(Linked.rootAccount)
+  }
+
+
+
 }
 
 
