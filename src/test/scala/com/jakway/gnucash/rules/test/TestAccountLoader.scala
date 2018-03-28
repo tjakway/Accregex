@@ -128,15 +128,15 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
     testObjects.linkedAccounts.get(testObjects.rootAccountId) shouldEqual Some(testObjects.Linked.rootAccount)
   }
 
-  "linkAccounts" should "link the asset account" in {
+  it should "link the asset account" in {
     testObjects.linkedAccounts.get(testObjects.assetsAccountId) shouldEqual Some(testObjects.Linked.assetAccount)
   }
 
-  "linkAccounts" should "link the current assets account" in {
+  it should "link the current assets account" in {
     testObjects.linkedAccounts.get(testObjects.currentAssetsAccountId) shouldEqual Some(testObjects.Linked.currentAssetsAccount)
   }
 
-  "linkAccounts" should "construct a walkable tree from the current assets account" in {
+  it should "construct a walkable tree from the current assets account" in {
      testObjects.linkedAccounts.get(testObjects.currentAssetsAccountId)
        .flatMap(_.parent.flatMap(_.parent)) shouldEqual Some(testObjects.Linked.rootAccount)
   }
