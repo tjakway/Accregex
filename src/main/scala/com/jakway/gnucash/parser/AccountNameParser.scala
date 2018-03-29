@@ -55,12 +55,25 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
             s"  Too many candidates remain: $candidates"))
         } else {
 
-          val res = acc.filter { u =>
-            //filter for the lowest-level accounts,
-            //i.e. accounts that are not parents of any other accumulated accounts
-            acc.foldLeft(false) {
-              case (cond, thisItem) => cond || thisItem.parent == u
+          //for each item, check if it's the parent of an item in the list and if it's
+          //a child of an item in the list
+          //TODO: since we know how the results are going to be used we could exit early
+          val analyzedAcc = acc.map { thisItem =>
+            val isParent = acc.foldLeft(false) {
+              case (cond, q) => cond || thisItem.parent == q
             }
+
+            val isChildOfCandidate = thisItem.parent.map(acc.contains(_)).getOrElse(false)
+
+            (thisItem, isParent, isChildOfCandidate)
+          }
+
+          //filter for accounts at the bottom of the hierarchy:
+          //that is, that are children of other accounts in the list
+          //but are not parents of any accounts in the list
+          val res = analyzedAcc.flatMap {
+            case (a, false, true) => Seq(a)
+            case _ => Seq()
           }
 
           //implementation error
