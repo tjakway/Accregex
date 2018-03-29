@@ -21,7 +21,9 @@ case class LinkedAccount(version: String,
                    name: String,
                    accType: String,
                    description: Option[String],
-                   parent: Option[LinkedAccount])
+                   parent: Option[LinkedAccount]) {
+  def isRootAccount: Boolean = parent.isEmpty
+}
 
 case class Transaction(version: String, id: String)
 

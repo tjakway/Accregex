@@ -5,59 +5,80 @@ import scala.annotation.tailrec
 class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
                         val divider: String = ":") {
 
-  def findReferencedAccount: ValidateF[String, LinkedAccount] =
-    (accountStr: String, errorType: String => ValidationError) => {
-    val accounts = accountStr.split(divider)
+  class AccountNameParserError(override val msg: String)
+    extends ValidationError(msg)
 
-    @tailrec
-    def lookup(candidates: Seq[LinkedAccount],
-               namesRemaining: Seq[String]):
-        Either[ValidationError, LinkedAccount]
-      = namesRemaining.headOption match {
-        case None if candidates.isEmpty =>
-          Left(errorType(s"Could not find account $accountStr"))
-        case None if candidates.length > 1 =>
-          Left(errorType(s"More than 1 account matched the name $accountStr"))
-        case None if candidates.length == 1 => Right(candidates.head)
+  case class BadAccountStringError(override val msg: String)
+    extends ValidationError(msg)
 
-        case Some(name) => {
+  case class NoMatchesFoundError(override val msg: String)
+    extends ValidationError(msg)
 
-          val currentCandidates = linkedAccounts.filter(_.name == name)
-          val accExists = !linkedAccounts.isEmpty
+  case class TooManyMatchesFoundError(override val msg: String)
+    extends ValidationError(msg)
 
-          //the new candidates are any of the current candidates that
-          //have parents with account names matching the name segment
-          //we're currently looking at
-          lazy val newCandidates =
-            candidates.filter(!_.parent.filter(_.name == name).isEmpty)
+  case class RootAccountError(override val msg: String, a: LinkedAccount)
+    extends ValidationError(msg)
 
-          val numRemainingNames = namesRemaining.length - 1
+  def findReferencedAccount(accountStr: String): Either[ValidationError, LinkedAccount] = {
+    val splitAccountStr = accountStr.split(divider)
 
-          lazy val errMsg = s"Could not find account matching $accountStr: " +
-                s"got up to section $name with candidates $candidates"
+    //TODO: could make other types of matches possible (e.g. case-insensitive, wildcards)
+    //filter on name exact match
+    def filterCandidates(candidates: Seq[LinkedAccount], name: String): Seq[LinkedAccount] =
+      candidates.filter(_.name.trim == name.trim)
 
-          //check if this is the last candidate
-          if(numRemainingNames == 0) {
-            //if so, stop recursing: nowhere left to go
-
-            //did we find it?
-            if(currentCandidates.length == 0) {
-              Left(errorType(errMsg + " (numNamesRemaining == 0)"))
-            } else if(currentCandidates.length > 1) {
-              Left(errorType(errMsg + " (too many candidates left--expected exactly 1)"))
-            } else {
-              //found it
-              Right(candidates.head)
-            }
-          }
-          else if(newCandidates.isEmpty && accExists) {
-              Left(errorType(errMsg))
-          } else {
-            lookup(newCandidates, namesRemaining.tail)
-          }
-        }
+    //tail, but don't throw an exception if empty
+    def tailOrEmpty[A](s: Seq[A]): Seq[A] =
+      if(s.isEmpty) {
+        Seq()
+      } else {
+        s.tail
       }
 
-    lookup(Seq(), accounts)
+    @tailrec
+    def helper(candidates: Seq[LinkedAccount],
+               namesRemaining: Seq[String]): Either[ValidationError, LinkedAccount] = {
+      val thisName: Option[String] = namesRemaining.headOption
+
+      if(namesRemaining.isEmpty) {
+        if(candidates.length == 0) {
+
+          val errMsg = s"No candidates found that match $accountStr: " +
+            s"no more names to match and no candidates left"
+          Left(NoMatchesFoundError(errMsg))
+
+        } else if(candidates.length > 1) {
+
+          Left(TooManyMatchesFoundError(s"Account string $accountStr was not specific enough." +
+            s"  Too many candidates remain: $candidates"))
+        } else {
+          Right(candidates.head)
+        }
+      } else {
+        val thisName = namesRemaining.head
+        val nextNames = tailOrEmpty(namesRemaining)
+
+        val nextCandidates = filterCandidates(candidates, thisName)
+
+        helper(nextCandidates, nextNames)
+      }
+    }
+
+    //validate input
+    if(splitAccountStr.isEmpty) {
+      Left(BadAccountStringError(s"$accountStr does not contain any entries"))
+    } else {
+      helper(linkedAccounts, splitAccountStr)
+        //make sure we're not returning the root account
+        .flatMap { x =>
+          if(x.isRootAccount) {
+            val errMsg = s"Only the root account matches $accountStr, refusing to return it"
+            Left(RootAccountError(errMsg, x))
+          } else {
+            Right(x)
+          }
+        }
+    }
   }
 }
