@@ -90,9 +90,10 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
         val thisName = namesRemaining.head
         val nextNames = tailOrEmpty(namesRemaining)
 
-        val nextCandidates = filterCandidates(candidates, thisName).flatMap(_.parent.toSeq)
+        val currentMatches = filterCandidates(candidates, thisName)
+        val nextCandidates = currentMatches.flatMap(_.parent.toSeq)
 
-        helper(acc ++ nextCandidates)(nextCandidates, nextNames)
+        helper(acc ++ currentMatches)(nextCandidates, nextNames)
       }
     }
 
