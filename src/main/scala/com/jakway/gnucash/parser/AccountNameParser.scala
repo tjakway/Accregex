@@ -20,11 +20,13 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
   case class RootAccountError(override val msg: String, a: LinkedAccount)
     extends ValidationError(msg)
 
+  def splitAccountStr(accountStr: String) = accountStr
+    .split(divider)
+    .filter(_.trim != divider)
+    .filter(!_.isEmpty)
+
   def findReferencedAccount(accountStr: String): Either[ValidationError, LinkedAccount] = {
-    val splitAccountStr = accountStr
-      .split(divider)
-      .filter(_.trim != divider)
-      .filter(!_.isEmpty)
+    val sAccountStr = splitAccountStr(accountStr)
 
     //TODO: could make other types of matches possible (e.g. case-insensitive, wildcards)
     //filter on name exact match
@@ -95,10 +97,10 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
     }
 
     //validate input
-    if(splitAccountStr.isEmpty) {
+    if(sAccountStr.isEmpty) {
       Left(BadAccountStringError(s"$accountStr does not contain any entries"))
     } else {
-      helper(Seq())(linkedAccounts, splitAccountStr)
+      helper(Seq())(linkedAccounts, sAccountStr)
         //make sure we're not returning the root account
         .flatMap { x =>
           if(x.isRootAccount) {
