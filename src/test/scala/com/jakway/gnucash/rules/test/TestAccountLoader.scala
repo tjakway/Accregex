@@ -163,4 +163,10 @@ class TestAccountNameParser(val regDocRoot: Node) extends FlatSpec with Matchers
 
     nameParser.findReferencedAccount(str) shouldEqual Right(testObjects.Linked.assetAccount)
   }
+
+  it should "disambiguate a third-level account" in {
+    val str = "Assets:Current Assets"
+
+    nameParser.findReferencedAccount(str) shouldEqual Right(testObjects.Linked.currentAssetsAccount)
+  }
 }

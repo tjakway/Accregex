@@ -37,7 +37,8 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
       }
 
     @tailrec
-    def helper(candidates: Seq[LinkedAccount],
+    def helper(acc: Seq[LinkedAccount])
+              (candidates: Seq[LinkedAccount],
                namesRemaining: Seq[String]): Either[ValidationError, LinkedAccount] = {
       val thisName: Option[String] = namesRemaining.headOption
 
@@ -53,15 +54,33 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
           Left(TooManyMatchesFoundError(s"Account string $accountStr was not specific enough." +
             s"  Too many candidates remain: $candidates"))
         } else {
-          Right(candidates.head)
+
+          val res = acc.filter { u =>
+            //filter for the lowest-level accounts,
+            //i.e. accounts that are not parents of any other accumulated accounts
+            acc.foldLeft(false) {
+              case (cond, thisItem) => cond || thisItem.parent == u
+            }
+          }
+
+          //implementation error
+          case class AccumulatorError(override val msg: String)
+            extends AccountNameParserError(msg)
+
+          if(res.length == 1) {
+            Right(res.head)
+          } else {
+            Left(AccumulatorError("Expected accumulator to contain exactly 1 item but got " +
+              s"$res"))
+          }
         }
       } else {
         val thisName = namesRemaining.head
         val nextNames = tailOrEmpty(namesRemaining)
 
-        val nextCandidates = filterCandidates(candidates, thisName)
+        val nextCandidates = filterCandidates(candidates, thisName).flatMap(_.parent.toSeq)
 
-        helper(nextCandidates, nextNames)
+        helper(acc ++ nextCandidates)(nextCandidates, nextNames)
       }
     }
 
@@ -69,7 +88,7 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
     if(splitAccountStr.isEmpty) {
       Left(BadAccountStringError(s"$accountStr does not contain any entries"))
     } else {
-      helper(linkedAccounts, splitAccountStr)
+      helper(Seq())(linkedAccounts, splitAccountStr)
         //make sure we're not returning the root account
         .flatMap { x =>
           if(x.isRootAccount) {
