@@ -21,12 +21,16 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
     extends ValidationError(msg)
 
   def findReferencedAccount(accountStr: String): Either[ValidationError, LinkedAccount] = {
-    val splitAccountStr = accountStr.split(divider)
+    val splitAccountStr = accountStr
+      .split(divider)
+      .filter(_.trim != divider)
+      .filter(!_.isEmpty)
 
     //TODO: could make other types of matches possible (e.g. case-insensitive, wildcards)
     //filter on name exact match
     def filterCandidates(candidates: Seq[LinkedAccount], name: String): Seq[LinkedAccount] =
-      candidates.filter(_.name.trim == name.trim)
+      candidates
+        .filter(_.name.trim == name.trim)
 
     //tail, but don't throw an exception if empty
     def tailOrEmpty[A](s: Seq[A]): Seq[A] =
@@ -58,23 +62,16 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
           //for each item, check if it's the parent of an item in the list and if it's
           //a child of an item in the list
           //TODO: since we know how the results are going to be used we could exit early
-          val analyzedAcc = acc.map { thisItem =>
+
+          //filter for accounts that are not parents of any accounts in the list
+          val res = acc.filter { thisItem =>
             val isParent = acc.foldLeft(false) {
-              case (cond, q) => cond || thisItem.parent == q
+              case (cond, q) => cond || q.parent == thisItem
             }
 
-            val isChildOfCandidate = thisItem.parent.map(acc.contains(_)).getOrElse(false)
-
-            (thisItem, isParent, isChildOfCandidate)
+            !isParent
           }
 
-          //filter for accounts at the bottom of the hierarchy:
-          //that is, that are children of other accounts in the list
-          //but are not parents of any accounts in the list
-          val res = analyzedAcc.flatMap {
-            case (a, false, true) => Seq(a)
-            case _ => Seq()
-          }
 
           //implementation error
           case class AccumulatorError(override val msg: String)
