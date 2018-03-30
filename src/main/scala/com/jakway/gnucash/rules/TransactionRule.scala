@@ -36,7 +36,19 @@ class RuleApplicator(val destAccount: LinkedAccount, val rules: Set[LinkedTransa
     * @return the rule to apply or None if no rule matches
     */
   def whichRule(transactionInput: TransactionInput): Either[ValidationError, Option[LinkedTransactionRule]] = {
+    val matchingRules = rules.filter(ruleMatches(transactionInput))
 
+    //no matches
+    if(matchingRules.isEmpty) {
+      Right(None)
+
+    //matches found--need to check that there's exactly 1
+    //rule to apply
+    } else {
+      new RuleOrdering(matchingRules.toSeq)
+        .getHighestPriority()
+        .map(Some(_))
+    }
   }
 
   def ruleMatches(i: TransactionInput)(rule: LinkedTransactionRule): Boolean = {
