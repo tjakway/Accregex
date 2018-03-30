@@ -20,10 +20,19 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
   case class RootAccountError(override val msg: String, a: LinkedAccount)
     extends ValidationError(msg)
 
+  /**
+    * Returns account names from MOST -> LEAST specific
+    * NOTE: this is the opposite of how they are written in the application, i.e.
+    * Assets:Current Assets:My Banks:Bank of America
+    * becomes Seq(Bank of America, My Banks, Current Assets, Assets)
+    * @param accountStr
+    * @return
+    */
   def splitAccountStr(accountStr: String) = accountStr
     .split(divider)
     .filter(_.trim != divider)
     .filter(!_.isEmpty)
+    .reverse
 
   def findReferencedAccount(accountStr: String): Either[ValidationError, LinkedAccount] = {
     val sAccountStr = splitAccountStr(accountStr)
