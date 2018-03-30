@@ -2,6 +2,7 @@ package com.jakway.gnucash.rules
 
 import java.util.Comparator
 
+import com.jakway.gnucash.parser.rules.TransactionInput
 import com.jakway.gnucash.parser.{LinkedAccount, ValidationError}
 
 import scala.util.matching.Regex
@@ -35,7 +36,7 @@ class RuleApplicator(val destAccount: LinkedAccount, val rules: Set[LinkedTransa
     * @param transactionInput
     * @return the rule to apply or None if no rule matches
     */
-  def whichRule(transactionInput: TransactionInput): Either[ValidationError, Option[LinkedTransactionRule]] = {
+  private def whichRule(transactionInput: TransactionInput): Either[ValidationError, Option[LinkedTransactionRule]] = {
     val matchingRules = rules.filter(ruleMatches(transactionInput))
 
     //no matches
@@ -51,7 +52,7 @@ class RuleApplicator(val destAccount: LinkedAccount, val rules: Set[LinkedTransa
     }
   }
 
-  def ruleMatches(i: TransactionInput)(rule: LinkedTransactionRule): Boolean = {
+  private def ruleMatches(i: TransactionInput)(rule: LinkedTransactionRule): Boolean = {
     i.destAccount == destAccount &&
     i.sourceAccount == rule.sourceAccount &&
     rule.pattern.findFirstMatchIn(i.description).isDefined
@@ -60,9 +61,6 @@ class RuleApplicator(val destAccount: LinkedAccount, val rules: Set[LinkedTransa
 }
 
 object RuleApplicator {
-  case class TransactionInput(description: String,
-                              sourceAccount: LinkedAccount,
-                              destAccount: LinkedAccount)
 
   class RuleOrdering(override val toOrder: Seq[LinkedTransactionRule])
     extends ZeroHighPriority[LinkedTransactionRule](toOrder) {
