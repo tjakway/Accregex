@@ -106,7 +106,7 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
       }
     }
 
-    //validate input
+    //validate inpue
     if(sAccountStr.isEmpty) {
       Left(BadAccountStringError(s"$accountStr does not contain any entries"))
     } else {
