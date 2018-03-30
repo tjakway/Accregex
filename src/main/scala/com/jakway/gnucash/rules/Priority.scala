@@ -2,6 +2,8 @@ package com.jakway.gnucash.rules
 
 import com.jakway.gnucash.parser.ValidationError
 
+import scala.reflect.ClassTag
+
 abstract class UniquePriorityOrdering[A, B](val toOrder: Seq[A]) {
   class UniquePriorityOrderingError(override val msg: String)
     extends ValidationError(msg)
@@ -26,7 +28,7 @@ abstract class UniquePriorityOrdering[A, B](val toOrder: Seq[A]) {
     * @return the item with the highest priority
     *         Error if >1 item has the highest priority
     */
-  def getHighestPriority(): Either[ValidationError, A] = {
+  def getHighestPriority()(implicit tag: ClassTag[A]): Either[ValidationError, A] = {
     import scala.util.Sorting
 
     if(toOrder.length < 0) {

@@ -30,7 +30,12 @@ class RuleApplicator(val destAccount: LinkedAccount, val rules: Set[LinkedTransa
   class RuleApplicatorError(override val msg: String)
     extends ValidationError(msg)
 
-  def whichRule(transactionInput: TransactionInput): Either[ValidationError, LinkedTransactionRule] = {
+  /**
+    *
+    * @param transactionInput
+    * @return the rule to apply or None if no rule matches
+    */
+  def whichRule(transactionInput: TransactionInput): Either[ValidationError, Option[LinkedTransactionRule]] = {
 
   }
 
@@ -50,7 +55,7 @@ object RuleApplicator {
   class RuleOrdering(override val toOrder: Seq[LinkedTransactionRule])
     extends ZeroHighPriority[LinkedTransactionRule](toOrder) {
 
-    override def getPriority(obj: LinkedTransactionRule): Int = obj.priority
+    override def getPriority(obj: LinkedTransactionRule): Double = obj.priority
   }
 }
 
