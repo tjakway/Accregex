@@ -47,5 +47,10 @@ object RuleApplicator {
                               sourceAccount: LinkedAccount,
                               destAccount: LinkedAccount)
 
+  class RuleOrdering(override val toOrder: Seq[LinkedTransactionRule])
+    extends ZeroHighPriority[LinkedTransactionRule](toOrder) {
+
+    override def getPriority(obj: LinkedTransactionRule): Int = obj.priority
+  }
 }
 

@@ -62,12 +62,12 @@ abstract class UniquePriorityOrdering[A, B](val toOrder: Seq[A]) {
   * Lowest number = highest priority
   */
 abstract class ZeroHighPriority[A](override val toOrder: Seq[A])
-  extends UniquePriorityOrdering[A, Int](toOrder) {
+  extends UniquePriorityOrdering[A, Double](toOrder) {
 
-  override implicit val ordering: Ordering[Int] = new Ordering[Int] {
+  override implicit val ordering: Ordering[Double] = new Ordering[Double] {
     //the opposite of what you would normally think
     //since 0 priority = highest
-    override def compare(x: Int, y: Int): Int = {
+    override def compare(x: Double, y: Double): Int = {
       val xHigher = -1
       val xLower = 1
       val equal = 0
