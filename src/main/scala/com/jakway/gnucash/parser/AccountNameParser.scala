@@ -70,18 +70,19 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
             s"  Too many candidates remain: $candidates"))
         } else {
 
-          //for each item, check if it's the parent of an item in the list and if it's
-          //a child of an item in the list
-          //TODO: since we know how the results are going to be used we could exit early
-
           //filter for accounts that are not parents of any accounts in the list
-          val res = acc.filter { thisItem =>
+          val res = acc.map { thisItem =>
             val isParent = acc.foldLeft(false) {
-              case (cond, q) => cond || q.parent == thisItem
+              case (cond, q) => cond || q.parent.filter(_ == thisItem).isDefined
             }
 
-            !isParent
-          }
+            (thisItem, isParent)
+            //traverse the list twice, once to mark items that are parents
+            //and a second time to filter them
+            //we traverse twice in case the first pass would filter early and
+            //cause us to miss items that are parents of items at the front of
+            //the list
+          }.filter(!_._2)
 
 
           //implementation error
@@ -89,7 +90,7 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
             extends AccountNameParserError(msg)
 
           if(res.length == 1) {
-            Right(res.head)
+            Right(res.head._1)
           } else {
             Left(AccumulatorError("Expected accumulator to contain exactly 1 item but got " +
               s"$res"))
