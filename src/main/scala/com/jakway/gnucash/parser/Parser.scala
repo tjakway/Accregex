@@ -1,8 +1,9 @@
 package com.jakway.gnucash.parser
 
+import com.jakway.gnucash.parser.rules.TransactionInput
 import com.jakway.util.XMLUtils
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import scala.xml.Node
 
 case class UnlinkedAccount(version: String,
@@ -160,8 +161,6 @@ class Parser {
       }
     }
   }
-
-
 }
 
 object Parser {
@@ -238,6 +237,94 @@ object Parser {
           s" a forest): $rootNodes"))
       }
     }
+  }
+
+  def parseTransaction(accounts: Map[String, LinkedAccount])(n: Node): Either[ValidationError, TransactionInput] = {
+    import NodeTests._
+
+    case class ParseTransactionError(override val msg: String)
+      extends ValidationError(msg)
+    implicit def errorType: String => ValidationError = ParseTransactionError.apply
+
+    /**
+      * @param s
+      * @return the split id and the account id
+      */
+    def parseSplit(s: Node): Either[ValidationError, (String, String, Double)] = {
+      val res = for {
+        _ <- hasNamespace((s, "trn"))
+
+        idNode <- getElem((s, "id"))
+        _ <- hasNamespace((idNode, "split"))
+        _ <- expectAttribute((idNode, "type", "guid"))
+        id <- getNodeText(idNode)
+
+        accountNode <- getElem((s, "account"))
+        _ <- hasNamespace((accountNode, "split"))
+        _ <- expectAttribute((accountNode, "type", "guid"))
+        accountId <- getNodeText(accountNode)
+
+        valueNode <- getElem((s, "value"))
+        _ <- hasNamespace((valueNode, "split"))
+        value <- getNodeText(valueNode)
+      } yield {
+        (id, accountId, value)
+      }
+
+      res.flatMap {
+        case (id, accountId, value) => {
+          Try(value.toDouble) match {
+            case Success(v) => Right((id, accountId, v))
+            case Failure(e) => {
+              val msg = s"Could not convert transaction value $value to double in " +
+                s"node $s"
+              Left(errorType(msg))
+            }
+          }
+        }
+      }
+    }
+
+    def lookupAccount(id: String): Either[ValidationError, LinkedAccount] = {
+      accounts.get(id) match {
+        case Some(a) => Right(a)
+        case None => Left(errorType(s"Could not find account with id $id in " +
+          s"map $accounts"))
+      }
+    }
+
+    val allSplits: Either[ValidationError, Seq[(String, LinkedAccount, Double)]] =
+      for {
+      _ <- hasNamespace((n, "gnc"))
+
+      //check & extract the transaction id
+      idNode <- getElem((n, "id"))
+      _ <- hasNamespace((idNode, "trn"))
+      _ <- expectAttribute((idNode, "type", "guid"))
+      id <- getNodeText(idNode)
+
+      //check & extract the description (memo)
+      descNode <- getElem((n, "description"))
+      _ <- hasNamespace((descNode, "trn"))
+      description <- getNodeText(descNode)
+
+      splitsRoot <- getElem((n, "splits"))
+      _ <- hasNamespace((splitsRoot, "trn"))
+
+      splitNodes <- getElems((splitsRoot, "split"))
+      parsedSplits <- ValidationError.accumulateEithers(splitNodes.map(parseSplit))
+
+      lookedUpSplits <- parsedSplits.map {
+        case (splitId, accountId, value) => lookupAccount(accountId)
+          .map(l => (splitId, l, value))
+      }
+    } yield {
+      lookedUpSplits
+    }
+
+
+
+
   }
 
 }

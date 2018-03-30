@@ -47,4 +47,8 @@ object ValidationError {
 
     in.foldLeft(empty)(f)
   }
+
+
+  def accumulateEithers[A, B](in: Seq[Either[A, B]]):
+    Either[Seq[A], Seq[B]] = accumulateEithers(in.map(_.map(Seq(_))))
 }
