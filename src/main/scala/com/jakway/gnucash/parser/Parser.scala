@@ -239,7 +239,8 @@ object Parser {
     }
   }
 
-  def parseTransaction(accounts: Map[String, LinkedAccount])(n: Node): Either[ValidationError, TransactionInput] = {
+  def parseTransaction(accounts: Map[String, LinkedAccount])(n: Node):
+    Either[ValidationError, TransactionInput] = {
     import NodeTests._
 
     case class ParseTransactionError(override val msg: String)
@@ -293,7 +294,7 @@ object Parser {
       }
     }
 
-    val allSplits: Either[ValidationError, Seq[(String, LinkedAccount, Double)]] =
+    val parsedSplits: Either[ValidationError, Seq[(String, String, Double)]] =
       for {
       _ <- hasNamespace((n, "gnc"))
 
@@ -312,17 +313,17 @@ object Parser {
       _ <- hasNamespace((splitsRoot, "trn"))
 
       splitNodes <- getElems((splitsRoot, "split"))
-      parsedSplits <- ValidationError.accumulateEithers(splitNodes.map(parseSplit))
-
-      lookedUpSplits <- parsedSplits.map {
-        case (splitId, accountId, value) => lookupAccount(accountId)
-          .map(l => (splitId, l, value))
-      }
+      parsedSplits <- ValidationError.accumulateAndWrap(splitNodes.map(parseSplit))
     } yield {
-      lookedUpSplits
+        parsedSplits
     }
 
-
+    val splits = parsedSplits.flatMap { x =>
+      ValidationError.accumulateAndWrap(x.map {
+        case (splitId, accountId, value) => lookupAccount(accountId)
+          .map(l => (splitId, l, value))
+      })
+    }
 
 
   }

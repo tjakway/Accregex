@@ -8,6 +8,17 @@ class ValidationError(val msg: String)
   val stackTrace = StackTraceString.apply(new Throwable())
 }
 
+class MultiValidationError(val errors: Seq[ValidationError])
+  extends ValidationError(s"Errors: $errors")
+
+object MultiValidationError {
+  def wrap[B](in: Either[Seq[ValidationError], Seq[B]]):
+    Either[ValidationError, Seq[B]] = in match {
+    case Left(xs) => Left(new MultiValidationError(xs))
+    case Right(xs) => Right(xs)
+  }
+}
+
 object ValidationError {
   /**
     * TODO: alternatively, make the Throwable argument to StackTraceString.apply in the class
@@ -51,4 +62,25 @@ object ValidationError {
 
   def accumulateEithers[A, B](in: Seq[Either[A, B]]):
     Either[Seq[A], Seq[B]] = accumulateEithers(in.map(_.map(Seq(_))))
+
+  def accumulateEithers[A, B](in: Seq[Either[Seq[A], Seq[B]]]):
+    Either[Seq[A], Seq[B]] = {
+    val empty: Seq[Either[A, Seq[B]]] = Seq()
+
+    //flatten each Left[Seq[A]] into a Seq[Left[A]]
+    val flattenedLefts: Seq[Either[A, Seq[B]]] = in.foldLeft(empty) {
+      case (acc, Right(xs)) => acc.+:(Right(xs))
+      case (acc, Left(xs)) => acc ++ xs.map(Left(_))
+    }
+
+    accumulateEithers(flattenedLefts)
+  }
+
+  def accumulateAndWrap[B](in: Seq[Either[ValidationError, B]]):
+    Either[ValidationError, Seq[B]] = {
+    accumulateEithers(in) match {
+      case Left(xs) => Left(new MultiValidationError(xs))
+      case Right(xs) => Right(xs)
+    }
+  }
 }
