@@ -289,7 +289,12 @@ object Parser {
       _ <- hasNamespace((n, "gnc"))
 
       //check & extract the transaction id
-      idNode <- getElem((n, "id"))
+      //make sure to exclude the ids of splits
+      idNode <- queryElem((n, { x =>
+        x.label == "id" &&
+        hasNamespace((x, "trn")).isRight &&
+        expectAttribute((x, "type", "guid")).isRight
+      }))
       _ <- hasNamespace((idNode, "trn"))
       _ <- expectAttribute((idNode, "type", "guid"))
       id <- getNodeText(idNode)
