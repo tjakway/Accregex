@@ -24,3 +24,5 @@ class TestLinkAccountsRegDocXML extends TestLinkAccounts(regDocRoot)
 class TestParserRegDocXML extends TestParser(regDocRoot)
 
 class TestAccountNameParserRegDocXML extends TestAccountNameParser(regDocRoot)
+
+class TestXMLAPIRegDocXML extends TestXMLAPI(BooksLiteral.books)

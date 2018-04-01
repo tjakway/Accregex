@@ -245,6 +245,5 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
 
     transactions.toSet shouldEqual testData.transactions
   }
-
 }
 
