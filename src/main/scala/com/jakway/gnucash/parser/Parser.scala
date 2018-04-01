@@ -250,7 +250,7 @@ object Parser {
       * @return the split id and the account id
       */
     def parseSplit(s: Node): Either[ValidationError, (String, String, Double)] = {
-      val res = for {
+      for {
         _ <- hasNamespace((s, "trn"))
 
         idNode <- getElem((s, "id"))
@@ -265,22 +265,11 @@ object Parser {
 
         valueNode <- getElem((s, "value"))
         _ <- hasNamespace((valueNode, "split"))
-        value <- getNodeText(valueNode)
+        valueStr <- getNodeText(valueNode)
+
+        value <- FractionParser.parseFraction(valueStr)
       } yield {
         (id, accountId, value)
-      }
-
-      res.flatMap {
-        case (id, accountId, value) => {
-          Try(value.toDouble) match {
-            case Success(v) => Right((id, accountId, v))
-            case Failure(e) => {
-              val msg = s"Could not convert transaction value $value to double in " +
-                s"node $s"
-              Left(errorType(msg))
-            }
-          }
-        }
       }
     }
 
