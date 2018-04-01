@@ -1,6 +1,6 @@
 package com.jakway.gnucash.parser
 
-import com.jakway.gnucash.parser.rules.TransactionInput
+import com.jakway.gnucash.parser.rules.{Split, Transaction}
 import com.jakway.util.XMLUtils
 
 import scala.util.{Failure, Success, Try}
@@ -25,8 +25,6 @@ case class LinkedAccount(version: String,
                    parent: Option[LinkedAccount]) {
   def isRootAccount: Boolean = parent.isEmpty
 }
-
-case class Transaction(version: String, id: String)
 
 class Parser {
   import NodeTests._
@@ -240,7 +238,7 @@ object Parser {
   }
 
   def parseTransaction(accounts: Map[String, LinkedAccount])(n: Node):
-    Either[ValidationError, TransactionInput] = {
+    Either[ValidationError, Transaction] = {
     import NodeTests._
 
     case class ParseTransactionError(override val msg: String)
@@ -294,7 +292,10 @@ object Parser {
       }
     }
 
-    val parsedSplits: Either[ValidationError, Seq[(String, String, Double)]] =
+    val parsedTransactionData: Either[ValidationError,
+                             (String, String, Seq[(String, String, Double)])] =
+      //parsing the transaction node
+      //TODO: extract date
       for {
       _ <- hasNamespace((n, "gnc"))
 
@@ -315,17 +316,20 @@ object Parser {
       splitNodes <- getElems((splitsRoot, "split"))
       parsedSplits <- ValidationError.accumulateAndWrap(splitNodes.map(parseSplit))
     } yield {
-        parsedSplits
+        (id, description, parsedSplits)
     }
 
-    val splits = parsedSplits.flatMap { x =>
-      ValidationError.accumulateAndWrap(x.map {
-        case (splitId, accountId, value) => lookupAccount(accountId)
-          .map(l => (splitId, l, value))
-      })
+    parsedTransactionData.flatMap {
+      case (transactionId, description, splitData) => {
+        for {
+          splits <- ValidationError.accumulateAndWrap(splitData.map {
+            case (splitId, accountId, value) => lookupAccount(accountId)
+              .map(l => Split(splitId, l, value))
+          })
+        } yield {
+          Transaction(transactionId, description, splits)
+        }
+      }
     }
-
-
   }
-
 }
