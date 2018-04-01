@@ -237,6 +237,11 @@ object Parser {
     }
   }
 
+  /**
+    * @param accounts a map of account id -> account
+    * @param n
+    * @return
+    */
   def parseTransaction(accounts: Map[String, LinkedAccount])(n: Node):
     Either[ValidationError, Transaction] = {
     import NodeTests._

@@ -199,7 +199,7 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
     val res: Either[ValidationError, (Seq[LinkedAccount], Transaction)] = for {
       accounts <- parser.parseAccountNodes(regDocRoot)
           .flatMap(Parser.linkAccounts)
-      accountMap = accounts.map(a => (a.name, a)).toMap
+      accountMap = accounts.map(a => (a.id, a)).toMap
 
       transactionNodes <- getElems((book, "transaction"))
 
