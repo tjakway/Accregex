@@ -69,10 +69,10 @@ case class Transaction(id: String,
     } == 0
   }
 
-  private def noRootAccount: Boolean = {
+  private def hasRootAccount: Boolean = {
     //no transaction should touch the root account directly
     splits.foldLeft(false) {
-      case (acc, Split(_, on, _)) => acc || on.parent.isEmpty
+      case (acc, Split(_, on, _)) => acc || on.isRootAccount
     }
   }
 
@@ -80,7 +80,7 @@ case class Transaction(id: String,
     * for a transaction to be valid all splits must sum to 0
     * @return
     */
-  def isValid: Boolean = splitsSumZero && noRootAccount
+  def isValid: Boolean = splitsSumZero && !hasRootAccount
 }
 
 

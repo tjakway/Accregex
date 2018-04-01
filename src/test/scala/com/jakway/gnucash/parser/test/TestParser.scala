@@ -185,9 +185,13 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
   }
 
   it should "have valid transaction test data" in {
-     new TransactionTestData(parser.parseAccountNodes(regDocRoot)
+     val transactions = new TransactionTestData(parser.parseAccountNodes(regDocRoot)
         .flatMap(Parser.linkAccounts)
-       .right.get).transactions.foreach(_.isValid shouldEqual true)
+       .right.get).transactions
+
+     transactions.length > 0  shouldEqual true
+
+     transactions.foreach(_.isValid shouldEqual true)
   }
 
   it should "parse the first transaction" in {
