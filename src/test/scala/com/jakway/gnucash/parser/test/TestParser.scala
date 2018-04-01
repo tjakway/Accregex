@@ -168,6 +168,10 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
     private val t1Split1AccountId = "086750b574471db8bf9013a7c4516684"
     private val t1Split2AccountId = "99fa355648ceb345777b6c968f46f6aa"
 
+    private val t2Split1AccountId = "48ecd41fdc87b028871e373d5f2696d0"
+    private val t2Split2AccountId = "716c03ee8edf200384eb974fa160f10c"
+    private val t2Split3AccountId = "086750b574471db8bf9013a7c4516684"
+
     val firstTransaction = Transaction(
       id = "686a709da476660e5b8925b54388aa51",
       description = "Opening Balance",
@@ -181,17 +185,35 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
         value = parseFraction("-500000/100").right.get,
         on = accounts.find(_.id == t1Split2AccountId).get)
     ))
-    val transactions = Seq(firstTransaction)
+
+    val secondTransaction = Transaction(
+      id = "eda07820de774d334e106a1566ae085b",
+      description = "Car Repair",
+      splits = Set(
+        Split(
+          id = "4a45046d150cd0e1e12a0f8a8a3f2977",
+          value = parseFraction("45000/100").right.get,
+          on = accounts.find(_.id == t2Split1AccountId).get),
+        Split(
+          id = "9cecac5fadc3d00667cbf512ed8499ce",
+          value = parseFraction("5000/100").right.get,
+          on = accounts.find(_.id == t2Split2AccountId).get),
+        Split(
+          id = "c6d6c512e71c1bca8c62a197c2ad8e23",
+          value = parseFraction("-50000/100").right.get,
+          on = accounts.find(_.id == t2Split3AccountId).get)
+      ))
+
+
+    val transactions = Set(firstTransaction, secondTransaction)
   }
 
   it should "have valid transaction test data" in {
-     val transactions = new TransactionTestData(parser.parseAccountNodes(regDocRoot)
-        .flatMap(Parser.linkAccounts)
-       .right.get).transactions
+    val transactions = transactionTestData._2
 
-     transactions.length > 0  shouldEqual true
+    transactions.size > 0  shouldEqual true
 
-     transactions.foreach(_.isValid shouldEqual true)
+    transactions.foreach(_.isValid shouldEqual true)
   }
 
   lazy val transactionTestData = {
