@@ -2,6 +2,16 @@ package com.jakway.gnucash.parser.rules
 
 import com.jakway.gnucash.parser.{LinkedAccount, ValidationError}
 
+
+/**
+  * @param id
+  * @param value
+  * @param on the account the value of the split modifies
+  */
+case class Split(id: String,
+                 on: LinkedAccount,
+                 value: Double)
+
 case class Transaction(id: String,
                        description: String,
                        splits: Seq[Split]) {
@@ -53,23 +63,24 @@ case class Transaction(id: String,
         false
       }
 
-  /**
-    * for a transaction to be valid all splits must sum to 0
-    * @return
-    */
-  def isValid: Boolean = {
+  private def splitsSumZero: Boolean = {
     splits.foldLeft(0: Double) {
       case (sum, Split(_, _, value)) => sum + value
     } == 0
   }
+
+  private def noRootAccount: Boolean = {
+    //no transaction should touch the root account directly
+    splits.foldLeft(false) {
+      case (acc, Split(_, on, _)) => acc || on.parent.isEmpty
+    }
+  }
+
+  /**
+    * for a transaction to be valid all splits must sum to 0
+    * @return
+    */
+  def isValid: Boolean = splitsSumZero && noRootAccount
 }
 
 
-/**
-  * @param id
-  * @param value
-  * @param on the account the value of the split modifies
-  */
-case class Split(id: String,
-                 on: LinkedAccount,
-                 value: Double)

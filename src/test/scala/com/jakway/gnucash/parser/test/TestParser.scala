@@ -1,6 +1,7 @@
 package com.jakway.gnucash.parser.test
 
 import com.jakway.gnucash.parser._
+import com.jakway.gnucash.parser.rules.{Split, Transaction}
 import com.jakway.util.XMLUtils
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -80,7 +81,7 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
     }
   }
 
-  val book =
+  val book: Node =
     parser.findBookNode(regDocRoot)(TestParserLoadError.apply _).right.get
 
   "XMLUtils.searchNode" should "find the 3 count-data nodes" in {
@@ -155,8 +156,60 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
 
     liabilities.parent shouldEqual Some(root)
     accountsPayable.parent shouldEqual Some(liabilities)
-
-
   }
+
+
+  /**
+    * Transaction parsing tests
+    */
+
+  class TransactionTestData(val accounts: Seq[LinkedAccount]) {
+    private val t1Split1AccountId = "086750b574471db8bf9013a7c4516684"
+    private val t1Split2AccountId = "99fa355648ceb345777b6c968f46f6aa"
+
+    val firstTransaction = Transaction(
+      id = "686a709da476660e5b8925b54388aa51",
+      description = "Opening Balance",
+      splits = Seq(
+        Split(
+          id = "b044243f0fbfa5447eefc0414373fbdd",
+          value = "500000/100".toDouble,
+          on = accounts.find(_.id == t1Split1AccountId).get),
+      Split(
+        id = "8405acaf9333bea7cd9d105fc8d1eccd",
+        value = "-500000/100".toDouble,
+        on = accounts.find(_.id == t1Split2AccountId).get)
+    ))
+    val transactions = Seq(firstTransaction)
+  }
+
+  it should "have valid transaction test data" in {
+     new TransactionTestData(parser.parseAccountNodes(regDocRoot)
+        .flatMap(Parser.linkAccounts)
+       .right.get).transactions.foreach(_.isValid shouldEqual true)
+  }
+
+  it should "parse the first transaction" in {
+
+    val res: Either[ValidationError, (Seq[LinkedAccount], Transaction)] = for {
+      accounts <- parser.parseAccountNodes(regDocRoot)
+          .flatMap(Parser.linkAccounts)
+      accountMap = accounts.map(a => (a.name, a)).toMap
+
+      transactionNodes <- getElems((book, "transaction"))
+
+      ts <- Parser.parseTransaction(accountMap)(transactionNodes.head)
+    } yield {
+      (accounts, ts)
+    }
+
+    val (accounts, transaction) = res.right.get
+
+    val testData = new TransactionTestData(accounts)
+
+    transaction.isValid shouldEqual true
+    transaction.id shouldEqual testData.firstTransaction.id
+  }
+
 }
 
