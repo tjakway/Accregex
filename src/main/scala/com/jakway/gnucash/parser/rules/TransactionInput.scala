@@ -14,7 +14,7 @@ case class Split(id: String,
 
 case class Transaction(id: String,
                        description: String,
-                       splits: Seq[Split]) {
+                       splits: Set[Split]) {
 
   private def cmpAccount(cmp: Double => Boolean)(linkedAccount: LinkedAccount): Boolean = {
     splits.foldLeft(false) {

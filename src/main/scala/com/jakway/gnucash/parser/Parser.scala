@@ -326,7 +326,7 @@ object Parser {
               .map(l => Split(splitId, l, value))
           })
         } yield {
-          Transaction(transactionId, description, splits)
+          Transaction(transactionId, description, splits.toSet)
         }
       }
     }

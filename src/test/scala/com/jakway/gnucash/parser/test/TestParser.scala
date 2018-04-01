@@ -171,7 +171,7 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
     val firstTransaction = Transaction(
       id = "686a709da476660e5b8925b54388aa51",
       description = "Opening Balance",
-      splits = Seq(
+      splits = Set(
         Split(
           id = "b044243f0fbfa5447eefc0414373fbdd",
           value = parseFraction("500000/100").right.get,
