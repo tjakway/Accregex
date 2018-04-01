@@ -27,7 +27,7 @@ case class LinkedAccount(version: String,
 }
 
 class Parser {
-  import NodeTests._
+  import com.jakway.gnucash.parser.xml.NodeTests._
 
   private[parser] def findBookNode: ValidateF[Node, Node] =
     (root, errorType: String => ValidationError) => {
@@ -244,7 +244,7 @@ object Parser {
     */
   def parseTransaction(accounts: Map[String, LinkedAccount])(n: Node):
     Either[ValidationError, Transaction] = {
-    import NodeTests._
+    import com.jakway.gnucash.parser.xml.NodeTests._
 
     case class ParseTransactionError(override val msg: String)
       extends ValidationError(msg)

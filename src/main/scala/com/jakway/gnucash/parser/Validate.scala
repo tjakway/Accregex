@@ -12,7 +12,7 @@ import scala.xml.Node
   * -
   */
 object Validate {
-  import NodeTests._
+  import com.jakway.gnucash.parser.xml.NodeTests._
 
   def apply(root: Node) = {
 

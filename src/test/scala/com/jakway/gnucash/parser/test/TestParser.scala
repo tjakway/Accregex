@@ -2,13 +2,14 @@ package com.jakway.gnucash.parser.test
 
 import com.jakway.gnucash.parser._
 import com.jakway.gnucash.parser.rules.{Split, Transaction}
+import com.jakway.gnucash.parser.xml.NodeTests
 import com.jakway.util.XMLUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.xml.{Node, XML}
 
 class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
-  import NodeTests._
+  import com.jakway.gnucash.parser.xml.NodeTests._
   val parser = new Parser
 
   /**

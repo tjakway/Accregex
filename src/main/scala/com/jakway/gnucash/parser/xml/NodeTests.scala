@@ -1,16 +1,15 @@
-package com.jakway.gnucash.parser
+package com.jakway.gnucash.parser.xml
 
+import com.jakway.gnucash.parser.{ValidateF, ValidationError}
 import com.jakway.util.XMLUtils
 
-import scala.util.{Failure, Success, Try}
-import scala.xml.{Attribute, Node, NodeSeq}
+import scala.xml.{Node, NodeSeq}
 
 /**
   * the downside to using SAM here is that to call other ValidationF's from a ValidationF we need to
   * either re-declare errorType as an implicit or pass it explicitly
   */
 object NodeTests {
-  import ValidationError._
 
   val namespaceSeparator = ":"
 
