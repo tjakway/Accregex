@@ -6,6 +6,18 @@ class ValidationError(val msg: String)
   extends RuntimeException(msg) {
 
   val stackTrace = StackTraceString.apply(new Throwable())
+
+  /**
+    * inline version of initCause that will return a new object
+    * @param t
+    * @return
+    */
+  def withCause(t: Throwable): ValidationError = {
+    //we can cast up to more general types from subclasses
+    val n: ValidationError = clone().asInstanceOf[ValidationError]
+    n.initCause(t)
+    n
+  }
 }
 
 class MultiValidationError(val errors: Seq[ValidationError])
