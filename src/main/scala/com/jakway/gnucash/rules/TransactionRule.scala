@@ -51,8 +51,8 @@ class RuleApplicator(val destAccount: LinkedAccount, val rules: Set[LinkedTransa
   }
 
   private def ruleMatches(i: Transaction)(rule: LinkedTransactionRule): Boolean = {
-    i.destAccount == destAccount &&
-    i.sourceAccount == rule.sourceAccount &&
+    i.isSourceAccount(rule.sourceAccount) &&
+    i.isDestAccount(rule.destAccount) &&
     rule.pattern.findFirstMatchIn(i.description).isDefined
   }
 

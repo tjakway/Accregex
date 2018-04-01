@@ -36,7 +36,7 @@ case class Transaction(id: String,
     */
   def isDestAccount: LinkedAccount => Boolean = cmpAccount(isCreditor)
 
-  def isDebitor: Double => Boolean =
+  private def isDebitor: Double => Boolean =
     value =>
       if(value < 0) {
         true
@@ -45,7 +45,7 @@ case class Transaction(id: String,
       }
 
   //TODO: not sure if 0 should be a creditor or debtor
-  def isCreditor: Double => Boolean =
+  private def isCreditor: Double => Boolean =
     value =>
       if(value >= 0) {
         true
