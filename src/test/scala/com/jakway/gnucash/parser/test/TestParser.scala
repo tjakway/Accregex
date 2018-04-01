@@ -196,24 +196,33 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
 
   it should "parse the first transaction" in {
 
-    val res: Either[ValidationError, (Seq[LinkedAccount], Transaction)] = for {
+    val res: Either[ValidationError,
+      (Seq[LinkedAccount], Seq[Transaction])] = for {
       accounts <- parser.parseAccountNodes(regDocRoot)
           .flatMap(Parser.linkAccounts)
       accountMap = accounts.map(a => (a.id, a)).toMap
 
       transactionNodes <- getElems((book, "transaction"))
 
-      ts <- Parser.parseTransaction(accountMap)(transactionNodes.head)
+      ts <- ValidationError.accumulateAndWrap(
+        transactionNodes.map(Parser.parseTransaction(accountMap)))
     } yield {
       (accounts, ts)
     }
 
-    val (accounts, transaction) = res.right.get
+    val (accounts, transactions) = res.right.get
 
     val testData = new TransactionTestData(accounts)
 
+    val transactionOpt = transactions
+      .find(_.id == testData.firstTransaction.id)
+
+    transactionOpt.isDefined shouldEqual true
+
+    val transaction = transactionOpt.get
+
     transaction.isValid shouldEqual true
-    transaction.id shouldEqual testData.firstTransaction.id
+    transaction shouldEqual testData.firstTransaction
   }
 
 }
