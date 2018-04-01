@@ -194,12 +194,12 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
      transactions.foreach(_.isValid shouldEqual true)
   }
 
-  it should "parse the first transaction" in {
+  lazy val transactionTestData = {
 
     val res: Either[ValidationError,
       (Seq[LinkedAccount], Seq[Transaction])] = for {
       accounts <- parser.parseAccountNodes(regDocRoot)
-          .flatMap(Parser.linkAccounts)
+        .flatMap(Parser.linkAccounts)
       accountMap = accounts.map(a => (a.id, a)).toMap
 
       transactionNodes <- getElems((book, "transaction"))
@@ -213,6 +213,12 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
     val (accounts, transactions) = res.right.get
 
     val testData = new TransactionTestData(accounts)
+
+    (accounts, transactions, testData)
+  }
+
+  it should "parse the first transaction" in {
+    val (account, transactions, testData) = transactionTestData
 
     val transactionOpt = transactions
       .find(_.id == testData.firstTransaction.id)
