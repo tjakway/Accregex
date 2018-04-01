@@ -239,18 +239,10 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
     (accounts, transactions, testData)
   }
 
-  it should "parse the first transaction" in {
-    val (account, transactions, testData) = transactionTestData
+  it should "parse the transactions" in {
+    val (_, transactions, testData) = transactionTestData
 
-    val transactionOpt = transactions
-      .find(_.id == testData.firstTransaction.id)
-
-    transactionOpt.isDefined shouldEqual true
-
-    val transaction = transactionOpt.get
-
-    transaction.isValid shouldEqual true
-    transaction shouldEqual testData.firstTransaction
+    transactions.toSet shouldEqual testData.transactions
   }
 
 }
