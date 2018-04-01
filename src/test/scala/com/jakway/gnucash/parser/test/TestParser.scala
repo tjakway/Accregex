@@ -158,12 +158,13 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
     accountsPayable.parent shouldEqual Some(liabilities)
   }
 
-
   /**
     * Transaction parsing tests
     */
 
   class TransactionTestData(val accounts: Seq[LinkedAccount]) {
+    import FractionParser._
+
     private val t1Split1AccountId = "086750b574471db8bf9013a7c4516684"
     private val t1Split2AccountId = "99fa355648ceb345777b6c968f46f6aa"
 
@@ -173,7 +174,7 @@ class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
       splits = Seq(
         Split(
           id = "b044243f0fbfa5447eefc0414373fbdd",
-          value = "500000/100".toDouble,
+          value = parseFraction("500000/100").right.get,
           on = accounts.find(_.id == t1Split1AccountId).get),
       Split(
         id = "8405acaf9333bea7cd9d105fc8d1eccd",
