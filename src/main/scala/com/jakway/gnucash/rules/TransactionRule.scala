@@ -1,6 +1,6 @@
 package com.jakway.gnucash.rules
 
-import com.jakway.gnucash.parser.rules.{Transaction, TransactionInput}
+import com.jakway.gnucash.parser.rules.{Transaction, Split}
 import com.jakway.gnucash.parser.{LinkedAccount, ValidationError}
 
 import scala.util.matching.Regex
@@ -50,7 +50,7 @@ class RuleApplicator(val destAccount: LinkedAccount, val rules: Set[LinkedTransa
     }
   }
 
-  private def ruleMatches(i: TransactionInput)(rule: LinkedTransactionRule): Boolean = {
+  private def ruleMatches(i: Transaction)(rule: LinkedTransactionRule): Boolean = {
     i.destAccount == destAccount &&
     i.sourceAccount == rule.sourceAccount &&
     rule.pattern.findFirstMatchIn(i.description).isDefined
