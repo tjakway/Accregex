@@ -60,10 +60,10 @@ object ValidationError {
   }
 
 
-  def accumulateEithers[A, B](in: Seq[Either[A, B]]):
+  def accumulateEithersSimpleSeq[A, B](in: Seq[Either[A, B]]):
     Either[Seq[A], Seq[B]] = accumulateEithers(in.map(_.map(Seq(_))))
 
-  def accumulateEithers[A, B](in: Seq[Either[Seq[A], Seq[B]]]):
+  def accumulateEithersNestedSeq[A, B](in: Seq[Either[Seq[A], Seq[B]]]):
     Either[Seq[A], Seq[B]] = {
     val empty: Seq[Either[A, Seq[B]]] = Seq()
 
@@ -78,7 +78,7 @@ object ValidationError {
 
   def accumulateAndWrap[B](in: Seq[Either[ValidationError, B]]):
     Either[ValidationError, Seq[B]] = {
-    accumulateEithers(in) match {
+    accumulateEithersSimpleSeq(in) match {
       case Left(xs) => Left(new MultiValidationError(xs))
       case Right(xs) => Right(xs)
     }
