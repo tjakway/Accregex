@@ -18,7 +18,6 @@ case class LinkedTransactionRule(pattern: Regex,
                                  sourceAccount: LinkedAccount,
                                  destAccount: LinkedAccount)
 
-
 /**
   * contains transaction matching and transformation logic
   * @param destAccount the account to move transactions from (probably "Unspecified")

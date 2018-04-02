@@ -16,12 +16,12 @@ abstract class NodeReplace[A] {
   * @tparam A
   */
 abstract class ElemReplace[A] extends NodeReplace[A] {
-  override def predicate(n: Node): Boolean = n match {
+  final override def predicate(n: Node): Boolean = n match {
     case e: Elem => predicateElem(e)
     case _ => false
   }
 
-  override def replace(n: Node): (A, Node) = n match {
+  final override def replace(n: Node): (A, Node) = n match {
     case e: Elem => replaceElem(e)
     case _ => throw new RuntimeException("ElemReplace.replace " +
       "should never be called on a non-Elem")
@@ -29,6 +29,26 @@ abstract class ElemReplace[A] extends NodeReplace[A] {
 
   def predicateElem(e: Elem): Boolean
   def replaceElem(e: Elem): (A, Node)
+}
+
+/**
+  * decouple logging from replace logic
+  * @param log
+  * @tparam A
+  */
+abstract class LoggingElemReplace[A](val log: Elem => A)
+  extends ElemReplace[A] {
+
+  def replaceE(e: Elem): Node
+
+  /**
+    * will only be called when the predicate returns true
+    * @param e
+    * @return
+    */
+  final override def replaceElem(e: Elem): (A, Node) = {
+    (log(e), replaceE(e))
+  }
 }
 
 object NodeReplace {
