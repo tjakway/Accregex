@@ -1,7 +1,7 @@
 package com.jakway.util
 
 import scala.annotation.tailrec
-import scala.xml.Node
+import scala.xml.{Node, PCData}
 
 object XMLUtils {
   def searchNode(f: Node => Boolean)(top: Node): Seq[Node] = {
@@ -27,4 +27,7 @@ object XMLUtils {
 
     helper(Seq(), top)
   }
+
+  def filterPCData(c: TraversableOnce[Node]): TraversableOnce[Node] =
+    c.filter(n => !(n.isInstanceOf[PCData] || n.label == "#PCDATA"))
 }

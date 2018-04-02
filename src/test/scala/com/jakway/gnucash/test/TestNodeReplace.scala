@@ -2,6 +2,7 @@ package com.jakway.gnucash.test
 
 import com.jakway.gnucash.parser.ValidationError
 import com.jakway.gnucash.parser.xml.{ElemReplace, NodeReplace}
+import com.jakway.util.XMLUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.xml.{Elem, Node}
@@ -52,12 +53,12 @@ class TestNodeReplace extends FlatSpec with Matchers {
     val replaceF = new BookReplace()
     val (tags, newBookTree) = replaceF.apply(BooksLiteral.books)
 
-    replaceF.countPredicateTrue shouldEqual 2
+    replaceF.countPredicateTrue > 0 shouldEqual true
 
     tags.length shouldEqual BooksLiteral.numBooks
 
-    //the tags should be paired with the original nodes
-    tags.foreach(_._2.label shouldEqual "book")
+    //the tags should be paired with the transformed nodes
+    tags.foreach(_._2.label shouldEqual newLabel)
 
     tags.map(_._1).toSet shouldEqual BooksLiteral.ids
 
@@ -70,6 +71,7 @@ class TestNodeReplace extends FlatSpec with Matchers {
       .copy(child = BooksLiteral.books.child) shouldEqual BooksLiteral.books
 
     //and the children of the changed tree should have the new label
-    newBookTree.child.map(_.label).toSet shouldEqual Set(newLabel)
+    XMLUtils.filterPCData(newBookTree.child)
+      .map(_.label).toSet shouldEqual Set(newLabel)
   }
 }
