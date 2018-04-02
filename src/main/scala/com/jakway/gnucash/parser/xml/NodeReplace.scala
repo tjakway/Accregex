@@ -39,6 +39,8 @@ object NodeReplace {
 
     var tags: Seq[(A, Node)] = Seq()
 
+    //note: the predicate may get called >1 per node but
+    //replace will only be called once
     def applyTrans(n: Node): Node =
       if(predicate(n)) {
         val r = replace(n)
