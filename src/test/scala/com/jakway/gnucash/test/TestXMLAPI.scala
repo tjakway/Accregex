@@ -2,6 +2,7 @@ package com.jakway.gnucash.test
 
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.xml.transform.RewriteRule
 import scala.xml.{Elem, Node}
 
 class TestXMLAPI(val root: Node) extends FlatSpec with Matchers {
