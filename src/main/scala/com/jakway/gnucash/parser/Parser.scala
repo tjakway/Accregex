@@ -29,7 +29,7 @@ case class LinkedAccount(version: String,
 class Parser {
   import com.jakway.gnucash.parser.xml.NodeTests._
 
-  private[parser] def findBookNode: ValidateF[Node, Node] =
+  def findBookNode: ValidateF[Node, Node] =
     (root, errorType: String => ValidationError) => {
       def isBookNode(n: Node): Boolean = {
         n.label == "book" &&
