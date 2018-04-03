@@ -83,8 +83,14 @@ class TestObjects(val regDocRoot: Node) {
     val rootAccount = Unlinked.rootAccount.link(None)
     val assetAccount = Unlinked.assetAccount.link(Some(rootAccount))
     val currentAssetsAccount = Unlinked.currentAssetsAccount.link(Some(assetAccount))
+    val expenseAccount = Unlinked.expensesAccount.link(Some(rootAccount))
+    val charityAccount = Unlinked.charityAccount.link(Some(expenseAccount))
 
-    val linkedAccountsTestObjects = Seq(rootAccount, assetAccount, currentAssetsAccount)
+    val linkedAccountsTestObjects = Seq(rootAccount,
+      assetAccount,
+      currentAssetsAccount,
+      expenseAccount,
+      charityAccount)
   }
 }
 
@@ -239,6 +245,11 @@ class TestAccountNameParser(val regDocRoot: Node) extends FlatSpec with Matchers
   }
 
   it should "disambiguate a second-level expense account" in {
+    secondLevelTest("Expenses", testObjects.Linked.expenseAccount)
+  }
 
+  it should "disambiguate a third-level expense account" in {
+    secondLevelTest("Expenses:Charity",
+      testObjects.Linked.charityAccount)
   }
 }
