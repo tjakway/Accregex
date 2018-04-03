@@ -60,14 +60,14 @@ class RuleApplicator(val allAccounts: Map[String, LinkedAccount],
     * @param e
     * @return
     */
-  override def predicateElem(e: Elem): Boolean = {
+  protected override def predicateElem(e: Elem): Boolean = {
     Parser.parseTransaction(allAccounts)(e) match {
       case Right(t) => Util.anyOf(rules)(ruleMatches(t))
       case Left(_) => false
     }
   }
 
-  override def replaceElem(e: Elem): (RuleApplicatorLogEvent, Node) = {
+  protected override def replaceElem(e: Elem): (RuleApplicatorLogEvent, Node) = {
     val res = for {
       t <- Parser.parseTransaction(allAccounts)(e)
       optR <- whichRule(t)

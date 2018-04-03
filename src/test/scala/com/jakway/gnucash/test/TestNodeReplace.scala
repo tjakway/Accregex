@@ -52,7 +52,7 @@ class TestNodeReplace extends FlatSpec with Matchers {
     }
 
     val replaceF = new BookReplace()
-    val (tags, newBookTree) = replaceF.apply(BooksLiteral.books)
+    val (tags, newBookTree) = replaceF.doReplace(BooksLiteral.books)
 
     replaceF.countPredicateTrue > 0 shouldEqual true
 

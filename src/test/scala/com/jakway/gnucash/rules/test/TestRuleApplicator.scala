@@ -52,7 +52,7 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
     val allTransactionNodes = NodeTests.getElems((regDocRoot, "transaction"))
       .right.get
 
-    val newNodes = allTransactionNodes.map(applicator.apply(_)._2)
+    val newNodes = allTransactionNodes.map(applicator.doReplace(_)._2)
 
     newNodes == allTransactionNodes shouldEqual false
 
