@@ -189,7 +189,8 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
 
   it should "construct a walkable tree from the expenses account" in {
     testObjects.linkedAccounts
-      .get(testObjects.expensesAccountId) shouldEqual Some(testObjects.Linked.rootAccount)
+      .get(testObjects.expensesAccountId)
+      .flatMap(_.parent) shouldEqual Some(testObjects.Linked.rootAccount)
   }
 
   it should "construct a walkable tree from the charity expenses account" in {
@@ -199,7 +200,10 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
       .cmpUnlinkedToLinked(testObjects.Unlinked.charityAccount,
         charityAccount.get) shouldEqual true
 
-    charityAccount.flatMap(_.parent) shouldEqual Some(testObjects.Linked.rootAccount)
+    val lookedUpExpenseAccount = charityAccount.flatMap(_.parent)
+    lookedUpExpenseAccount shouldEqual Some(testObjects.Linked.expenseAccount)
+    lookedUpExpenseAccount
+      .flatMap(_.parent) shouldEqual Some(testObjects.Linked.rootAccount)
   }
 }
 
