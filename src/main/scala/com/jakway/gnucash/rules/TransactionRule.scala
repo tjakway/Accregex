@@ -6,7 +6,7 @@ import com.jakway.gnucash.parser.{LinkedAccount, Parser, ValidationError}
 
 import scala.util.Try
 import scala.util.matching.Regex
-import scala.xml.{Elem, Node, Text}
+import scala.xml.{Elem, Group, Node, Text}
 
 
 /**
@@ -66,16 +66,23 @@ case class LinkedTransactionRule(pattern: Regex,
 /**
   * contains transaction matching and transformation logic
   * @param allAccounts a map of account ID -> LinkedAccount
-  * @param destAccount the account to move transactions from (probably "Unspecified")
+  * @param targetAccount the account to move transactions from (probably "Unspecified")
   */
 class RuleApplicator(val allAccounts: Map[String, LinkedAccount],
-                     val destAccount: LinkedAccount,
+                     val targetAccount: LinkedAccount,
                      val rules: Set[LinkedTransactionRule])
   extends ElemReplace[RuleApplicator.RuleApplicatorLogEvent] {
   import RuleApplicator._
 
   class RuleApplicatorError(override val msg: String)
     extends ValidationError(msg)
+
+  //sanity check
+  if(allAccounts.get(targetAccount.id) != targetAccount) {
+    throw new RuleApplicatorError("Basic check `allAccounts.get(targetAccount.id) " +
+      "!= targetAccount` in RuleApplicator failed!")
+  }
+
 
   def anyTrue[A](s: TraversableOnce[A])(f: A => Boolean): Boolean = s.foldLeft(false) {
     case (b, x) => b || f(x)
@@ -120,7 +127,27 @@ class RuleApplicator(val allAccounts: Map[String, LinkedAccount],
     }
   }
 
-  override def replaceElem(e: Elem): (RuleApplicatorLogEvent, Node) = ???
+  override def replaceElem(e: Elem): (RuleApplicatorLogEvent, Node) = {
+    val res = for {
+      t <- Parser.parseTransaction(allAccounts)(e)
+      optR <- whichRule(t)
+      r <- optR match {
+        case None => Left(new RuleApplicatorError(s"replaceElem called for " +
+          s"$e but no rule matches"))
+        case Some(x) => Right(x)
+      }
+    } yield {
+      (r, r.replace(targetAccount.id)(e))
+    }
+
+    res match {
+      case Left(err) => (RuleApplicatorLogEvent.Error(err), e)
+      case Right((rule, newNode)) => {
+        val oldNode = e
+        (RuleApplicatorLogEvent.Success(rule, oldNode), newNode)
+      }
+    }
+  }
 }
 
 object RuleApplicator {
@@ -132,5 +159,15 @@ object RuleApplicator {
   }
 
   sealed trait RuleApplicatorLogEvent
+
+  object RuleApplicatorLogEvent {
+    case class Error(validationError: ValidationError)
+      extends RuntimeException(s"$validationError")
+        with RuleApplicatorLogEvent
+
+    case class Success(ruleApplied: LinkedTransactionRule, node: Node)
+      extends RuleApplicatorLogEvent
+  }
+
 }
 
