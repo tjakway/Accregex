@@ -1,5 +1,6 @@
 package com.jakway.gnucash.test
 
+import com.jakway.gnucash.test.objects.BooksLiteral
 import com.jakway.util.XMLUtils
 import org.scalatest._
 

@@ -1,4 +1,4 @@
-package com.jakway.gnucash.test
+package com.jakway.gnucash.test.objects
 
 object BooksLiteral {
   val donQuixoteId = "b1615"

@@ -4,12 +4,14 @@ import com.jakway.gnucash.parser.rules.UnlinkedTransactionRule
 import com.jakway.gnucash.parser.xml.NodeTests
 import com.jakway.gnucash.parser.{AccountNameParser, LinkedAccount, Parser, ValidationError}
 import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
+import com.jakway.gnucash.test.objects.RegDocTestObjects
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.xml.Node
 
 class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
   val parser: Parser = new Parser()
+  lazy val testObjects: RegDocTestObjects = new RegDocTestObjects(regDocRoot)
 
   case class TestRuleApplicatorError(override val msg: String)
     extends ValidationError(msg)
@@ -38,12 +40,13 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
 
       gasAccount <- nameParser.findReferencedAccount(gasAccountString)
     } yield {
-      new RuleApplicator(
-        allAccounts, gasAccount, Set(changeGasRule))
+      (gasAccount, new RuleApplicator(
+        allAccounts, gasAccount, Set(changeGasRule)))
     }
 
     applicatorE.isRight shouldEqual true
-    val applicator = applicatorE.right.get
+    val (gasAccount, applicator) = applicatorE.right.get
+    gasAccount shouldEqual testObjects.Linked.
 
     val allTransactionNodes = NodeTests.getElems((regDocRoot, "transaction"))
       .right.get
