@@ -96,7 +96,9 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
           //if there are still too many items, filter for those who are children
           //of other items in the list
           val childrenFiltered =
-            if(parentsFiltered.length > 1) {
+            //if we're going more than 1 level deep, filter for children of
+            //other accounts in the list
+            if(sAccountStr.length > 1) {
               parentsFiltered.filter(_._3)
             } else {
               parentsFiltered
