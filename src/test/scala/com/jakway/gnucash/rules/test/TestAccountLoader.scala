@@ -213,19 +213,32 @@ class TestAccountNameParser(val regDocRoot: Node) extends FlatSpec with Matchers
       .findReferencedAccount(testObjects.rootAccountName).isLeft shouldEqual true
   }
 
-  it should "disambiguate a second-level account" in {
-    val str = "Assets"
-
-    nameParser.findReferencedAccount(str) shouldEqual Right(testObjects.Linked.assetAccount)
+  def secondLevelTest(accountStr: String, expectedAccount: LinkedAccount)= {
+    nameParser.findReferencedAccount(accountStr) shouldEqual
+      Right(expectedAccount)
   }
 
-  it should "disambiguate a third-level account" in {
-    val str = "Assets:Current Assets"
+  def thirdLevelTest(accountStr: String,
+                     expectedAccount: LinkedAccount,
+                     expectedNames: Seq[String]) = {
+    nameParser.splitAccountStr(accountStr) shouldEqual expectedNames
 
-    nameParser.splitAccountStr(str) shouldEqual Seq(
-      testObjects.Linked.currentAssetsAccount.name,
-      testObjects.Linked.assetAccount.name)
+    secondLevelTest(accountStr, expectedAccount)
+  }
 
-    nameParser.findReferencedAccount(str) shouldEqual Right(testObjects.Linked.currentAssetsAccount)
+  it should "disambiguate a second-level asset account" in {
+      secondLevelTest("Assets", testObjects.Linked.assetAccount)
+  }
+
+  it should "disambiguate a third-level asset account" in {
+    thirdLevelTest("Assets:Current Assets",
+      testObjects.Linked.currentAssetsAccount,
+      Seq(
+        testObjects.Linked.currentAssetsAccount.name,
+        testObjects.Linked.assetAccount.name))
+  }
+
+  it should "disambiguate a second-level expense account" in {
+
   }
 }
