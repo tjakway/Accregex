@@ -7,7 +7,7 @@ import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
 import com.jakway.gnucash.test.objects.RegDocTestObjects
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.xml.Node
+import scala.xml.{Elem, Node}
 
 class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
   val parser: Parser = new Parser()
@@ -51,9 +51,21 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
     val allTransactionNodes = NodeTests.getElems((regDocRoot, "transaction"))
       .right.get
 
+    //clone the old nodes just in case
+    val oldNodes = allTransactionNodes.map(_.asInstanceOf[Elem].copy())
     val newNodes = allTransactionNodes.map(applicator.doReplace(_)._2)
 
-    newNodes != allTransactionNodes shouldEqual true
+    def parseTrans = Parser.parseTransaction(allAccounts) _
+
+    val (newTransactions, oldTransactions) = {for {
+      newTransactions <- ValidationError accumulateEithersSimpleSeq newNodes.map(parseTrans)
+      oldTransactions <- ValidationError accumulateEithersSimpleSeq oldNodes.map(parseTrans)
+    } yield {
+      (newTransactions, oldTransactions)
+    }}.right.get
+
+
+    newTransactions != oldTransactions shouldEqual true
 
   }
 
