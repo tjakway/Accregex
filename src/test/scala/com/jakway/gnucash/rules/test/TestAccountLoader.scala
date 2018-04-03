@@ -147,7 +147,17 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
       testObjects.Linked.expenseAccount)
   }
 
-  //it should "construct a walkable tree from the charity expenses account" in {
+  it should "construct a walkable tree from the auto expenses account" in {
+    testTree(testObjects.autoAccountId,
+      testObjects.Linked.autoAccount,
+      testObjects.Linked.expenseAccount)
+  }
+
+  it should "construct a walkable tree from the gas expenses account" in {
+    testTree(testObjects.gasAccountId,
+      testObjects.Linked.gasAccount,
+      testObjects.Linked.autoAccount)
+  }
 }
 
 
