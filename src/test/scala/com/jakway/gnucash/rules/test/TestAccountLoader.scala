@@ -181,7 +181,15 @@ class TestAccountNameParser(val regDocRoot: Node) extends FlatSpec with Matchers
       Right(expectedAccount)
   }
 
-  def thirdLevelTest(accountStr: String,
+  /**
+    * for tests involving name parsing
+    * (i.e. account levels >2)
+    * @param accountStr
+    * @param expectedAccount
+    * @param expectedNames
+    * @return
+    */
+  def higherLevelTest(accountStr: String,
                      expectedAccount: LinkedAccount,
                      expectedNames: Seq[String]) = {
     nameParser.splitAccountStr(accountStr) shouldEqual expectedNames
@@ -194,7 +202,7 @@ class TestAccountNameParser(val regDocRoot: Node) extends FlatSpec with Matchers
   }
 
   it should "disambiguate a third-level asset account" in {
-    thirdLevelTest("Assets:Current Assets",
+    higherLevelTest("Assets:Current Assets",
       testObjects.Linked.currentAssetsAccount,
       Seq(
         testObjects.Linked.currentAssetsAccount.name,
@@ -205,8 +213,22 @@ class TestAccountNameParser(val regDocRoot: Node) extends FlatSpec with Matchers
     secondLevelTest("Expenses", testObjects.Linked.expenseAccount)
   }
 
-  it should "disambiguate a third-level expense account" in {
+  it should "disambiguate a third-level expense (charity) account" in {
     secondLevelTest("Expenses:Charity",
       testObjects.Linked.charityAccount)
+  }
+
+  it should "disambiguate a third-level expense (auto) account" in {
+    secondLevelTest("Expenses:Auto",
+      testObjects.Linked.autoAccount)
+  }
+
+  it should "disambiguate a fourth-level expense (gas) account" in {
+    higherLevelTest("Expenses:Auto:Gas",
+      testObjects.Linked.gasAccount,
+      Seq(
+        testObjects.Linked.gasAccount.name,
+        testObjects.Linked.autoAccount.name,
+        testObjects.Linked.expenseAccount.name))
   }
 }
