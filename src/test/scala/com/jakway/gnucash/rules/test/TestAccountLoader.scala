@@ -41,7 +41,7 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
   case class TestLinkAccountsLoadError(override val msg: String)
     extends ValidationError(msg)
 
-  val testObjects = new RegDocTestObjects(regDocRoot)
+  lazy val testObjects = new RegDocTestObjects(regDocRoot)
 
   /**
     * tests of the unlinkedAccounts test object
@@ -171,7 +171,7 @@ class TestAccountNameParser(val regDocRoot: Node) extends FlatSpec with Matchers
 
   //the user should NOT be able to reference the root account by name because
   //it's an "ephemeral" account (not visible in the account tree in GNUCash)
-  "AccountNameParser" should "not disambiguate a top-level account" in {
+  "AccountNameParser" should "not disambiguate the root account" in {
     nameParser
       .findReferencedAccount(testObjects.rootAccountName).isLeft shouldEqual true
   }
