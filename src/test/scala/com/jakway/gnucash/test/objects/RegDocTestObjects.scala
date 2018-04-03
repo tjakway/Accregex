@@ -92,7 +92,7 @@ class RegDocTestObjects(val regDocRoot: Node) {
       gasAccountName,
       "EXPENSE",
       Some("Gas"),
-      Some(gasAccountId))
+      Some(autoAccountId))
 
     val unlinkedAccountsTestObjects = Seq(rootAccount,
       assetsAccount,
