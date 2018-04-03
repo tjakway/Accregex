@@ -1,7 +1,7 @@
 package com.jakway.gnucash.test
 
 import com.jakway.gnucash.parser.test.TestParser
-import com.jakway.gnucash.rules.test.{TestAccountNameParser, TestLinkAccounts}
+import com.jakway.gnucash.rules.test.{TestAccountNameParser, TestLinkAccounts, TestRuleApplicator}
 
 import scala.xml.XML
 
@@ -24,3 +24,5 @@ class TestLinkAccountsRegDocXML extends TestLinkAccounts(regDocRoot)
 class TestParserRegDocXML extends TestParser(regDocRoot)
 
 class TestAccountNameParserRegDocXML extends TestAccountNameParser(regDocRoot)
+
+class TestRuleApplicatorRegDocXML extends TestRuleApplicator(regDocRoot)
