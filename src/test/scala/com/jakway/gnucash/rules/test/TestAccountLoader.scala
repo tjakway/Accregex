@@ -1,6 +1,6 @@
 package com.jakway.gnucash.rules.test
 
-import com.jakway.gnucash.parser.{AccountNameParser, Parser, UnlinkedAccount, ValidationError}
+import com.jakway.gnucash.parser._
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.xml.Node
@@ -33,6 +33,12 @@ class TestObjects(val regDocRoot: Node) {
   val currentAssetsAccountId = "794a0c0fac9d75f85cf7c99141c9caac"
   val currentAssetsName = "Current Assets"
 
+  val expensesAccountId = "b49c132fd93c94675a901feb8c5df41a"
+  val expensesAccountName = "Expenses"
+
+  val charityAccountId = "845aea6cf3402b138be1bcb6bbd62bc7"
+  val charityAccountName = "Charity"
+
   object Unlinked {
     val rootAccount = UnlinkedAccount("2.0.0",
       rootAccountId,
@@ -55,7 +61,22 @@ class TestObjects(val regDocRoot: Node) {
       Some("Current Assets"),
       Some(assetsAccountId))
 
-    val unlinkedAccountsTestObjects = Seq(rootAccount, assetAccount, currentAssetsAccount)
+    val expensesAccount = UnlinkedAccount("2.0.0",
+      expensesAccountId,
+      expensesAccountName,
+      "EXPENSE",
+      Some("Expenses"),
+      Some(rootAccountId))
+
+    val charityAccount = UnlinkedAccount("2.0.0",
+      charityAccountId,
+      charityAccountName,
+      "EXPENSE",
+      Some("Charity"),
+      Some(expensesAccountId))
+
+    val unlinkedAccountsTestObjects = Seq(rootAccount, assetAccount, currentAssetsAccount,
+      expensesAccount, charityAccount)
   }
 
   object Linked {
@@ -64,6 +85,25 @@ class TestObjects(val regDocRoot: Node) {
     val currentAssetsAccount = Unlinked.currentAssetsAccount.link(Some(assetAccount))
 
     val linkedAccountsTestObjects = Seq(rootAccount, assetAccount, currentAssetsAccount)
+  }
+}
+
+object TestLinkAccounts {
+  /**
+    * TODO: could reduce duplication by making a trait Account and having both
+    * UnlinkedAccount and LinkedAccount inherit from it
+    * @param u
+    * @param l
+    * @return
+    */
+  def cmpUnlinkedToLinked(u: UnlinkedAccount, l: LinkedAccount): Boolean = {
+    val parentsMatch = u.parentId == l.parent.map(_.id)
+
+    u.id == l.id &&
+    u.accType == l.accType &&
+    u.description == l.description &&
+    parentsMatch &&
+    u.version == l.version
   }
 }
 
@@ -139,6 +179,21 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
   it should "construct a walkable tree from the current assets account" in {
      testObjects.linkedAccounts.get(testObjects.currentAssetsAccountId)
        .flatMap(_.parent.flatMap(_.parent)) shouldEqual Some(testObjects.Linked.rootAccount)
+  }
+
+  it should "construct a walkable tree from the expenses account" in {
+    testObjects.linkedAccounts
+      .get(testObjects.expensesAccountId) shouldEqual Some(testObjects.Linked.rootAccount)
+  }
+
+  it should "construct a walkable tree from the charity expenses account" in {
+    val charityAccount = testObjects.linkedAccounts.get(testObjects.charityAccountId)
+
+    TestLinkAccounts
+      .cmpUnlinkedToLinked(testObjects.Unlinked.charityAccount,
+        charityAccount.get) shouldEqual true
+
+    charityAccount.flatMap(_.parent) shouldEqual Some(testObjects.Linked.rootAccount)
   }
 }
 
