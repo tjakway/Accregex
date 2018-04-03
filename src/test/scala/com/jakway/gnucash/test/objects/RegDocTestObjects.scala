@@ -1,6 +1,6 @@
 package com.jakway.gnucash.test.objects
 
-import com.jakway.gnucash.parser.{Parser, UnlinkedAccount, ValidationError}
+import com.jakway.gnucash.parser.{LinkedAccount, Parser, UnlinkedAccount, ValidationError}
 
 import scala.xml.Node
 
@@ -16,7 +16,7 @@ class RegDocTestObjects(val regDocRoot: Node) {
       .getOrElse(throw TestObjectsException("Error while loading " +
         "TestLinkAccounts.unlinkedAccounts"))
 
-  lazy val linkedAccounts = Parser
+  lazy val linkedAccounts: Map[String, LinkedAccount] = Parser
     .linkAccounts(unlinkedAccounts.values.toSeq)
     .map(_.map(a => (a.id, a)))
     .map(_.toMap)
@@ -38,6 +38,12 @@ class RegDocTestObjects(val regDocRoot: Node) {
   val charityAccountId = "845aea6cf3402b138be1bcb6bbd62bc7"
   val charityAccountName = "Charity"
 
+  val autoAccountId = "ad1e02d787aa1f9adce351e566ec36e9"
+  val autoAccountName = "Auto"
+
+  val gasAccountId = "716c03ee8edf200384eb974fa160f10c"
+  val gasAccountName = "Gas"
+
   object Unlinked {
     val rootAccount = UnlinkedAccount("2.0.0",
       rootAccountId,
@@ -46,7 +52,7 @@ class RegDocTestObjects(val regDocRoot: Node) {
       None,
       None)
 
-    val assetAccount = UnlinkedAccount("2.0.0",
+    val assetsAccount = UnlinkedAccount("2.0.0",
       assetsAccountId,
       assetsAccountName,
       "ASSET",
@@ -74,21 +80,43 @@ class RegDocTestObjects(val regDocRoot: Node) {
       Some("Charity"),
       Some(expensesAccountId))
 
-    val unlinkedAccountsTestObjects = Seq(rootAccount, assetAccount, currentAssetsAccount,
-      expensesAccount, charityAccount)
+    val autoAccount = UnlinkedAccount("2.0.0",
+      autoAccountId,
+      autoAccountName,
+      "EXPENSE",
+      Some("Auto"),
+      Some(expensesAccountId))
+
+    val gasAccount = UnlinkedAccount("2.0.0",
+      gasAccountId,
+      gasAccountName,
+      "EXPENSE",
+      Some("Gas"),
+      Some(gasAccountId))
+
+    val unlinkedAccountsTestObjects = Seq(rootAccount,
+      assetsAccount,
+        currentAssetsAccount,
+      expensesAccount,
+        charityAccount,
+        autoAccount, gasAccount)
   }
 
   object Linked {
     val rootAccount = Unlinked.rootAccount.link(None)
-    val assetAccount = Unlinked.assetAccount.link(Some(rootAccount))
-    val currentAssetsAccount = Unlinked.currentAssetsAccount.link(Some(assetAccount))
+    val assetsAccount = Unlinked.assetsAccount.link(Some(rootAccount))
+    val currentAssetsAccount = Unlinked.currentAssetsAccount.link(Some(assetsAccount))
     val expenseAccount = Unlinked.expensesAccount.link(Some(rootAccount))
     val charityAccount = Unlinked.charityAccount.link(Some(expenseAccount))
+    val autoAccount = Unlinked.autoAccount.link(Some(expenseAccount))
+    val gasAccount = Unlinked.gasAccount.link(Some(autoAccount))
 
     val linkedAccountsTestObjects = Seq(rootAccount,
-      assetAccount,
+      assetsAccount,
       currentAssetsAccount,
       expenseAccount,
-      charityAccount)
+      charityAccount,
+      autoAccount,
+      gasAccount)
   }
 }

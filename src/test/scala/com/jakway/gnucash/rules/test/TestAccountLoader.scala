@@ -1,3 +1,6 @@
+/**
+  * contains tests for parsing account nodes and parsing account names
+  */
 package com.jakway.gnucash.rules.test
 
 import com.jakway.gnucash.parser._
@@ -51,7 +54,7 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
   }
 
   it should "have an assets account and a current assets account" in {
-    testObjects.unlinkedAccounts.get(testObjects.assetsAccountId) shouldEqual Some(testObjects.Unlinked.assetAccount)
+    testObjects.unlinkedAccounts.get(testObjects.assetsAccountId) shouldEqual Some(testObjects.Unlinked.assetsAccount)
     testObjects.unlinkedAccounts.get(testObjects.currentAssetsAccountId) shouldEqual Some(testObjects.Unlinked.currentAssetsAccount)
   }
 
@@ -88,37 +91,63 @@ class TestLinkAccounts(val regDocRoot: Node) extends FlatSpec with Matchers {
     testObjects.linkedAccounts.get(testObjects.rootAccountId) shouldEqual Some(testObjects.Linked.rootAccount)
   }
 
+  /**
+    * test that we can walk 1 level up the tree from the given account id
+    * @param accountId
+    * @param expectedAccount
+    * @param expectedParent
+    * @return
+    */
+  def testTree(accountId: String,
+               expectedAccount: LinkedAccount,
+               expectedParent: LinkedAccount) = {
+    val actualAccount = testObjects.linkedAccounts.get(accountId)
+
+    //look up the unlinked account with the same ID and check that it
+    //corresponds to our linked account
+    val unlinkedAccount = testObjects.unlinkedAccounts.get(accountId)
+    TestLinkAccounts
+      .cmpUnlinkedToLinked(
+        unlinkedAccount.get,
+        actualAccount.get)
+
+    actualAccount shouldEqual Some(expectedAccount)
+    actualAccount.flatMap(_.parent) shouldEqual Some(expectedParent)
+  }
+
   it should "link the asset account" in {
-    testObjects.linkedAccounts.get(testObjects.assetsAccountId) shouldEqual Some(testObjects.Linked.assetAccount)
+    testObjects.linkedAccounts.get(testObjects.assetsAccountId) shouldEqual Some(testObjects.Linked.assetsAccount)
   }
 
   it should "link the current assets account" in {
     testObjects.linkedAccounts.get(testObjects.currentAssetsAccountId) shouldEqual Some(testObjects.Linked.currentAssetsAccount)
   }
 
+  it should "construct a walkable tree from the assets account" in {
+    testTree(testObjects.assetsAccountId,
+      testObjects.Linked.assetsAccount,
+      testObjects.Linked.rootAccount)
+  }
+
   it should "construct a walkable tree from the current assets account" in {
-     testObjects.linkedAccounts.get(testObjects.currentAssetsAccountId)
-       .flatMap(_.parent.flatMap(_.parent)) shouldEqual Some(testObjects.Linked.rootAccount)
+    testTree(testObjects.currentAssetsAccountId,
+      testObjects.Linked.currentAssetsAccount,
+      testObjects.Linked.assetsAccount)
   }
 
   it should "construct a walkable tree from the expenses account" in {
-    testObjects.linkedAccounts
-      .get(testObjects.expensesAccountId)
-      .flatMap(_.parent) shouldEqual Some(testObjects.Linked.rootAccount)
+    testTree(testObjects.expensesAccountId,
+      testObjects.Linked.expenseAccount,
+      testObjects.Linked.rootAccount)
   }
 
   it should "construct a walkable tree from the charity expenses account" in {
-    val charityAccount = testObjects.linkedAccounts.get(testObjects.charityAccountId)
-
-    TestLinkAccounts
-      .cmpUnlinkedToLinked(testObjects.Unlinked.charityAccount,
-        charityAccount.get) shouldEqual true
-
-    val lookedUpExpenseAccount = charityAccount.flatMap(_.parent)
-    lookedUpExpenseAccount shouldEqual Some(testObjects.Linked.expenseAccount)
-    lookedUpExpenseAccount
-      .flatMap(_.parent) shouldEqual Some(testObjects.Linked.rootAccount)
+    testTree(testObjects.charityAccountId,
+      testObjects.Linked.charityAccount,
+      testObjects.Linked.expenseAccount)
   }
+
+  //it should "construct a walkable tree from the charity expenses account" in {
 }
 
 
@@ -151,7 +180,7 @@ class TestAccountNameParser(val regDocRoot: Node) extends FlatSpec with Matchers
   }
 
   it should "disambiguate a second-level asset account" in {
-      secondLevelTest("Assets", testObjects.Linked.assetAccount)
+      secondLevelTest("Assets", testObjects.Linked.assetsAccount)
   }
 
   it should "disambiguate a third-level asset account" in {
@@ -159,7 +188,7 @@ class TestAccountNameParser(val regDocRoot: Node) extends FlatSpec with Matchers
       testObjects.Linked.currentAssetsAccount,
       Seq(
         testObjects.Linked.currentAssetsAccount.name,
-        testObjects.Linked.assetAccount.name))
+        testObjects.Linked.assetsAccount.name))
   }
 
   it should "disambiguate a second-level expense account" in {
