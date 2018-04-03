@@ -1,5 +1,7 @@
 package com.jakway.gnucash.parser
 
+import com.jakway.util.Util
+
 import scala.annotation.tailrec
 
 class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
@@ -71,12 +73,19 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
         } else {
 
           //filter for accounts that are not parents of any accounts in the list
-          val res = acc.map { thisItem =>
-            val isParent = acc.foldLeft(false) {
-              case (cond, q) => cond || q.parent.filter(_ == thisItem).isDefined
+          val parentsFiltered = acc.map { thisItem =>
+
+            val isParent = Util.anyOf(acc)(_.parent.filter(_ == thisItem).isDefined)
+            val isChild = thisItem.parent match {
+                //search the list for this item's parent
+                //if found, this item is a child of another item in the list
+              case Some(thisItemParent) => Util.anyOf(acc)(_ == thisItemParent)
+                //root account can't be a child
+              case None => false
             }
 
-            (thisItem, isParent)
+
+            (thisItem, isParent, isChild)
             //traverse the list twice, once to mark items that are parents
             //and a second time to filter them
             //we traverse twice in case the first pass would filter early and
@@ -84,6 +93,16 @@ class AccountNameParser(val linkedAccounts: Seq[LinkedAccount],
             //the list
           }.filter(!_._2)
 
+          //if there are still too many items, filter for those who are children
+          //of other items in the list
+          val childrenFiltered =
+            if(parentsFiltered.length > 1) {
+              parentsFiltered.filter(_._3)
+            } else {
+              parentsFiltered
+            }
+
+          val res = childrenFiltered
 
           //implementation error
           case class AccumulatorError(override val msg: String)

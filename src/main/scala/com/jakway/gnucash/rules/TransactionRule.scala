@@ -3,6 +3,7 @@ package com.jakway.gnucash.rules
 import com.jakway.gnucash.parser.rules.Transaction
 import com.jakway.gnucash.parser.xml.ElemReplace
 import com.jakway.gnucash.parser.{LinkedAccount, Parser, ValidationError}
+import com.jakway.util.Util
 
 import scala.util.matching.Regex
 import scala.xml.{Elem, Node, Text}
@@ -81,11 +82,6 @@ class RuleApplicator(val allAccounts: Map[String, LinkedAccount],
       "!= targetAccount` in RuleApplicator failed!")
   }
 
-
-  def anyTrue[A](s: TraversableOnce[A])(f: A => Boolean): Boolean = s.foldLeft(false) {
-    case (b, x) => b || f(x)
-  }
-
   /**
     *
     * @param transactionInput
@@ -120,7 +116,7 @@ class RuleApplicator(val allAccounts: Map[String, LinkedAccount],
     */
   override def predicateElem(e: Elem): Boolean = {
     Parser.parseTransaction(allAccounts)(e) match {
-      case Right(t) => anyTrue(rules)(ruleMatches(t))
+      case Right(t) => Util.anyOf(rules)(ruleMatches(t))
       case Left(_) => false
     }
   }
