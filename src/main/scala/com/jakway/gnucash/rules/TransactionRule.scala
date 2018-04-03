@@ -1,12 +1,11 @@
 package com.jakway.gnucash.rules
 
-import com.jakway.gnucash.parser.rules.{Split, Transaction}
-import com.jakway.gnucash.parser.xml.{ElemReplace, LoggingElemReplace}
+import com.jakway.gnucash.parser.rules.Transaction
+import com.jakway.gnucash.parser.xml.ElemReplace
 import com.jakway.gnucash.parser.{LinkedAccount, Parser, ValidationError}
 
-import scala.util.Try
 import scala.util.matching.Regex
-import scala.xml.{Elem, Group, Node, Text}
+import scala.xml.{Elem, Node, Text}
 
 
 /**
