@@ -77,9 +77,9 @@ class RuleApplicator(val allAccounts: Map[String, LinkedAccount],
     extends ValidationError(msg)
 
   //sanity check
-  if(allAccounts.get(targetAccount.id) != targetAccount) {
+  if(allAccounts.get(targetAccount.id) == targetAccount) {
     throw new RuleApplicatorError("Basic check `allAccounts.get(targetAccount.id) " +
-      "!= targetAccount` in RuleApplicator failed!")
+      "== targetAccount` in RuleApplicator failed!")
   }
 
   /**
