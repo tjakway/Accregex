@@ -44,17 +44,16 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
         allAccounts, gasAccount, Set(changeGasRule)))
     }
 
-    applicatorE.isRight shouldEqual true
     val (gasAccount, applicator) = applicatorE.right.get
-    //TODO
-    //gasAccount shouldEqual testObjects.Linked.
+
+    gasAccount shouldEqual testObjects.Linked.gasAccount
 
     val allTransactionNodes = NodeTests.getElems((regDocRoot, "transaction"))
       .right.get
 
     val newNodes = allTransactionNodes.map(applicator.doReplace(_)._2)
 
-    newNodes == allTransactionNodes shouldEqual false
+    newNodes != allTransactionNodes shouldEqual true
 
   }
 
