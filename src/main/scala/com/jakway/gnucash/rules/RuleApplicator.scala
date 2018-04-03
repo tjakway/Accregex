@@ -51,7 +51,9 @@ class RuleApplicator(val allAccounts: Map[String, LinkedAccount],
 
   private def ruleMatches(i: Transaction)(rule: LinkedTransactionRule): Boolean = {
     i.isSourceAccount(rule.sourceAccount) &&
-    i.isDestAccount(rule.destAccount) &&
+    //check if this transaction credits funds to the TARGET
+    //account (i.e. the one we want to replace)
+    i.isDestAccount(targetAccount) &&
     rule.pattern.findFirstMatchIn(i.description).isDefined
   }
 
