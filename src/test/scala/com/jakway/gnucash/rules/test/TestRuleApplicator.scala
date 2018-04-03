@@ -62,15 +62,20 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
 
     def parseTrans = Parser.parseTransaction(allAccounts) _
 
-    val t: Either[Seq[ValidationError], (Seq[Transaction], Seq[Transaction])] =
+    /*val t: Either[Seq[ValidationError], (Seq[Transaction], Seq[Transaction])] =
     for {
       newTransactions <- ValidationError accumulateEithersSimpleSeq newNodes.map(parseTrans)
       oldTransactions <- ValidationError accumulateEithersSimpleSeq oldNodes.map(parseTrans)
     } yield {
       (newTransactions, oldTransactions)
     }
-    val (newTransactions, oldTransactions) = t.right.get
+    val (newTransactions, oldTransactions) = t.right.get*/
 
+    println("NEW NODES:")
+    println(newNodes)
+
+    println("OLD NODES:")
+    println(oldNodes)
 
     newNodes.toString != oldNodes.toString shouldEqual true
     //newTransactions != oldTransactions shouldEqual true
