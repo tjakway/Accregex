@@ -16,9 +16,27 @@ abstract class NodeReplace[A] {
   * @tparam A
   */
 abstract class ElemReplace[A] extends NodeReplace[A] {
+  var numPredicateFalse: Int = 0
+  var numPredicateTrue: Int = 0
+
+  def incrementCount(b: Boolean) =
+    if(b) {
+      numPredicateTrue += 1
+    } else {
+      numPredicateFalse += 1
+    }
+
   final protected override def predicate(n: Node): Boolean = n match {
-    case e: Elem => predicateElem(e)
-    case _ => false
+    case e: Elem => {
+      val res = predicateElem(e)
+      incrementCount(res)
+      res
+    }
+
+    case _ => {
+      incrementCount(false)
+      false
+    }
   }
 
   final protected override def replace(n: Node): (A, Node) = n match {

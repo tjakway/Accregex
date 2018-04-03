@@ -65,6 +65,8 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
     }}.right.get
 
 
+
+    newNodes.toString != oldNodes.toString shouldEqual true
     newTransactions != oldTransactions shouldEqual true
 
   }
