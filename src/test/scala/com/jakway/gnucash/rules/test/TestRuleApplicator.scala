@@ -27,9 +27,9 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
       .map(l => (l.id, l))
       .toMap
 
-    val gasAccountString = "Expenses:Auto:Gas"
+    val targetAccountString = "Expenses:Auto:Gas"
     val unlinkedChangeGasRule = UnlinkedTransactionRule(".*",
-      "1", "Assets:Current Assets", "Expenses:Charity")
+      "1", "Assets:Current Assets:Checking Account", "Expenses:Charity")
 
     val nameParser = new AccountNameParser(allAccounts.values.toSeq)
 
@@ -38,15 +38,15 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
       changeGasRule <- UnlinkedTransactionRule
                       .link(nameParser)(unlinkedChangeGasRule)
 
-      gasAccount <- nameParser.findReferencedAccount(gasAccountString)
+      targetAccount <- nameParser.findReferencedAccount(targetAccountString)
     } yield {
-      (gasAccount, new RuleApplicator(
-        allAccounts, gasAccount, Set(changeGasRule)))
+      (targetAccount, new RuleApplicator(
+        allAccounts, targetAccount, Set(changeGasRule)))
     }
 
-    val (gasAccount, applicator) = applicatorE.right.get
+    val (targetAccount, applicator) = applicatorE.right.get
 
-    gasAccount shouldEqual testObjects.Linked.gasAccount
+    targetAccount shouldEqual testObjects.Linked.gasAccount
 
     val allTransactionNodes = NodeTests.getElems((regDocRoot, "transaction"))
       .right.get
