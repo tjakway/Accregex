@@ -22,6 +22,10 @@ case class LinkedTransactionRule(pattern: Regex,
                                  destAccount: LinkedAccount) {
   import com.jakway.gnucash.parser.xml.NodeTests._
 
+  case class LinkedTransactionRuleError(override val msg: String)
+    extends ValidationError(msg)
+  implicit def errorType: String => ValidationError = LinkedTransactionRuleError.apply
+
   /**
     * TODO: handle debits and credits differently
     *
