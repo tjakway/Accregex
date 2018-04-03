@@ -33,7 +33,6 @@ case class LinkedTransactionRule(pattern: Regex,
     * @param n
     * @return
     */
-
   def replace(targetAccountID: String)(n: Node): Node = n match {
       //recurse downward on all the relevant split nodes until
       //we get to split:account
