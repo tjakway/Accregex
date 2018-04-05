@@ -28,7 +28,8 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
       .toMap
 
     val targetAccountString = "Expenses:Auto:Gas"
-    val unlinkedChangeGasRule = UnlinkedTransactionRule(".*",
+    val description = "Car Repair"
+    val unlinkedChangeGasRule = UnlinkedTransactionRule(description,
       "1", "Assets:Current Assets:Checking Account", "Expenses:Charity")
 
     val nameParser = new AccountNameParser(allAccounts.values.toSeq)
@@ -76,6 +77,24 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
     newNodes.xml_!=(oldNodes) shouldEqual true
     newNodes.toString != oldNodes.toString shouldEqual true
     newTransactions != oldTransactions shouldEqual true
+
+    //make sure the output nodes match what we expect
+    val changedTransactions = newTransactions.filter(_.description == description)
+    changedTransactions.length shouldEqual 1
+    val changedSplits = changedTransactions.head.splits
+    changedSplits.size shouldEqual 3
+
+    changedSplits.map(_.on.name) shouldEqual Set("Checking Account",
+      "Repair and Maintenance", "Charity")
+
+    val prevTransaction = oldTransactions.filter(_.description == description)
+    prevTransaction.length shouldEqual 1
+    prevTransaction != changedTransactions shouldEqual true
+
+    //make sure the values of the splits stay the same
+    def getSplitValues(e: Seq[Transaction]) = e.head.splits.map(_.value)
+    getSplitValues(prevTransaction) shouldEqual getSplitValues(changedTransactions)
+
 
   }
 
