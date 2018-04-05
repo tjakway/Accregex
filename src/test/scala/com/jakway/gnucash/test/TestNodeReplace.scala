@@ -32,7 +32,7 @@ abstract class ElemReplaceCountPredicate[A] extends ElemReplace[A] {
   }
 }
 
-class TestNodeReplace extends FlatSpec with Matchers {
+class TestNodeReplace(val regDocRoot: Node) extends FlatSpec with Matchers {
   import com.jakway.gnucash.parser.xml.NodeTests._
 
   case class TestNodeReplaceError(override val msg: String)
@@ -113,6 +113,6 @@ class TestNodeReplace extends FlatSpec with Matchers {
   }
 
   it should "not change the structure of the reg doc tree" in {
-
+    testNoReplaceVisitChildren(regDocRoot)
   }
 }

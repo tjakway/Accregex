@@ -26,3 +26,5 @@ class TestParserRegDocXML extends TestParser(regDocRoot)
 class TestAccountNameParserRegDocXML extends TestAccountNameParser(regDocRoot)
 
 class TestRuleApplicatorRegDocXML extends TestRuleApplicator(regDocRoot)
+
+class TestNodeReplaceRegDocXML extends TestNodeReplace(regDocRoot)
