@@ -59,11 +59,7 @@ case class LinkedTransactionRule(pattern: Regex,
           val replacementTextNode = Text(destAccount.id)
 
           //return a copy with the new child node
-          splitAccountNode
-            //already checked it's a Right
-            .right.get
-            .asInstanceOf[Elem]
-            .copy(child = Seq(replacementTextNode))
+          n.asInstanceOf[Elem].copy(child = Seq(replacementTextNode))
         }
         case _ => n
       }
