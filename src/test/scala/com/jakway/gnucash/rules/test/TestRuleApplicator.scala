@@ -72,17 +72,10 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
     }
     val (newTransactions, oldTransactions) = t.right.get
 
-    println("NEW NODES:")
-    println(newNodes)
-
-    println("OLD NODES:")
-    println(oldNodes)
-
-    println(clonedNodes.diff(oldNodes))
     clonedNodes == oldNodes
     newNodes.xml_!=(oldNodes) shouldEqual true
     newNodes.toString != oldNodes.toString shouldEqual true
-    //newTransactions != oldTransactions shouldEqual true
+    newTransactions != oldTransactions shouldEqual true
 
   }
 
