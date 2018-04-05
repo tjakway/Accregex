@@ -56,20 +56,21 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
     }.right.get
 
     //clone the old nodes just in case
-    //val oldNodes = allTransactionNodes.map(_.asInstanceOf[Elem].copy())
+    val clonedNodes = allTransactionNodes.map(_.asInstanceOf[Elem].copy())
     val oldNodes = allTransactionNodes
     val newNodes = allTransactionNodes.map(applicator.doReplace(_)._2)
 
+
     def parseTrans = Parser.parseTransaction(allAccounts) _
 
-    /*val t: Either[Seq[ValidationError], (Seq[Transaction], Seq[Transaction])] =
+    val t: Either[Seq[ValidationError], (Seq[Transaction], Seq[Transaction])] =
     for {
       newTransactions <- ValidationError accumulateEithersSimpleSeq newNodes.map(parseTrans)
       oldTransactions <- ValidationError accumulateEithersSimpleSeq oldNodes.map(parseTrans)
     } yield {
       (newTransactions, oldTransactions)
     }
-    val (newTransactions, oldTransactions) = t.right.get*/
+    val (newTransactions, oldTransactions) = t.right.get
 
     println("NEW NODES:")
     println(newNodes)
@@ -77,6 +78,9 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
     println("OLD NODES:")
     println(oldNodes)
 
+    println(clonedNodes.diff(oldNodes))
+    clonedNodes == oldNodes
+    newNodes.xml_!=(oldNodes) shouldEqual true
     newNodes.toString != oldNodes.toString shouldEqual true
     //newTransactions != oldTransactions shouldEqual true
 

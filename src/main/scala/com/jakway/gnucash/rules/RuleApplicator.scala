@@ -79,7 +79,7 @@ class RuleApplicator(val allAccounts: Map[String, LinkedAccount],
         case Some(x) => Right(x)
       }
     } yield {
-      (r, r.replace(targetAccount.id)(e))
+      (r, r.replace(allAccounts, targetAccount.id)(e))
     }
 
     res match {

@@ -3,6 +3,7 @@ package com.jakway.gnucash.parser
 import com.jakway.gnucash.parser.rules.{Split, Transaction}
 import com.jakway.util.XMLUtils
 
+import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
 import scala.xml.Node
 
@@ -162,6 +163,9 @@ class Parser {
 }
 
 object Parser {
+  import com.jakway.gnucash.parser.xml.NodeTests._
+
+  val guidPattern: Regex = """\w{32}""".r
 
   def linkAccounts(accounts: Seq[UnlinkedAccount]): Either[ValidationError, Seq[LinkedAccount]] = {
     case class LinkAccountsError(override val msg: String) extends ValidationError(msg)
@@ -237,6 +241,41 @@ object Parser {
     }
   }
 
+
+  /**
+    * @param s
+    * @return the split id and the account id
+    */
+  def parseSplit(s: Node): Either[ValidationError, (String, String, Double)] = {
+    case class ParseSplitError(override val msg: String)
+      extends ValidationError(msg)
+    implicit def errorType: String => ValidationError = ParseSplitError.apply
+
+    for {
+      _ <- hasNamespace((s, "trn"))
+
+      idNode <- getElem((s, "id"))
+      _ <- hasNamespace((idNode, "split"))
+      _ <- expectAttribute((idNode, "type", "guid"))
+      id <- getNodeText(idNode)
+
+      accountNode <- getElem((s, "account"))
+      _ <- hasNamespace((accountNode, "split"))
+      _ <- expectAttribute((accountNode, "type", "guid"))
+      accountId <- getNodeText(accountNode)
+
+      valueNode <- getElem((s, "value"))
+      _ <- hasNamespace((valueNode, "split"))
+      valueStr <- getNodeText(valueNode)
+
+      value <- FractionParser.parseFraction(valueStr)
+    } yield {
+      (id, accountId, value)
+    }
+  }
+
+  def isSplit(s: Node): Boolean = parseSplit(s).isRight
+
   /**
     * @param accounts a map of account id -> account
     * @param n
@@ -244,39 +283,11 @@ object Parser {
     */
   def parseTransaction(accounts: Map[String, LinkedAccount])(n: Node):
     Either[ValidationError, Transaction] = {
-    import com.jakway.gnucash.parser.xml.NodeTests._
 
     case class ParseTransactionError(override val msg: String)
       extends ValidationError(msg)
+
     implicit def errorType: String => ValidationError = ParseTransactionError.apply
-
-    /**
-      * @param s
-      * @return the split id and the account id
-      */
-    def parseSplit(s: Node): Either[ValidationError, (String, String, Double)] = {
-      for {
-        _ <- hasNamespace((s, "trn"))
-
-        idNode <- getElem((s, "id"))
-        _ <- hasNamespace((idNode, "split"))
-        _ <- expectAttribute((idNode, "type", "guid"))
-        id <- getNodeText(idNode)
-
-        accountNode <- getElem((s, "account"))
-        _ <- hasNamespace((accountNode, "split"))
-        _ <- expectAttribute((accountNode, "type", "guid"))
-        accountId <- getNodeText(accountNode)
-
-        valueNode <- getElem((s, "value"))
-        _ <- hasNamespace((valueNode, "split"))
-        valueStr <- getNodeText(valueNode)
-
-        value <- FractionParser.parseFraction(valueStr)
-      } yield {
-        (id, accountId, value)
-      }
-    }
 
     def lookupAccount(id: String): Either[ValidationError, LinkedAccount] = {
       accounts.get(id) match {
@@ -331,4 +342,48 @@ object Parser {
       }
     }
   }
+
+  def isTransaction(accounts: Map[String, LinkedAccount])(n: Node): Boolean =
+    parseTransaction(accounts)(n).isRight
+
+  //TODO: refactor to reduce duplication between isSplits and parseTransaction
+  def isSplits(n: Node): Boolean = {
+    implicit def errorType: String => ValidationError =
+      (m: String) => new ValidationError(m)
+    val res = for {
+      splitsRoot <- getElem((n, "splits"))
+      _ <- hasNamespace((splitsRoot, "trn"))
+    } yield {splitsRoot}
+
+    res.isRight
+  }
+
+  def getSplitAccount: ValidateF[Node, String] =
+    (n: Node, et: String => ValidationError) => {
+      implicit def errorType: String => ValidationError = et
+
+      for {
+        _ <- hasNamespace((n, "split"))
+        _ <- expectAttribute((n, "type", "guid"))
+        childNode <- onlyOne[Node](n.child)
+
+        guidMatches = guidPattern.findAllIn(childNode.text)
+
+        //make sure it's a guid
+        _ <- if(guidMatches.length == 1) {
+          Right({})
+        }
+        else {
+          Left(errorType(s"Expected an id node but ${childNode.text} " +
+            s"didn't match the guid regex pattern exactly once (numMatches = " +
+            s"${guidMatches.length}"))
+        }
+      } yield {
+        childNode.text
+      }
+  }
+
+  def isSplitAccount(n: Node): Boolean =
+    getSplitAccount(n)(errorType = (m: String) => new ValidationError(m))
+    .isRight
 }
