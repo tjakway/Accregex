@@ -1,11 +1,6 @@
 package com.jakway.gnucash
 
 import java.io.File
-import java.nio.file.Files
-
-import scala.util.Try
-
-import com.jakway.util.Util._
 
 object Config {
   val progName = "accregex"
