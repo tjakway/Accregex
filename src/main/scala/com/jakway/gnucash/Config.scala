@@ -7,6 +7,12 @@ import scala.util.Try
 
 import com.jakway.util.Util._
 
+object Config {
+  val progName = "accregex"
+}
+
+import Config._
+
 case class UnvalidatedConfig(inputPath: String,
                              rulesPath: String,
                              outputPath: Option[String],
@@ -111,8 +117,6 @@ case class ValidatedConfig(inputPath: File,
 object UnvalidatedConfig {
   val default: UnvalidatedConfig =
     UnvalidatedConfig("", "rules.conf", None, true, true)
-
-  val progName = "accregex"
 
   val parser = new scopt.OptionParser[UnvalidatedConfig](progName) {
     head(progName)

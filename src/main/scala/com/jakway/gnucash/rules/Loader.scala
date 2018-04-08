@@ -2,7 +2,7 @@ package com.jakway.gnucash.rules
 
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.jakway.gnucash.Config
+import com.jakway.gnucash.{Config, ValidatedConfig}
 import com.jakway.gnucash.parser.ValidationError
 import com.jakway.gnucash.parser.rules.UnlinkedTransactionRule
 import org.json4s.JObject
