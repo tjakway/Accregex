@@ -1,5 +1,7 @@
 package com.jakway.gnucash.io
 
+import java.io.PrintWriter
+
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.parser._
 import com.jakway.gnucash.parser.rules.UnlinkedTransactionRule
@@ -29,7 +31,16 @@ class Driver(val config: ValidatedConfig) {
   import Driver._
   val parser = new Parser()
 
-  def run(): Unit = ???
+  def run(): Unit = runEither() match {
+    case Right(newXML) => {
+      XML.write(new PrintWriter(config.outputPath), newXML, config.enc,
+        true, null) //null means no doctype
+    }
+    case Left(err) => {
+      System.err.println(ErrorPrinter.format(err))
+      System.exit(1)
+    }
+  }
 
   def runEither(): Either[ValidationError, Node] = {
     for {

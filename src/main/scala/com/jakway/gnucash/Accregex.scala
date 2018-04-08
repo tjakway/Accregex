@@ -4,7 +4,7 @@ import com.jakway.gnucash.io.Driver
 
 
 object Accregex {
-  def fatalError(msg: String): Unit = {
+  private def fatalError(msg: String): Unit = {
     System.err.println(s"Fatal error in ${Config.progName}: $msg")
     System.exit(1)
   }
