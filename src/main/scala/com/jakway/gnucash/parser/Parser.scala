@@ -7,7 +7,7 @@ import com.sun.org.apache.xerces.internal.impl.xpath.XPath.NodeTest
 
 import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
-import scala.xml.Node
+import scala.xml.{Elem, Node}
 
 case class UnlinkedAccount(version: String,
                    id: String,
@@ -389,9 +389,66 @@ object Parser {
     getSplitAccount(n)(errorType = (m: String) => new ValidationError(m))
     .isRight
 
-  def getTransactionNodes: ValidateF[(Node, Map[String, LinkedAccount]), Seq[Node]] =
+
+  private def opTransactionNodes(op: Map[String, LinkedAccount] => Node => Boolean):
+    ValidateF[(Node, Map[String, LinkedAccount]), Seq[Node]] =
     (t: (Node, Map[String, LinkedAccount]), errorType: String => ValidationError) => {
       val (bookNode, accountMap) = t
-      NodeTests.queryElems((bookNode, isTransaction(accountMap)))(errorType)
+      NodeTests.queryElems((bookNode, op(accountMap)))(errorType)
     }
+
+
+  def getTransactionNodes: ValidateF[(Node, Map[String, LinkedAccount]), Seq[Node]] =
+    opTransactionNodes(isTransaction)
+
+  def filterAllTransactionNodes: ValidateF[(Node, Map[String, LinkedAccount]), Seq[Node]] = {
+    def isNotTransaction(x: Map[String, LinkedAccount])(y: Node) = !(isTransaction(x)(y))
+
+    opTransactionNodes(isNotTransaction)
+  }
+
+  //both of these filters *should* give the same result
+  def filterSingleLevelTransactionNodes(accountMap: Map[String, LinkedAccount])(n: Node): Seq[Node] =
+      n.child.filter(!isTransaction(accountMap)(_))
+
+  def replaceTransactionNodes(accountMap: Map[String, LinkedAccount])
+                             (book: Node, replacedTransactions: Seq[Node]): Either[ValidationError, Elem] = {
+    case class ReplaceTransactionNodesError(override val msg: String)
+      extends ValidationError(msg)
+
+    //validate input
+    def bookAsElem: Either[ValidationError, Elem] =
+      Try(book.asInstanceOf[Elem]) match {
+        case Success(x) => Right(x)
+        case Failure(t) => Left(ReplaceTransactionNodesError(s"Could not cast book node `$book` to " +
+          s"an instance of Elem").withCause(t))
+      }
+
+    val preFilterLength = book.child.length
+
+    bookAsElem.flatMap { (bookElem: Elem) =>
+
+      val eitherFilteredChildren = {
+        //TODO: test & refactor
+        val f1 = filterSingleLevelTransactionNodes(accountMap)(bookElem)
+        val f2 = filterAllTransactionNodes((bookElem, accountMap))(ReplaceTransactionNodesError.apply _)
+        if(Right(f1) != f2) {
+          Left(ReplaceTransactionNodesError(
+            s"Expected filter functions to give identical results " +
+              s"but got f1=$f1, f2=$f2"))
+        } else {
+          Right(f1)
+        }
+      }
+
+      for {
+        filteredChildren <- eitherFilteredChildren
+      } yield {
+        val postFilterLength = filteredChildren.length
+        val newChildren = filteredChildren ++ replacedTransactions
+
+        bookElem.copy(child=newChildren)
+      }
+    }
+  }
 }
