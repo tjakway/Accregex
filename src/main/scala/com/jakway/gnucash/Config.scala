@@ -8,6 +8,18 @@ object Config {
 
 import Config._
 
+
+case class ValidatedConfig(inputPath: File,
+                           rulesPath: File,
+                           outputPath: File,
+                           summarize: Boolean,
+                           compress: Boolean) {
+  /**
+    * *highly* doubt this will ever be configurable
+    */
+  val enc = "UTF-8"
+}
+
 case class UnvalidatedConfig(inputPath: String,
                              rulesPath: String,
                              outputPath: Option[String],
@@ -102,12 +114,6 @@ case class UnvalidatedConfig(inputPath: String,
   def checkGnucashInputFile(gnucashInput: File): Either[String, File] =
     checkRuleInputFile(gnucashInput)
 }
-
-case class ValidatedConfig(inputPath: File,
-                           rulesPath: File,
-                           outputPath: File,
-                           summarize: Boolean,
-                           compress: Boolean)
 
 object UnvalidatedConfig {
   val default: UnvalidatedConfig =
