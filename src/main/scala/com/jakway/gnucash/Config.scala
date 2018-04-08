@@ -5,6 +5,8 @@ import java.nio.file.Files
 
 import scala.util.Try
 
+import com.jakway.util.Util._
+
 case class UnvalidatedConfig(inputPath: String,
                              rulesPath: String,
                              outputPath: String,
@@ -13,6 +15,15 @@ case class UnvalidatedConfig(inputPath: String,
   def validate(): Either[String, ValidatedConfig] = {
 
   }
+
+  def validateOrExit(): ValidatedConfig =
+    validate() match {
+      case Right(x) => x
+      case Left(errMsg) => {
+        System.err.println(errMsg)
+        System.exit(1)
+        null: ValidatedConfig
+      }
 
   def calculateOutputFile(inputFile: File, maxTries: Long = 100000): Either[String, File] = {
     val outputDir = inputFile.getParentFile()
