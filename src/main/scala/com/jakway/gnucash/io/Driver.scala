@@ -53,8 +53,7 @@ class Driver(val config: ValidatedConfig) {
     for {
       rawString <- read()
       transactionRuleLoader = new com.jakway.gnucash.rules.Loader(rawString)
-      unlinkedRules: Seq[UnlinkedTransactionRule] <- MultiValidationError.
-                                                      wrap(transactionRuleLoader.parse)
+      unlinkedRules <- MultiValidationError.wrap(transactionRuleLoader.parse)
 
       linkedRules <- ValidationError.accumulateAndWrap(
         unlinkedRules.map(UnlinkedTransactionRule.link(accountNameParser)))
