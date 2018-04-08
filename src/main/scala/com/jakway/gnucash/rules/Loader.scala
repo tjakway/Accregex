@@ -125,8 +125,7 @@ class Loader(val srcToParse: String) {
 
 
 object Loader {
-  //root object is "accregex"
-  val jsonRoot = Config.progName
+  val jsonRoot = "rules"
 
   def loadFromFile(path: String): Either[Seq[ValidationError], Seq[UnlinkedTransactionRule]] = {
     case class TransactionLoaderFileError(override val msg: String)
