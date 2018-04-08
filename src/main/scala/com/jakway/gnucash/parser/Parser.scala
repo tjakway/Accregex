@@ -441,13 +441,26 @@ object Parser {
         }
       }
 
-      for {
+      val res = for {
         filteredChildren <- eitherFilteredChildren
       } yield {
         val postFilterLength = filteredChildren.length
         val newChildren = filteredChildren ++ replacedTransactions
 
         bookElem.copy(child=newChildren)
+      }
+
+      res match {
+        case Right(repElem)
+          if repElem.child.length != preFilterLength => {
+          Left(ReplaceTransactionNodesError(s"Expected the same number of " +
+            s"replacement nodes as the original tree but " +
+            s"repElem.child.length != preFilterLength, where " +
+            s"repElem.child.length=${repElem.child.length}, preFilterLength=$preFilterLength," +
+            s" and repElem=${repElem}"))
+        }
+        case Right(repElem) => Right(repElem)
+        case Left(x) => Left(x)
       }
     }
   }
