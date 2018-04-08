@@ -127,7 +127,8 @@ object UnvalidatedConfig {
 
     opt[Boolean]('s', "summarize")
       .action((x, c) => c.copy(summarize = x))
-      .text(s"Whether to print a summary of changes (default=${default.summarize})")
+      //TODO
+      .text(s"(NOT IMPLEMENTED) Whether to print a summary of changes (default=${default.summarize})")
 
     opt[String]('i', "input")
       .action((x, c) => c.copy(inputPath = x))
@@ -140,6 +141,7 @@ object UnvalidatedConfig {
 
     opt[Boolean]('c', "compress-output")
       .action((x, c) => c.copy(compress = x))
-      .text(s"Whether to compress the output file (default=${default.compress}")
+      //TODO
+      .text(s"(NOT IMPLEMENTED) Whether to compress the output file (default=${default.compress}")
   }
 }
