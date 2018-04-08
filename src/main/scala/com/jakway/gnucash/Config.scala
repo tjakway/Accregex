@@ -9,14 +9,26 @@ import com.jakway.util.Util._
 
 case class UnvalidatedConfig(inputPath: String,
                              rulesPath: String,
-                             outputPath: String,
+                             outputPath: Option[String],
                              summarize: Boolean,
                              compress: Boolean) {
-  def validate(): Either[String, ValidatedConfig] = {
 
+  def validate(): Either[String, ValidatedConfig] = {
+    for {
+      input <- checkGnucashInputFile(new File(inputPath))
+      out <- getOutputFile(input, outputPath)
+      rules <-checkRuleInputFile(new File(rulesPath))
+    } yield {
+      ValidatedConfig(input, rules, out, summarize, compress)
+    }
   }
 
-  def validateOrExit(): ValidatedConfig =
+  def getOutputFile(inputFile: File, outputPath: Option[String]): Either[String, File] = outputPath match {
+    case Some(explicitFile) => checkOutputFile(new File(explicitFile))
+    case None => calculateOutputFile(inputFile)
+  }
+
+  def validateOrExit(): ValidatedConfig = {
     validate() match {
       case Right(x) => x
       case Left(errMsg) => {
@@ -24,6 +36,8 @@ case class UnvalidatedConfig(inputPath: String,
         System.exit(1)
         null: ValidatedConfig
       }
+    }
+  }
 
   def calculateOutputFile(inputFile: File, maxTries: Long = 100000): Either[String, File] = {
     val outputDir = inputFile.getParentFile()
@@ -62,16 +76,30 @@ case class UnvalidatedConfig(inputPath: String,
     }
   }
 
-  def checkOutputFile(outFile: File): Either[String, File] = {
-    val toCheck = Seq(
-      (outFile.exists(), s"$outFile already exists"),
-      (!outFile.canWrite(), s"cannot write to $outFile"))
 
-    toCheck.find(_._1).map(_._2) match {
+  private def iterateChecks[A](checks: Seq[(Boolean, String)])(onSuccess: A): Either[String, A] = {
+    checks.find(_._1).map(_._2) match {
       case Some(errMsg) => Left(errMsg)
-      case None => Right(outFile)
+      case None => Right(onSuccess)
     }
   }
+
+  def checkOutputFile(outFile: File): Either[String, File] = {
+    iterateChecks(Seq(
+      (outFile.exists(), s"$outFile already exists"),
+      (!outFile.canWrite(), s"cannot write to $outFile")))(outFile)
+  }
+
+  def checkRuleInputFile(rules: File): Either[String, File] = {
+    iterateChecks(Seq(
+      (!rules.exists(), s"${rules} does not exist"),
+      (!rules.canRead(), s"$rules exists but cannot be read"),
+      (rules.isDirectory(), s"$rules is a directory")
+    ))(rules)
+  }
+
+  def checkGnucashInputFile(gnucashInput: File): Either[String, File] =
+    checkRuleInputFile(gnucashInput)
 }
 
 case class ValidatedConfig(inputPath: File,
@@ -82,7 +110,7 @@ case class ValidatedConfig(inputPath: File,
 
 object UnvalidatedConfig {
   val default: UnvalidatedConfig =
-    UnvalidatedConfig("", "rules.conf", "", true, true)
+    UnvalidatedConfig("", "rules.conf", None, true, true)
 
   val progName = "accregex"
 
@@ -103,8 +131,8 @@ object UnvalidatedConfig {
       .required()
 
     opt[String]('o', "output")
-      .action((x, c) => c.copy(outputPath = x))
-      .text("The destination file (default=processed.out")
+      .action((x, c) => c.copy(outputPath = Some(x)))
+      .text("The destination file (default=input_filename.out")
 
     opt[Boolean]('c', "compress-output")
       .action((x, c) => c.copy(compress = x))
