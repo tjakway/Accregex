@@ -31,7 +31,7 @@ class Driver(val config: ValidatedConfig) {
 
   def run(): Unit = ???
 
-  def runEither(): Either[ValidationError, Unit] = {
+  def runEither(): Either[ValidationError, Node] = {
     for {
       //load the input XML file
       rootNode <- loadGnucashXMLFile()
@@ -54,7 +54,8 @@ class Driver(val config: ValidatedConfig) {
       outputTransactionNodes = allTransactionNodes.map(ruleApplicator.doReplace(_)._2)
 
       newBookNode <- Parser.replaceTransactionNodes(accountMap)(bookNode, outputTransactionNodes)
-    } yield {}
+      newRootNode <- Parser.replaceBookNode(rootNode)(newBookNode)
+    } yield (newRootNode)
   }
 
   private def loadAccounts(book: Node) = {
