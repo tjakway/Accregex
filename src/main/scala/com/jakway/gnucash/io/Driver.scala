@@ -53,6 +53,7 @@ class Driver(val config: ValidatedConfig) {
       //TODO: handle tags outputted by RuleApplicator.doReplace
       outputTransactionNodes = allTransactionNodes.map(ruleApplicator.doReplace(_)._2)
 
+      newBookNode <- Parser.replaceTransactionNodes(accountMap)(bookNode, outputTransactionNodes)
     } yield {}
   }
 

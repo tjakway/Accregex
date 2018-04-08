@@ -34,13 +34,7 @@ class Parser {
 
   def findBookNode: ValidateF[Node, Node] =
     (root, errorType: String => ValidationError) => {
-      def isBookNode(n: Node): Boolean = {
-        n.label == "book" &&
-          getAttribute((n, "version"))(errorType).isRight &&
-          hasNamespace((n, "gnc"))(errorType).isRight
-      }
-
-      findOnlyOne((isBookNode _, root))(errorType)
+      findOnlyOne((Parser.isBookNode _, root))(errorType)
     }
 
   private def isCountDataNode(n: Node): Boolean = {
@@ -463,5 +457,47 @@ object Parser {
         case Left(x) => Left(x)
       }
     }
+  }
+
+  def replaceBookNode(root: Node)(replacementBookNode: Node) = {
+    case class ReplaceBookNodeError(override val msg: String)
+      extends ValidationError(msg)
+
+    //validate input
+    def rootAsElem: Either[ValidationError, Elem] =
+      Try(root.asInstanceOf[Elem]) match {
+        case Success(x) => Right(x)
+        case Failure(t) => Left(ReplaceBookNodeError(s"Could not cast root node `$root` to " +
+          s"an instance of Elem").withCause(t))
+      }
+
+    //sanity check
+    if(!isBookNode(replacementBookNode)) {
+      Left(ReplaceBookNodeError("replacementBookNode argument is not a book node" +
+        s", replacementBookNode=$replacementBookNode"))
+    } else {
+      //filter out non-books then append our replacement node
+      rootAsElem.flatMap { (rootElem: Elem) =>
+        val numBookNodes = rootElem.child.count(isBookNode)
+
+        if(numBookNodes != 1) {
+          Left(ReplaceBookNodeError(s"Expected only 1 book node in root element `$root` but " +
+            s"numBookNodes=$numBookNodes"))
+        } else {
+          val filteredChildren = rootElem.child.filter(!isBookNode(_))
+          val newChildren = filteredChildren ++ Seq(replacementBookNode)
+
+          Right(rootElem.copy(child=newChildren))
+        }
+      }
+    }
+  }
+
+  def isBookNode(n: Node): Boolean = {
+    def f = new ValidationError(_)
+
+    n.label == "book" &&
+      getAttribute((n, "version"))(f).isRight &&
+      hasNamespace((n, "gnc"))(f).isRight
   }
 }
