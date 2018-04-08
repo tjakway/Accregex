@@ -41,7 +41,7 @@ case class UnvalidatedConfig(inputPath: String,
       }
 
       if(tooManyAttempts) {
-        Left("Could not generate an output file, please pass one explicitly")
+        Left("Could not generate an output filename, please pass one explicitly")
       } else {
         Right(candidate)
       }
