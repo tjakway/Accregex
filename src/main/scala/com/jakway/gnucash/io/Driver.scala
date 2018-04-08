@@ -25,6 +25,10 @@ class Driver(val config: ValidatedConfig) {
       rootNode <- loadGnucashXMLFile()
       bookNode <- parser.findBookNode(rootNode)(GnucashXMLLoadError.apply(_))
       accounts <- loadAccounts(bookNode)
+      rules <- loadRules(new AccountNameParser(accounts))(accounts)
+
+      accountMap = accounts.map(x => (x.id, x)).toMap
+
     } yield {}
   }
 

@@ -52,7 +52,7 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
     val allTransactionNodes = {
       for {
         bookNode <- parser.findBookNode(regDocRoot)
-        transactions <- NodeTests.getElems((bookNode, "transaction"))
+        transactions <- Parser.getTransactionNodes((bookNode, allAccounts))
       } yield(transactions)
     }.right.get
 

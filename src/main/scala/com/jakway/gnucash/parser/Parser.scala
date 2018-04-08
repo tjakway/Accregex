@@ -1,7 +1,9 @@
 package com.jakway.gnucash.parser
 
 import com.jakway.gnucash.parser.rules.{Split, Transaction}
+import com.jakway.gnucash.parser.xml.NodeTests
 import com.jakway.util.XMLUtils
+import com.sun.org.apache.xerces.internal.impl.xpath.XPath.NodeTest
 
 import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
@@ -386,4 +388,10 @@ object Parser {
   def isSplitAccount(n: Node): Boolean =
     getSplitAccount(n)(errorType = (m: String) => new ValidationError(m))
     .isRight
+
+  def getTransactionNodes: ValidateF[(Node, Map[String, LinkedAccount]), Seq[Node]] =
+    (t: (Node, Map[String, LinkedAccount]), errorType: String => ValidationError) => {
+      val (bookNode, accountMap) = t
+      NodeTests.queryElems((bookNode, isTransaction(accountMap)))(errorType)
+    }
 }

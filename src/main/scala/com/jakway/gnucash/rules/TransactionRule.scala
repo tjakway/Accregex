@@ -31,7 +31,9 @@ case class LinkedTransactionRule(pattern: Regex,
     * TODO: handle debits and credits differently
     *
     * re replacing XML, see: https://stackoverflow.com/questions/17705693/scala-replace-xml-element-with-specific-text
-    * @param accounts needed for Parser.isTransaction.  TODO: refactor so as to make it unnecessary
+    * @param accounts map of account ID -> account
+    *                 needed for Parser.isTransaction.
+    *                 TODO: refactor so as to make it unnecessary
     * @param targetAccountID most likely "unspecified"
     * @param n
     * @return

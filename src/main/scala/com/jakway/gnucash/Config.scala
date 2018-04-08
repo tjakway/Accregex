@@ -13,7 +13,8 @@ case class ValidatedConfig(inputPath: File,
                            rulesPath: File,
                            outputPath: File,
                            summarize: Boolean,
-                           compress: Boolean) {
+                           compress: Boolean,
+                           targetAccount: String) {
   /**
     * *highly* doubt this will ever be configurable
     */
@@ -24,7 +25,8 @@ case class UnvalidatedConfig(inputPath: String,
                              rulesPath: String,
                              outputPath: Option[String],
                              summarize: Boolean,
-                             compress: Boolean) {
+                             compress: Boolean,
+                             targetAccount: String) {
 
   def validate(): Either[String, ValidatedConfig] = {
     for {
@@ -32,7 +34,7 @@ case class UnvalidatedConfig(inputPath: String,
       out <- getOutputFile(input, outputPath)
       rules <-checkRuleInputFile(new File(rulesPath))
     } yield {
-      ValidatedConfig(input, rules, out, summarize, compress)
+      ValidatedConfig(input, rules, out, summarize, compress, targetAccount)
     }
   }
 
@@ -117,7 +119,7 @@ case class UnvalidatedConfig(inputPath: String,
 
 object UnvalidatedConfig {
   val default: UnvalidatedConfig =
-    UnvalidatedConfig("", "rules.conf", None, true, true)
+    UnvalidatedConfig("", "rules.conf", None, true, true, "Unspecified")
 
   val parser = new scopt.OptionParser[UnvalidatedConfig](progName) {
     head(progName)
@@ -144,5 +146,9 @@ object UnvalidatedConfig {
       .action((x, c) => c.copy(compress = x))
       //TODO
       .text(s"(NOT IMPLEMENTED) Whether to compress the output file (default=${default.compress}")
+
+    opt[String]('t', "target-account")
+      .action((x, c) =>  c.copy(targetAccount = x))
+      .text(s"The account we're going to replace (default=${default.targetAccount}")
   }
 }
