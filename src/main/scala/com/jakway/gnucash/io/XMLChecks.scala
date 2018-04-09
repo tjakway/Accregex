@@ -31,7 +31,23 @@ object XMLValidator {
   val schemaResource = "/" + schemaName
 }
 
-class XMLValidator(validatedConfig: ValidatedConfig) {
+trait XMLValidator {
+  def validate(inputName: String, xmlInput: String): Either[ValidationError, Unit] = {
+    validate(inputName, new StreamSource(new StringReader(xmlInput)))
+  }
+
+  def validate(xmlInput: File): Either[ValidationError, Unit] = {
+    validate(xmlInput.toString, new StreamSource(xmlInput))
+  }
+
+  def validate(inputName: String, xmlInput: StreamSource): Either[ValidationError, Unit]
+}
+
+/**
+  * validate the XML against our RELAX-NG schema
+  * @param validatedConfig
+  */
+class GnucashXMLValidator(validatedConfig: ValidatedConfig) extends XMLValidator {
   import XMLValidator._
 
   private lazy val validator: Either[ValidationError, javax.xml.validation.Validator] = {
@@ -50,15 +66,7 @@ class XMLValidator(validatedConfig: ValidatedConfig) {
     }
   }
 
-  def validate(inputName: String, xmlInput: String): Either[ValidationError, Unit] = {
-    validate(inputName, new StreamSource(new StringReader(xmlInput)))
-  }
-
-  def validate(xmlInput: File): Either[ValidationError, Unit] = {
-    validate(xmlInput.toString, new StreamSource(xmlInput))
-  }
-
-  def validate(inputName: String, xmlInput: StreamSource): Either[ValidationError, Unit] = {
+  override def validate(inputName: String, xmlInput: StreamSource): Either[ValidationError, Unit] = {
     validator.flatMap { v =>
       try {
         Right(v.validate(xmlInput))
@@ -73,4 +81,12 @@ class XMLValidator(validatedConfig: ValidatedConfig) {
       }
     }
   }
+}
+
+/**
+  * do-nothing instance of XMLValidator
+  */
+class SkipXMLValidator extends XMLValidator {
+  override def validate(inputName: String, xmlInput: StreamSource): Either[ValidationError, Unit] =
+    Right()
 }
