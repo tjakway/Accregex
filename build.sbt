@@ -20,6 +20,14 @@ libraryDependencies ++=
       //need it for producing JSON from the DSL
       "org.json4s" %% "json4s-jackson" % "3.5.3",
 
+      //XMLUnit
+      //https://github.com/xmlunit/xmlunit
+      //for comparing XML documents
+      "xmlunit" % "xmlunit" % "1.6",
+
+      //jing/trang: for validating against RELAX-NG schemas
+      "com.thaiopensource" % "jing" % "20091111",
+
       //scalatest
       //see http://www.scalatest.org/install
       "org.scalatest" %% "scalatest" % "3.0.4" % "test",
