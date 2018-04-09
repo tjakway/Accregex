@@ -87,6 +87,10 @@ class GnucashXMLValidator(validatedConfig: ValidatedConfig) extends XMLValidator
   * do-nothing instance of XMLValidator
   */
 class SkipXMLValidator extends XMLValidator {
+  override def validate(inputName: String, xmlInput: String): Either[ValidationError, Unit] = Right()
+
+  override def validate(xmlInput: File): Either[ValidationError, Unit] = Right()
+
   override def validate(inputName: String, xmlInput: StreamSource): Either[ValidationError, Unit] =
     Right()
 }
