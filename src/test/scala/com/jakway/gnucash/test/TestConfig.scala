@@ -1,5 +1,6 @@
 package com.jakway.gnucash.test
 
+import com.jakway.gnucash.io.test.TestXMLValidator
 import com.jakway.gnucash.parser.test.TestParser
 import com.jakway.gnucash.rules.test.{TestAccountNameParser, TestLinkAccounts, TestRuleApplicator}
 

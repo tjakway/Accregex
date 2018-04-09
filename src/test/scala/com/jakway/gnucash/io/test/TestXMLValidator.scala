@@ -14,9 +14,7 @@ class TestXMLValidator(val regDocRoot: Node) extends FlatSpec with Matchers {
   val regDocElem = regDocRoot.asInstanceOf[Elem]
 
   "XMLValidator" should "support >1 validator instance simultaneously" in {
-    @volatile
     val v1 = new GnucashXMLValidator()
-    @volatile
     val v2 = new GnucashXMLValidator()
   }
 
