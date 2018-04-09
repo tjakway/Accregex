@@ -33,9 +33,10 @@ object XMLValidator {
 }
 
 trait XMLValidator {
-  def validate(inputName: String, node: scala.xml.Node, enc: String = "UTF-8"): Either[ValidationError, Unit] = {
+  def validate(inputName: String, node: scala.xml.Node): Either[ValidationError, Unit] = {
     Try {
       //need to render the node as a string then pass it on as a StreamSource
+      val enc = "UTF-8"
       val sw: StringWriter = new StringWriter()
       scala.xml.XML.write(sw, node, enc,
         true, null) //null means no doctype

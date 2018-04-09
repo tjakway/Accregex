@@ -60,6 +60,9 @@ class Driver(val config: ValidatedConfig) {
 
   def runEither(): Either[ValidationError, Node] = {
     for {
+      //optionally validate the input file first
+      _ <- inputValidator.validate(config.inputPath)
+
       //load the input XML file
       rootNode <- loadGnucashXMLFile()
       bookNode <- parser.findBookNode(rootNode)(GnucashXMLLoadError.apply(_))
@@ -82,6 +85,10 @@ class Driver(val config: ValidatedConfig) {
 
       newBookNode <- Parser.replaceTransactionNodes(accountMap)(bookNode, outputTransactionNodes)
       newRootNode <- Parser.replaceBookNode(rootNode)(newBookNode)
+
+      //optionally validate the transformed XML document
+      _ <- outputValidator.validate(s"output XML to be written to ${config.outputPath}",
+        newRootNode)
     } yield (newRootNode)
   }
 
