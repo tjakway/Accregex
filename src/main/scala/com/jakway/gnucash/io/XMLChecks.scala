@@ -45,9 +45,8 @@ trait XMLValidator {
 
 /**
   * validate the XML against our RELAX-NG schema
-  * @param validatedConfig
   */
-class GnucashXMLValidator(validatedConfig: ValidatedConfig) extends XMLValidator {
+class GnucashXMLValidator extends XMLValidator {
   import XMLValidator._
 
   private lazy val validator: Either[ValidationError, javax.xml.validation.Validator] = {

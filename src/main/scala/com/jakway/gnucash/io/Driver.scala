@@ -31,6 +31,8 @@ class Driver(val config: ValidatedConfig) {
   import Driver._
   val parser = new Parser()
 
+
+
   def run(): Unit = runEither() match {
     case Right(newXML) => {
       XML.write(new PrintWriter(config.outputPath), newXML, config.enc,
