@@ -31,14 +31,26 @@ class Driver(val config: ValidatedConfig) {
   import Driver._
   val parser = new Parser()
 
-  lazy val validator: XMLValidator = {
-    if
-  }
+  //schema validation can be disabled via flags
+  lazy val inputValidator: XMLValidator =
+    if(config.skipInputValidation) {
+      new GnucashXMLValidator()
+    } else {
+      new SkipXMLValidator()
+    }
+
+  lazy val outputValidator: XMLValidator =
+    if(config.skipOutputValidation) {
+      new GnucashXMLValidator()
+    } else {
+      new SkipXMLValidator()
+    }
+
 
   def run(): Unit = runEither() match {
     case Right(newXML) => {
       XML.write(new PrintWriter(config.outputPath), newXML, config.enc,
-        true, null) //null means no doctype
+        true, null) //null means no doctyp
     }
     case Left(err) => {
       System.err.println(ErrorPrinter.format(err))

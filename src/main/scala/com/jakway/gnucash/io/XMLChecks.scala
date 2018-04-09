@@ -1,8 +1,9 @@
 package com.jakway.gnucash.io
 
-import java.io.{File, StringReader}
+import java.io.{File, StringReader, StringWriter}
 
 import com.jakway.gnucash.ValidatedConfig
+import com.jakway.gnucash.io.XMLValidator.{GnucashInitializeValidatorError, XMLValidationError}
 import com.jakway.gnucash.parser.ValidationError
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
@@ -32,6 +33,24 @@ object XMLValidator {
 }
 
 trait XMLValidator {
+  def validate(inputName: String, node: scala.xml.Node, enc: String = "UTF-8"): Either[ValidationError, Unit] = {
+    Try {
+      //need to render the node as a string then pass it on as a StreamSource
+      val sw: StringWriter = new StringWriter()
+      scala.xml.XML.write(sw, node, enc,
+        true, null) //null means no doctype
+
+      sw.toString()
+    } match {
+      case Success(xmlStr) => {
+        validate(inputName, xmlStr)
+      }
+      case Failure(t) => Left(new XMLValidationError("Error rendering a scala XML node to a String")
+        .withCause(t))
+
+    }
+  }
+
   def validate(inputName: String, xmlInput: String): Either[ValidationError, Unit] = {
     validate(inputName, new StreamSource(new StringReader(xmlInput)))
   }
