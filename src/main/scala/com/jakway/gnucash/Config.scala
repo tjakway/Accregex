@@ -14,6 +14,8 @@ case class ValidatedConfig(inputPath: File,
                            outputPath: File,
                            summarize: Boolean,
                            compress: Boolean,
+                           skipInputValidation: Boolean,
+                           skipOutputValidation: Boolean,
                            targetAccount: String) {
   /**
     * *highly* doubt this will ever be configurable
@@ -26,6 +28,8 @@ case class UnvalidatedConfig(inputPath: String,
                              outputPath: Option[String],
                              summarize: Boolean,
                              compress: Boolean,
+                             skipInputValidation: Boolean,
+                             skipOutputValidation: Boolean,
                              targetAccount: String) {
 
   def validate(): Either[String, ValidatedConfig] = {
@@ -34,7 +38,9 @@ case class UnvalidatedConfig(inputPath: String,
       out <- getOutputFile(input, outputPath)
       rules <-checkRuleInputFile(new File(rulesPath))
     } yield {
-      ValidatedConfig(input, rules, out, summarize, compress, targetAccount)
+      ValidatedConfig(input, rules, out,
+        summarize, compress, skipInputValidation, skipOutputValidation,
+        targetAccount)
     }
   }
 
@@ -119,7 +125,7 @@ case class UnvalidatedConfig(inputPath: String,
 
 object UnvalidatedConfig {
   val default: UnvalidatedConfig =
-    UnvalidatedConfig("", "rules.conf", None, true, true, "Unspecified")
+    UnvalidatedConfig("", "rules.conf", None, true, true, false, false, "Unspecified")
 
   val parser = new scopt.OptionParser[UnvalidatedConfig](progName) {
     head(progName)
@@ -145,10 +151,20 @@ object UnvalidatedConfig {
     opt[Boolean]('c', "compress-output")
       .action((x, c) => c.copy(compress = x))
       //TODO
-      .text(s"(NOT IMPLEMENTED) Whether to compress the output file (default=${default.compress}")
+      .text(s"(NOT IMPLEMENTED) Whether to compress the output file (default=${default.compress})")
+
+    opt[Boolean]("validate-input")
+        .action((x, c) => c.copy(skipInputValidation = x))
+        .text(s"Whether to check the input against our schema (default=${default.skipInputValidation})" +
+          s".  Note that this is only one of many checks.")
+
+    opt[Boolean]("validate-output")
+      .action((x, c) => c.copy(skipOutputValidation = x))
+      .text(s"Whether to check the output against our schema (default=${default.skipOutputValidation})" +
+        s".  Note that this is only one of many checks.")
 
     opt[String]('t', "target-account")
       .action((x, c) =>  c.copy(targetAccount = x))
-      .text(s"The account we're going to replace (default=${default.targetAccount}")
+      .text(s"The account we're going to replace (default=${default.targetAccount})")
   }
 }

@@ -31,7 +31,9 @@ class Driver(val config: ValidatedConfig) {
   import Driver._
   val parser = new Parser()
 
-
+  lazy val validator: XMLValidator = {
+    if
+  }
 
   def run(): Unit = runEither() match {
     case Right(newXML) => {
