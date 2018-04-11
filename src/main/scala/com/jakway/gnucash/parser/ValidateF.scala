@@ -3,9 +3,9 @@ package com.jakway.gnucash.parser
 import scala.util.{Failure, Success, Try}
 import scala.xml.Node
 
-//package private validation function class
+//validation function class
 //see https://stackoverflow.com/questions/49353695/type-synonyms-for-implicits
-private[parser] abstract class ValidateF[I,O] {
+abstract class ValidateF[I,O] {
   // single abstract method without implicits
   def validate( i: I,
                   errorType: String => ValidationError
