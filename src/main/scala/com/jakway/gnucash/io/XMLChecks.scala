@@ -82,7 +82,7 @@ trait ExternalValidator extends XMLValidator {
 /**
   * validate the XML against our RELAX-NG schema
   */
-class XMLLintValidator(val tmpDir: Option[File] = None) extends ExternalValidator {
+class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidator {
   import XMLValidator._
 
   case class XMLLintValidator(override val msg: String)
@@ -106,19 +106,51 @@ class XMLLintValidator(val tmpDir: Option[File] = None) extends ExternalValidato
       }
     }
 
-    tmpDir match {
+    tempDir match {
       //fail if the passed dir isn't valid
-      case Some(dir) => checkDir(s"Could not use passed temp dir $tmpDir", dir)
+      case Some(dir) => checkDir(s"Could not use passed temp dir $tempDir", dir)
 
       //try and generated one otherwise
       case None => {
         Try(Files.createTempDirectory(defaultTmpDirPrefix)) match {
           case Success(dir) => checkDir(s"Could not use generated temp dir $dir", dir.toFile)
+              .map { x => x.deleteOnExit(); x }
           case Failure(t) => Left(XMLLintValidator("Could not create temporary dir").withCause(t))
         }
       }
     }
   }
+
+  private def getTempFile(dir: File): Either[ValidationError, File] = {
+    Try(Files.createTempFile(dir.toPath, null, ".xml")) match {
+      case Success(f) => Right(f.toFile)
+      case Failure(t) => Left(
+        XMLLintValidator(s"Could not create temp file in $dir").withCause(t))
+    }
+  }
+
+  private def xmlToTmpFile(dir: File)(xml: String): Either[ValidationError, File] = {
+    import java.io.PrintWriter
+    def write(dest: File): Either[ValidationError, Unit] = {
+      val res = Try(new PrintWriter(dest))
+        .foreach { p =>
+          p.println(xml)
+          p.close()
+        }
+      res match {
+        case Success(_) => Right()
+        case Failure(t) => Left(
+          XMLLintValidator(s"Failed to write XML `$xml` to file $dest").withCause(t))
+      }
+    }
+
+    for {
+      f <- getTempFile(dir)
+      write(f)
+    } yield xml
+  }
+
+
 
   private lazy val validator: Either[ValidationError, javax.xml.validation.Validator] = {
     //read the schema resource and set up the necessary JAX machinery
