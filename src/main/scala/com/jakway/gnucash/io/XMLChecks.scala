@@ -11,6 +11,7 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory}
 
+import scala.sys.process.processInternal.InputStream
 import scala.util.{Failure, Success, Try}
 
 class CmpXML(val left: File, val right: File) {
@@ -151,6 +152,11 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
   }
 
 
+  override def validate(inputName: String, xmlInput: StreamSource): Either[ValidationError, Unit] = {
+    for {
+      xmlToFile() xmlInput.
+    }
+  }
 
   private lazy val validator: Either[ValidationError, javax.xml.validation.Validator] = {
     //read the schema resource and set up the necessary JAX machinery
@@ -195,4 +201,29 @@ class SkipXMLValidator extends XMLValidator {
 
   override def validate(inputName: String, xmlInput: StreamSource): Either[ValidationError, Unit] =
     Right()
+}
+
+
+private object StreamReader {
+
+  //see https://stackoverflow.com/questions/309424/read-convert-an-inputstream-to-a-string
+  def readStream(inputStream: InputStream): String = {
+    import java.io.InputStreamReader
+
+    val bufferSize = 1024
+    val buffer = new Array[Char](bufferSize)
+    val out = new StringBuilder
+    val in = new InputStreamReader(inputStream, "UTF-8")
+
+    var rsz = 0
+
+    do {
+      rsz = in.read(buffer, 0, buffer.length)
+      if(rsz >= 0) {
+        out.append(buffer, 0, rsz)
+      }
+    } while(rsz >= 0)
+
+    out.toString()
+  }
 }
