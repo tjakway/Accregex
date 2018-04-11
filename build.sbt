@@ -40,4 +40,4 @@ mainClass in Compile := Some("com.jakway.gnucash.Accregex")
 excludeFilter in unmanagedSources := HiddenFileFilter || "snippets.scala"
 
 //enable more warnings
-scalacOptions in compile ++= Seq("-unchecked", "-deprecation", "-feature")
+scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-feature")
