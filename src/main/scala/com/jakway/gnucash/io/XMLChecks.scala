@@ -1,10 +1,12 @@
 package com.jakway.gnucash.io
 
 import java.io.{File, StringReader, StringWriter}
+import java.nio.file.Files
 
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.io.XMLValidator.{GnucashInitializeValidatorError, XMLValidationError}
 import com.jakway.gnucash.parser.ValidationError
+import com.jakway.util.runner.CheckCommandExists
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory}
@@ -63,11 +65,60 @@ trait XMLValidator {
   def validate(inputName: String, xmlInput: StreamSource): Either[ValidationError, Unit]
 }
 
+trait ExternalValidator extends XMLValidator {
+  val programName: String
+
+  case class ExternalValidatorError(override val msg: String)
+    extends ValidationError(msg)
+
+  def testExists(testCmd: String): Either[ValidationError, Unit] = {
+    Try(new CheckCommandExists(programName, Seq("--version"))) match {
+      case Success(_) => Right()
+      case Failure(t) => Left(ExternalValidatorError(s"Program does not exist: $testCmd"))
+    }
+  }
+}
+
 /**
   * validate the XML against our RELAX-NG schema
   */
-class GnucashXMLValidator extends XMLValidator {
+class XMLLintValidator(val tmpDir: Option[File] = None) extends ExternalValidator {
   import XMLValidator._
+
+  case class XMLLintValidator(override val msg: String)
+    extends ValidationError(msg)
+
+  val defaultTmpDirPrefix = "accregexvalidator"
+
+  private def getTmpDir(): Either[ValidationError, File] = {
+
+    def checkDir(errHeader: String, d: File): Either[ValidationError, File] = {
+      def err = (x: String) => Left(XMLLintValidator(errHeader + ": " + x))
+      //wrap IO actions in a Try to catch SecurityExceptions
+      if(!d.exists() && !Try(d.mkdirs()).getOrElse(false)) {
+        err(s"expected $d to exist")
+      } else if(!d.isDirectory) {
+        err(s"expected $d to be a directory")
+      } else if(!d.canWrite && !Try(d.setWritable(true)).getOrElse(false)) {
+        err(s"expected $d to be writeable")
+      } else {
+        Right(d)
+      }
+    }
+
+    tmpDir match {
+      //fail if the passed dir isn't valid
+      case Some(dir) => checkDir(s"Could not use passed temp dir $tmpDir", dir)
+
+      //try and generated one otherwise
+      case None => {
+        Try(Files.createTempDirectory(defaultTmpDirPrefix)) match {
+          case Success(dir) => checkDir(s"Could not use generated temp dir $dir", dir.toFile)
+          case Failure(t) => Left(XMLLintValidator("Could not create temporary dir").withCause(t))
+        }
+      }
+    }
+  }
 
   private lazy val validator: Either[ValidationError, javax.xml.validation.Validator] = {
     //read the schema resource and set up the necessary JAX machinery
