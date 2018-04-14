@@ -21,6 +21,30 @@ object XMLValidator {
   class XMLValidationError(override val msg: String)
     extends ValidationError(msg)
 
+  def getValidators(conf: ValidatedConfig): (XMLValidator, XMLValidator) = {
+    lazy val tempDir = conf.tempDir.map(new File(_))
+
+    val inputValidator = if(conf.skipInputValidation) {
+      new SkipXMLValidator()
+    } else {
+      new XMLLintValidator(tempDir)
+    }
+
+    val outputValidator = if(conf.skipOutputValidation) {
+      new SkipXMLValidator()
+    } else {
+      //if we're performing both input and output verification then
+      //use the same validator object for both
+      if(inputValidator.isInstanceOf[XMLLintValidator]) {
+        inputValidator
+      } else {
+        new XMLLintValidator(tempDir)
+      }
+    }
+
+    (inputValidator, outputValidator)
+  }
+
   val schemaName = "gnucash-v2.rnc"
   val schemaResource = "/" + schemaName
 }

@@ -31,22 +31,6 @@ class Driver(val config: ValidatedConfig) {
   import Driver._
   val parser = new Parser()
 
-  //schema validation can be disabled via flags
-  lazy val inputValidator: XMLValidator =
-    if(config.skipInputValidation) {
-      new XMLLintValidator()
-    } else {
-      new SkipXMLValidator()
-    }
-
-  lazy val outputValidator: XMLValidator =
-    if(config.skipOutputValidation) {
-      new XMLLintValidator()
-    } else {
-      new SkipXMLValidator()
-    }
-
-
   def run(): Unit = runEither() match {
     case Right(newXML) => {
       XML.write(new PrintWriter(config.outputPath), newXML, config.enc,
@@ -57,6 +41,8 @@ class Driver(val config: ValidatedConfig) {
       System.exit(1)
     }
   }
+
+  lazy val (inputValidator, outputValidator) = XMLValidator.getValidators(config)
 
   def runEither(): Either[ValidationError, Node] = {
     for {
