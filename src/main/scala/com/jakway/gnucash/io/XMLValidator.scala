@@ -13,10 +13,6 @@ import javax.xml.validation.{Schema, SchemaFactory}
 
 import scala.util.{Failure, Success, Try}
 
-class CmpXML(val left: File, val right: File) {
-
-}
-
 object XMLValidator {
   class XMLValidationError(override val msg: String)
     extends ValidationError(msg)
