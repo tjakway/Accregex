@@ -133,6 +133,7 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
 
   private def xmlToTmpFile(dir: File)(xml: String): Either[ValidationError, File] = {
     import java.io.PrintWriter
+    //close over the XML and write it out to the passed file
     def write(dest: File): Either[ValidationError, Unit] = {
       val res = Try(new PrintWriter(dest))
         .foreach { p =>
@@ -148,8 +149,8 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
 
     for {
       f <- getTempFile(dir)
-      write(f)
-    } yield xml
+      _ <- write(f)
+    } yield f
   }
 
 
