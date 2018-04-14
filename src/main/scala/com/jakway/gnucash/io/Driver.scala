@@ -34,14 +34,14 @@ class Driver(val config: ValidatedConfig) {
   //schema validation can be disabled via flags
   lazy val inputValidator: XMLValidator =
     if(config.skipInputValidation) {
-      new GnucashXMLValidator()
+      new XMLLintValidator()
     } else {
       new SkipXMLValidator()
     }
 
   lazy val outputValidator: XMLValidator =
     if(config.skipOutputValidation) {
-      new GnucashXMLValidator()
+      new XMLLintValidator()
     } else {
       new SkipXMLValidator()
     }
@@ -87,7 +87,7 @@ class Driver(val config: ValidatedConfig) {
       newRootNode <- Parser.replaceBookNode(rootNode)(newBookNode)
 
       //optionally validate the transformed XML document
-      _ <- outputValidator.validate(s"output XML to be written to ${config.outputPath}",
+      _ <- outputValidator.validateNode(s"output XML to be written to ${config.outputPath}",
         newRootNode)
     } yield (newRootNode)
   }

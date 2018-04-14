@@ -165,9 +165,9 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
 
     def exec(schemaLoc: File, toVerify: File): Either[ValidationError, ProgramOutput] =
       Runner.run(programName, Seq("--relaxng", schemaLoc.toString, toVerify.toString)) match {
-        case q: ZeroExitCode => Right(q)
         case e: ExceptionOnRun => Left(XMLLintValidator(
           s"Error while running $programName: $e").withCause(e.e))
+        case q: ProgramOutput => Right(q)
       }
 
     for {
