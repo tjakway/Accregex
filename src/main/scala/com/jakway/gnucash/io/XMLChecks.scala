@@ -4,7 +4,7 @@ import java.io._
 import java.nio.file.Files
 
 import com.jakway.gnucash.ValidatedConfig
-import com.jakway.gnucash.io.XMLValidator.{GnucashInitializeValidatorError, XMLValidationError}
+import com.jakway.gnucash.io.XMLValidator.XMLValidationError
 import com.jakway.gnucash.parser.{ValidateF, ValidationError}
 import com.jakway.util.runner._
 import javax.xml.XMLConstants
@@ -20,15 +20,6 @@ class CmpXML(val left: File, val right: File) {
 object XMLValidator {
   class XMLValidationError(override val msg: String)
     extends ValidationError(msg)
-
-  class GnucashInitializeValidatorError
-    extends ValidationError("An error occurred while " +
-      s"initializing the XML validator from $schemaName, see exception for details")
-
-  case class GnucashValidationError(inputFilename: String,
-                                    schemaFilename: String)
-    extends ValidationError(s"Failed to validate XML document $inputFilename against " +
-      s"RELAX-NG schema $schemaFilename")
 
   val schemaName = "gnucash-v2.rnc"
   val schemaResource = "/" + schemaName
