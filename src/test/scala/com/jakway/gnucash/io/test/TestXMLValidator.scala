@@ -24,7 +24,9 @@ class TestXMLValidator(val regDocRoot: Node) extends FlatSpec with Matchers {
 
     assert(tf.canWrite)
 
-    XML.write(new PrintWriter(tf), n, "UTF-8", true, null)
+    val writer = new PrintWriter(tf)
+    XML.write(writer, n, "UTF-8", true, null)
+    writer.close()
 
     tf
   }
