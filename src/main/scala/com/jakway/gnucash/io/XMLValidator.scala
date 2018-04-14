@@ -45,7 +45,7 @@ object XMLValidator {
     (inputValidator, outputValidator)
   }
 
-  val schemaName = "gnucash-v2.rnc"
+  val schemaName = "gnucash-v2.rng"
   val schemaResource = "/" + schemaName
 }
 
@@ -188,7 +188,7 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
     }
 
     def exec(schemaLoc: File, toVerify: File): Either[ValidationError, ProgramOutput] =
-      Runner.run(programName, Seq("--relaxng", schemaLoc.toString, toVerify.toString)) match {
+      Runner.run(programName, Seq("--relaxng", schemaLoc.toString, toVerify.toString), true) match {
         case e: ExceptionOnRun => Left(XMLLintValidator(
           s"Error while running $programName: $e").withCause(e.e))
         case q: ProgramOutput => Right(q)

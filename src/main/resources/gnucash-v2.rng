@@ -1,0 +1,1716 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Aug 2012: A RELAX NG Compact schema for gnucash "v2" XML files.
+  Copyright (C) 2006 Joshua Sled <jsled@asynchronous.org>
+  Copyright (C) 2012 Baptiste Carvello <devel@baptiste-carvello.net>
+-->
+<!--
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License as
+  published by the Free Software Foundation; either version 2 of
+  the License, or (at your option) version 3.
+-->
+<!--
+  This schema is non-normative; files emitted by gnucash <= 2.0 (and perhaps
+  later) that do not validate against it likely represent a problem with the
+  schema, not the file. The schema was last updated for gnucash trunk, rev 22330.
+-->
+<!-- http://relaxng.org/compact-tutorial-20030326.html -->
+<!-- from write_v2_header in src/backend/xml/io-gncxml-v2.c -->
+<!--
+  plugins, in order (address, owner, bill-term, customer, employee, entry, invoice,
+  job, order, tax-table, vendor)
+-->
+<grammar xmlns:bt-prox="http://www.gnucash.org/XML/bt-prox" xmlns:book="http://www.gnucash.org/XML/book" xmlns:slot="http://www.gnucash.org/XML/slot" xmlns:employee="http://www.gnucash.org/XML/employee" xmlns:bgt="http://www.gnucash.org/XML/bgt" xmlns:bt-days="http://www.gnucash.org/XML/bt-days" xmlns:lot="http://www.gnucash.org/XML/lot" xmlns:act="http://www.gnucash.org/XML/act" xmlns:split="http://www.gnucash.org/XML/split" xmlns:price="http://www.gnucash.org/XML/price" xmlns:vendor="http://www.gnucash.org/XML/vendor" xmlns:cmdty="http://www.gnucash.org/XML/cmdty" xmlns:taxtable="http://www.gnucash.org/XML/taxtable" xmlns:addr="http://www.gnucash.org/XML/addr" xmlns:gnc="http://www.gnucash.org/XML/gnc" xmlns:order="http://www.gnucash.org/XML/order" xmlns:owner="http://www.gnucash.org/XML/owner" xmlns:cd="http://www.gnucash.org/XML/cd" xmlns:tte="http://www.gnucash.org/XML/tte" xmlns:sx="http://www.gnucash.org/XML/sx" xmlns:billterm="http://www.gnucash.org/XML/billterm" xmlns:recurrence="http://www.gnucash.org/XML/recurrence" xmlns:trn="http://www.gnucash.org/XML/trn" xmlns:entry="http://www.gnucash.org/XML/entry" xmlns:invoice="http://www.gnucash.org/XML/invoice" xmlns:job="http://www.gnucash.org/XML/job" xmlns:cust="http://www.gnucash.org/XML/cust" xmlns:ts="http://www.gnucash.org/XML/ts" xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <ref name="GnuCashXml"/>
+  </start>
+  <define name="GnuCashXml">
+    <element name="gnc-v2">
+      <!-- from gnc_book_write_to_xml_filehandle_v2 in src/backend/xml/io-gncxml-v2.c -->
+      <choice>
+        <group>
+          <element name="gnc:count-data">
+            <attribute name="cd:type">
+              <value>book</value>
+            </attribute>
+            <value>1</value>
+          </element>
+          <ref name="Book"/>
+        </group>
+        <!-- from gnc_book_write_accounts_to_xml_filehandle_v2 in src/backend/xml/io-gncxml-v2.c -->
+        <group>
+          <optional>
+            <element name="gnc:count-data">
+              <attribute name="cd:type">
+                <value>commodity</value>
+              </attribute>
+              <data type="int"/>
+            </element>
+          </optional>
+          <optional>
+            <element name="gnc:count-data">
+              <attribute name="cd:type">
+                <value>account</value>
+              </attribute>
+              <data type="int"/>
+            </element>
+          </optional>
+          <zeroOrMore>
+            <ref name="Commodity"/>
+          </zeroOrMore>
+          <zeroOrMore>
+            <ref name="Account"/>
+          </zeroOrMore>
+        </group>
+      </choice>
+    </element>
+  </define>
+  <!-- from write_book in src/backend/xml/io-gncxml-v2.c -->
+  <define name="Book">
+    <element name="gnc:book">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <!-- from write_book_parts in src/backend/xml/gnc-book-xml-v2.c -->
+      <element name="book:id">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <optional>
+        <element name="book:slots">
+          <oneOrMore>
+            <ref name="KvpSlot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+      <optional>
+        <!-- from write_book in src/backend/xml/io-gncxml-v2.c -->
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>commodity</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>account</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>transaction</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>schedxaction</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>budget</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>price</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <!-- plugins (those with a get_count slot) -->
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>gnc:GncBillTerm</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>gnc:GncCustomer</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>gnc:GncEmployee</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>gnc:GncEntry</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>gnc:GncInvoice</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>gnc:GncJob</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>gnc:GncOrder</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>gnc:GncTaxTable</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="gnc:count-data">
+          <attribute name="cd:type">
+            <value>gnc:GncVendor</value>
+          </attribute>
+          <data type="int"/>
+        </element>
+      </optional>
+      <zeroOrMore>
+        <ref name="Commodity"/>
+      </zeroOrMore>
+      <optional>
+        <ref name="PriceDb"/>
+      </optional>
+      <zeroOrMore>
+        <ref name="Account"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="Transaction"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="TemplateTransactions"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="ScheduledTransaction"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="Budget"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <!-- plugins (those with a write slot) -->
+        <ref name="BillTerm"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="Customer"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="Employee"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="Entry"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="Invoice"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="Job"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="Order"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="TaxTable"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="Vendor"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <!-- from src/backend/xml/sixtp-dom-generators.c -->
+  <define name="KvpSlot">
+    <element name="slot">
+      <element name="slot:key">
+        <text/>
+      </element>
+      <ref name="KvpValue"/>
+    </element>
+  </define>
+  <define name="KvpValue">
+    <choice>
+      <element name="slot:value">
+        <attribute name="type">
+          <value>integer</value>
+        </attribute>
+        <data type="int"/>
+      </element>
+      <element name="slot:value">
+        <attribute name="type">
+          <value>double</value>
+        </attribute>
+        <data type="double"/>
+      </element>
+      <element name="slot:value">
+        <attribute name="type">
+          <value>numeric</value>
+        </attribute>
+        <ref name="GncNumeric"/>
+      </element>
+      <element name="slot:value">
+        <attribute name="type">
+          <value>string</value>
+        </attribute>
+        <text/>
+      </element>
+      <element name="slot:value">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="slot:value">
+        <attribute name="type">
+          <value>timespec</value>
+        </attribute>
+        <ref name="TimeSpec"/>
+      </element>
+      <element name="slot:value">
+        <attribute name="type">
+          <value>gdate</value>
+        </attribute>
+        <ref name="GDate"/>
+      </element>
+      <element name="slot:value">
+        <attribute name="type">
+          <value>binary</value>
+        </attribute>
+        <data type="string">
+          <param name="pattern">[0-9a-f]*</param>
+        </data>
+      </element>
+      <element name="slot:value">
+        <attribute name="type">
+          <value>list</value>
+        </attribute>
+        <zeroOrMore>
+          <ref name="KvpValue"/>
+        </zeroOrMore>
+      </element>
+      <element name="slot:value">
+        <attribute name="type">
+          <value>frame</value>
+        </attribute>
+        <zeroOrMore>
+          <ref name="KvpSlot"/>
+        </zeroOrMore>
+      </element>
+    </choice>
+  </define>
+  <!-- various patterns -->
+  <define name="GncNumeric">
+    <data type="string">
+      <param name="pattern">-?[0-9]+/-?[0-9]+</param>
+    </data>
+  </define>
+  <define name="GUID">
+    <data type="string">
+      <param name="pattern">[0-9a-f]{32}</param>
+    </data>
+  </define>
+  <define name="TimeSpec">
+    <ref name="TimeStamp"/>
+    <optional>
+      <element name="ts:ns">
+        <data type="int"/>
+      </element>
+    </optional>
+  </define>
+  <define name="TimeStamp">
+    <element name="ts:date">
+      <data type="string">
+        <param name="pattern">[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} (\+|-)[0-9]{4}</param>
+      </data>
+    </element>
+  </define>
+  <define name="GDate">
+    <element name="gdate">
+      <data type="string">
+        <param name="pattern">[0-9]{4}-[0-9]{2}-[0-9]{2}</param>
+      </data>
+    </element>
+  </define>
+  <!-- from gnc_commodity_dom_tree_create in src/backend/xml/gnc-commodity-xml-v2.c -->
+  <define name="Commodity">
+    <element name="gnc:commodity">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <choice>
+        <group>
+          <element name="cmdty:space">
+            <value>ISO4217</value>
+          </element>
+          <!-- catégorie (monnaies) -->
+          <element name="cmdty:id">
+            <text/>
+          </element>
+        </group>
+        <!-- dénomination -->
+        <group>
+          <element name="cmdty:space">
+            <text/>
+          </element>
+          <element name="cmdty:id">
+            <text/>
+          </element>
+          <optional>
+            <element name="cmdty:name">
+              <text/>
+            </element>
+          </optional>
+          <optional>
+            <element name="cmdty:xcode">
+              <text/>
+            </element>
+          </optional>
+          <element name="cmdty:fraction">
+            <text/>
+          </element>
+        </group>
+      </choice>
+      <optional>
+        <element name="cmdty:get_quotes">
+          <empty/>
+        </element>
+        <optional>
+          <element name="cmdty:quote_source">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="cmdty:quote_tz">
+            <choice>
+              <text/>
+              <empty/>
+            </choice>
+          </element>
+        </optional>
+      </optional>
+      <optional>
+        <element name="cmdty:slots">
+          <oneOrMore>
+            <ref name="KvpSlot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+    </element>
+  </define>
+  <!-- from gnc_pricedb_to_dom_tree in src/backend/xml/gnc-pricedb-xml-v2.c -->
+  <define name="PriceDb">
+    <element name="gnc:pricedb">
+      <attribute name="version">
+        <value>1</value>
+      </attribute>
+      <oneOrMore>
+        <ref name="Price"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <!-- from gnc_price_to_dom_tree in src/backend/xml/gnc-pricedb-xml-v2.c -->
+  <define name="Price">
+    <element name="price">
+      <element name="price:id">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="price:commodity">
+        <element name="cmdty:space">
+          <text/>
+        </element>
+        <element name="cmdty:id">
+          <text/>
+        </element>
+      </element>
+      <element name="price:currency">
+        <element name="cmdty:space">
+          <text/>
+        </element>
+        <element name="cmdty:id">
+          <text/>
+        </element>
+      </element>
+      <element name="price:time">
+        <ref name="TimeSpec"/>
+      </element>
+      <optional>
+        <element name="price:source">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <!-- from the doc string of gnc_price_class_init in src/engine/gnc-pricedb.c -->
+        <element name="price:type">
+          <choice>
+            <value>bid</value>
+            <value>ask</value>
+            <value>last</value>
+            <value>nav</value>
+            <value>transaction</value>
+            <value>unknown</value>
+          </choice>
+        </element>
+      </optional>
+      <element name="price:value">
+        <ref name="GncNumeric"/>
+      </element>
+    </element>
+  </define>
+  <!-- from gnc_account_dom_tree_create in src/backend/xml/gnc-account-xml-v2.c -->
+  <define name="Account">
+    <element name="gnc:account">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <element name="act:name">
+        <text/>
+      </element>
+      <element name="act:id">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <!-- from xaccAccountTypeEnumAsString in src/engine/Account.c -->
+      <element name="act:type">
+        <choice>
+          <value>NONE</value>
+          <value>BANK</value>
+          <value>CASH</value>
+          <value>CREDIT</value>
+          <value>ASSET</value>
+          <value>LIABILITY</value>
+          <value>STOCK</value>
+          <value>MUTUAL</value>
+          <value>CURRENCY</value>
+          <value>INCOME</value>
+          <value>EXPENSE</value>
+          <value>EQUITY</value>
+          <value>RECEIVABLE</value>
+          <value>PAYABLE</value>
+          <value>ROOT</value>
+          <value>TRADING</value>
+          <value>CHECKING</value>
+          <value>SAVINGS</value>
+          <value>MONEYMRKT</value>
+          <value>CREDITLINE</value>
+        </choice>
+      </element>
+      <optional>
+        <element name="act:commodity">
+          <element name="cmdty:space">
+            <text/>
+          </element>
+          <element name="cmdty:id">
+            <text/>
+          </element>
+        </element>
+        <element name="act:commodity-scu">
+          <data type="int"/>
+        </element>
+        <optional>
+          <element name="act:non-standard-scu">
+            <empty/>
+          </element>
+        </optional>
+      </optional>
+      <optional>
+        <element name="act:code">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="act:description">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="act:slots">
+          <oneOrMore>
+            <ref name="KvpSlot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+      <optional>
+        <element name="act:parent">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="act:lots">
+          <oneOrMore>
+            <ref name="Lot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+    </element>
+  </define>
+  <!-- from gnc_lot_dom_tree_create in src/backend/xml/gnc-lot-xml-v2.c -->
+  <define name="Lot">
+    <element name="gnc:lot">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <element name="lot:id">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="lot:slots">
+        <oneOrMore>
+          <ref name="KvpSlot"/>
+        </oneOrMore>
+      </element>
+    </element>
+  </define>
+  <!-- from gnc_transaction_dom_tree_create in src/backend/xml/gnc-transaction-xml-v2.c -->
+  <define name="Transaction">
+    <element name="gnc:transaction">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <element name="trn:id">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="trn:currency">
+        <element name="cmdty:space">
+          <text/>
+        </element>
+        <element name="cmdty:id">
+          <text/>
+        </element>
+      </element>
+      <optional>
+        <element name="trn:num">
+          <text/>
+        </element>
+      </optional>
+      <element name="trn:date-posted">
+        <ref name="TimeSpec"/>
+      </element>
+      <element name="trn:date-entered">
+        <ref name="TimeSpec"/>
+      </element>
+      <optional>
+        <element name="trn:description">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="trn:slots">
+          <oneOrMore>
+            <ref name="KvpSlot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+      <element name="trn:splits">
+        <oneOrMore>
+          <ref name="Split"/>
+        </oneOrMore>
+      </element>
+    </element>
+  </define>
+  <!-- from split_to_dom_tree in src/backend/xml/gnc-transaction-xml-v2.c -->
+  <define name="Split">
+    <element name="trn:split">
+      <element name="split:id">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <optional>
+        <element name="split:memo">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="split:action">
+          <text/>
+        </element>
+      </optional>
+      <!-- from defines in src/engine/Split.h -->
+      <element name="split:reconciled-state">
+        <choice>
+          <value>y</value>
+          <value>n</value>
+          <value>c</value>
+          <value>f</value>
+          <value>v</value>
+        </choice>
+      </element>
+      <optional>
+        <element name="split:reconcile-date">
+          <ref name="TimeSpec"/>
+        </element>
+      </optional>
+      <element name="split:value">
+        <ref name="GncNumeric"/>
+      </element>
+      <element name="split:quantity">
+        <ref name="GncNumeric"/>
+      </element>
+      <element name="split:account">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <optional>
+        <element name="split:lot">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="split:slots">
+          <oneOrMore>
+            <ref name="KvpSlot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+    </element>
+  </define>
+  <!-- from write_template_transaction_data in src/backend/xml/io-gncxml-v2.c -->
+  <define name="TemplateTransactions">
+    <element name="gnc:template-transactions">
+      <zeroOrMore>
+        <ref name="Account"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="Transaction"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <!-- from gnc_schedXaction_dom_tree_create in src/backend/xml/gnc-schedxaction-xml-v2.c -->
+  <define name="ScheduledTransaction">
+    <element name="gnc:schedxaction">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <element name="sx:id">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="sx:name">
+        <text/>
+      </element>
+      <element name="sx:enabled">
+        <choice>
+          <value>y</value>
+          <value>n</value>
+        </choice>
+      </element>
+      <element name="sx:autoCreate">
+        <choice>
+          <value>y</value>
+          <value>n</value>
+        </choice>
+      </element>
+      <element name="sx:autoCreateNotify">
+        <choice>
+          <value>y</value>
+          <value>n</value>
+        </choice>
+      </element>
+      <element name="sx:advanceCreateDays">
+        <data type="int"/>
+      </element>
+      <element name="sx:advanceRemindDays">
+        <data type="int"/>
+      </element>
+      <element name="sx:instanceCount">
+        <data type="int"/>
+      </element>
+      <element name="sx:start">
+        <ref name="GDate"/>
+      </element>
+      <optional>
+        <element name="sx:last">
+          <ref name="GDate"/>
+        </element>
+      </optional>
+      <optional>
+        <choice>
+          <group>
+            <element name="sx:num-occur">
+              <data type="int"/>
+            </element>
+            <element name="sx:rem-occur">
+              <data type="int"/>
+            </element>
+          </group>
+          <element name="sx:end">
+            <ref name="GDate"/>
+          </element>
+        </choice>
+      </optional>
+      <element name="sx:templ-acct">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="sx:schedule">
+        <zeroOrMore>
+          <element name="gnc:recurrence">
+            <ref name="RecurrenceContent"/>
+          </element>
+        </zeroOrMore>
+      </element>
+      <zeroOrMore>
+        <ref name="DeferredInstance"/>
+      </zeroOrMore>
+      <optional>
+        <element name="sx:slots">
+          <oneOrMore>
+            <ref name="KvpSlot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+    </element>
+  </define>
+  <define name="DeferredInstance">
+    <element name="sx:deferredInstance">
+      <optional>
+        <element name="sx:last">
+          <ref name="GDate"/>
+        </element>
+      </optional>
+      <element name="sx:rem-occur">
+        <data type="int"/>
+      </element>
+      <element name="sx:instanceCount">
+        <data type="int"/>
+      </element>
+    </element>
+  </define>
+  <!-- from recurrence_to_dom_tree in src/backend/xml/gnc-recurrence-xml-v2.c -->
+  <define name="RecurrenceContent">
+    <attribute name="version">
+      <value>1.0.0</value>
+    </attribute>
+    <element name="recurrence:mult">
+      <data type="int"/>
+    </element>
+    <!-- from a static array in src/engine/Recurrence.c -->
+    <element name="recurrence:period_type">
+      <choice>
+        <value>once</value>
+        <value>day</value>
+        <value>week</value>
+        <value>month</value>
+        <value>end of month</value>
+        <value>nth weekday</value>
+        <value>last weekday</value>
+        <value>year</value>
+      </choice>
+    </element>
+    <element name="recurrence:start">
+      <ref name="GDate"/>
+    </element>
+    <optional>
+      <element name="recurrence:weekend_adj">
+        <choice>
+          <value>none</value>
+          <value>back</value>
+          <value>forward</value>
+        </choice>
+      </element>
+    </optional>
+  </define>
+  <!-- from gnc_budget_dom_tree_create in src/backend/xml/gnc-budget-xml-v2.c -->
+  <define name="Budget">
+    <element name="gnc:budget">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <element name="bgt:id">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="bgt:name">
+        <text/>
+      </element>
+      <element name="bgt:description">
+        <text/>
+      </element>
+      <element name="bgt:num-periods">
+        <data type="int"/>
+      </element>
+      <element name="bgt:recurrence">
+        <ref name="RecurrenceContent"/>
+      </element>
+      <optional>
+        <element name="bgt:slots">
+          <oneOrMore>
+            <ref name="KvpSlot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+    </element>
+  </define>
+  <!-- from in src/backend/xml/gnc-bill-term-xml-v2.c -->
+  <define name="BillTerm">
+    <element name="gnc:GncBillTerm">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <optional>
+        <element name="billterm:guid">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <element name="billterm:name">
+        <text/>
+      </element>
+      <element name="billterm:desc">
+        <text/>
+      </element>
+      <element name="billterm:refcount">
+        <data type="int"/>
+      </element>
+      <element name="billterm:invisible">
+        <data type="boolean">
+          <param name="pattern">[01]</param>
+        </data>
+      </element>
+      <optional>
+        <element name="billterm:slots">
+          <oneOrMore>
+            <ref name="KvpSlot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+      <optional>
+        <element name="billterm:child">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="billterm:parent">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <choice>
+        <element name="billterm:days">
+          <optional>
+            <element name="bt-days:due-days">
+              <data type="int"/>
+            </element>
+          </optional>
+          <optional>
+            <element name="bt-days:disc-days">
+              <data type="int"/>
+            </element>
+          </optional>
+          <optional>
+            <element name="bt-days:discount">
+              <ref name="GncNumeric"/>
+            </element>
+          </optional>
+        </element>
+        <element name="billterm:proximo">
+          <optional>
+            <element name="bt-prox:due-day">
+              <data type="int"/>
+            </element>
+          </optional>
+          <optional>
+            <element name="bt-prox:disc-day">
+              <data type="int"/>
+            </element>
+          </optional>
+          <optional>
+            <element name="bt-prox:discount">
+              <ref name="GncNumeric"/>
+            </element>
+          </optional>
+          <optional>
+            <element name="bt-prox:cutoff-day">
+              <data type="int"/>
+            </element>
+          </optional>
+        </element>
+      </choice>
+    </element>
+  </define>
+  <!-- from customer_dom_tree_create in src/backend/xml/gnc-customer-xml-v2.c -->
+  <define name="Customer">
+    <element name="gnc:GncCustomer">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <element name="cust:guid">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="cust:name">
+        <text/>
+      </element>
+      <element name="cust:id">
+        <text/>
+      </element>
+      <element name="cust:addr">
+        <ref name="AddressContent"/>
+      </element>
+      <element name="cust:shipaddr">
+        <ref name="AddressContent"/>
+      </element>
+      <optional>
+        <element name="cust:notes">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="cust:terms">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <!-- from gncTaxIncludedTypeToString in src/engine/gncTaxTable.c -->
+      <element name="cust:taxincluded">
+        <choice>
+          <value>YES</value>
+          <value>NO</value>
+          <value>USEGLOBAL</value>
+        </choice>
+      </element>
+      <element name="cust:active">
+        <data type="boolean">
+          <param name="pattern">[01]</param>
+        </data>
+      </element>
+      <element name="cust:discount">
+        <ref name="GncNumeric"/>
+      </element>
+      <element name="cust:credit">
+        <ref name="GncNumeric"/>
+      </element>
+      <element name="cust:currency">
+        <element name="cmdty:space">
+          <text/>
+        </element>
+        <element name="cmdty:id">
+          <text/>
+        </element>
+      </element>
+      <element name="cust:use-tt">
+        <data type="boolean">
+          <param name="pattern">[01]</param>
+        </data>
+      </element>
+      <optional>
+        <element name="cust:taxtable">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="cust:slots">
+          <oneOrMore>
+            <ref name="KvpSlot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+    </element>
+  </define>
+  <!-- from gnc_address_to_dom_tree in src/backend/xml/gnc-address-xml-v2.c -->
+  <define name="AddressContent">
+    <attribute name="version">
+      <value>2.0.0</value>
+    </attribute>
+    <choice>
+      <empty/>
+      <group>
+        <optional>
+          <element name="addr:name">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="addr:addr1">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="addr:addr2">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="addr:addr3">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="addr:addr4">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="addr:phone">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="addr:fax">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="addr:email">
+            <text/>
+          </element>
+        </optional>
+      </group>
+    </choice>
+  </define>
+  <!-- from employee_dom_tree_create in src/backend/xml/gnc-employee-xml-v2.c -->
+  <define name="Employee">
+    <element name="gnc:GncEmployee">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <element name="employee:guid">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="employee:username">
+        <text/>
+      </element>
+      <element name="employee:id">
+        <text/>
+      </element>
+      <element name="employee:addr">
+        <ref name="AddressContent"/>
+      </element>
+      <optional>
+        <element name="employee:language">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="employee:acl">
+          <text/>
+        </element>
+      </optional>
+      <element name="employee:active">
+        <data type="boolean">
+          <param name="pattern">[01]</param>
+        </data>
+      </element>
+      <element name="employee:workday">
+        <ref name="GncNumeric"/>
+      </element>
+      <element name="employee:rate">
+        <ref name="GncNumeric"/>
+      </element>
+      <element name="employee:currency">
+        <element name="cmdty:space">
+          <text/>
+        </element>
+        <element name="cmdty:id">
+          <text/>
+        </element>
+      </element>
+      <optional>
+        <element name="employee:ccard">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="employee:slots">
+          <oneOrMore>
+            <ref name="KvpSlot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+    </element>
+  </define>
+  <!-- from entry_dom_tree_create in src/backend/xml/gnc-entry-xml-v2.c -->
+  <define name="Entry">
+    <element name="gnc:GncEntry">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <element name="entry:guid">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="entry:date">
+        <ref name="TimeSpec"/>
+      </element>
+      <element name="entry:entered">
+        <ref name="TimeSpec"/>
+      </element>
+      <optional>
+        <element name="entry:description">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="entry:action">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="entry:notes">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="entry:qty">
+          <ref name="GncNumeric"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="entry:i-acct">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="entry:i-price">
+          <ref name="GncNumeric"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="entry:i-discount">
+          <ref name="GncNumeric"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="entry:invoice">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+        <!-- from gncAmountTypeToString in src/engine/gncTaxTable.c -->
+        <element name="entry:i-disc-type">
+          <choice>
+            <value>VALUE</value>
+            <value>PERCENT</value>
+          </choice>
+        </element>
+        <!-- from gncEntryDiscountHowToString in src/engine/gncEntry.c -->
+        <element name="entry:i-disc-how">
+          <choice>
+            <value>PRETAX</value>
+            <value>POSTTAX</value>
+            <value>SAMETIME</value>
+          </choice>
+        </element>
+        <element name="entry:i-taxable">
+          <data type="boolean">
+            <param name="pattern">[01]</param>
+          </data>
+        </element>
+        <element name="entry:i-taxincluded">
+          <data type="boolean">
+            <param name="pattern">[01]</param>
+          </data>
+        </element>
+      </optional>
+      <optional>
+        <element name="entry:i-taxtable">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="entry:b-acct">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="entry:b-price">
+          <ref name="GncNumeric"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="entry:bill">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+        <element name="entry:billable">
+          <data type="boolean">
+            <param name="pattern">[01]</param>
+          </data>
+        </element>
+        <optional>
+          <element name="entry:billto">
+            <ref name="OwnerContent"/>
+          </element>
+        </optional>
+        <element name="entry:b-taxable">
+          <data type="boolean">
+            <param name="pattern">[01]</param>
+          </data>
+        </element>
+        <element name="entry:b-taxincluded">
+          <data type="boolean">
+            <param name="pattern">[01]</param>
+          </data>
+        </element>
+        <optional>
+          <!-- from gncEntryPaymentTypeToString in src/engine/gncEntry.c -->
+          <element name="entry:b-pay">
+            <choice>
+              <value>CASH</value>
+              <value>CARD</value>
+            </choice>
+          </element>
+        </optional>
+      </optional>
+      <optional>
+        <element name="entry:b-taxtable">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="entry:order">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+    </element>
+  </define>
+  <!-- from gnc_owner_to_dom_tree in src/backend/xml/gnc-owner-xml-v2.c -->
+  <define name="OwnerContent">
+    <attribute name="version">
+      <value>2.0.0</value>
+    </attribute>
+    <element name="owner:type">
+      <choice>
+        <value>gncCustomer</value>
+        <value>gncJob</value>
+        <value>gncVendor</value>
+        <value>gncEmployee</value>
+      </choice>
+    </element>
+    <element name="owner:id">
+      <attribute name="type">
+        <value>guid</value>
+      </attribute>
+      <ref name="GUID"/>
+    </element>
+  </define>
+  <!-- from invoice_dom_tree_create in src/backend/xml/gnc-invoice-xml-v2.c -->
+  <define name="Invoice">
+    <element name="gnc:GncInvoice">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <element name="invoice:guid">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="invoice:id">
+        <text/>
+      </element>
+      <element name="invoice:owner">
+        <ref name="OwnerContent"/>
+      </element>
+      <element name="invoice:opened">
+        <ref name="TimeSpec"/>
+      </element>
+      <optional>
+        <element name="invoice:posted">
+          <ref name="TimeSpec"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="invoice:terms">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="invoice:billing_id">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="invoice:notes">
+          <text/>
+        </element>
+      </optional>
+      <element name="invoice:active">
+        <data type="boolean">
+          <param name="pattern">[01]</param>
+        </data>
+      </element>
+      <optional>
+        <element name="invoice:posttxn">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="invoice:postlot">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="invoice:postacc">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <element name="invoice:currency">
+        <element name="cmdty:space">
+          <text/>
+        </element>
+        <element name="cmdty:id">
+          <text/>
+        </element>
+      </element>
+      <optional>
+        <element name="invoice:billto">
+          <ref name="OwnerContent"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="invoice:charge-amt">
+          <ref name="GncNumeric"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="invoice:slots">
+          <oneOrMore>
+            <ref name="KvpSlot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+    </element>
+  </define>
+  <!-- from job_dom_tree_create in src/backend/xml/gnc-job-xml-v2.c -->
+  <define name="Job">
+    <element name="gnc:GncJob">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <element name="job:guid">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="job:id">
+        <text/>
+      </element>
+      <element name="job:name">
+        <text/>
+      </element>
+      <optional>
+        <element name="job:reference">
+          <text/>
+        </element>
+      </optional>
+      <element name="job:owner">
+        <ref name="OwnerContent"/>
+      </element>
+      <element name="job:active">
+        <data type="boolean">
+          <param name="pattern">[01]</param>
+        </data>
+      </element>
+    </element>
+  </define>
+  <!-- from order_dom_tree_create in src/backend/xml/gnc-order-xml-v2.c -->
+  <define name="Order">
+    <element name="gnc:GncOrder">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <element name="order:guid">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="order:id">
+        <text/>
+      </element>
+      <element name="order:owner">
+        <ref name="OwnerContent"/>
+      </element>
+      <element name="order:opened">
+        <ref name="TimeSpec"/>
+      </element>
+      <optional>
+        <element name="order:closed">
+          <ref name="TimeSpec"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="order:notes">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="order:reference">
+          <text/>
+        </element>
+      </optional>
+      <element name="order:active">
+        <data type="boolean">
+          <param name="pattern">[01]</param>
+        </data>
+      </element>
+    </element>
+  </define>
+  <!-- from taxtable_dom_tree_create in src/backend/xml/gnc-tax-table-xml-v2.c -->
+  <define name="TaxTable">
+    <element name="gnc:GncTaxTable">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <optional>
+        <element name="taxtable:guid">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <element name="taxtable:name">
+        <text/>
+      </element>
+      <element name="taxtable:refcount">
+        <data type="int"/>
+      </element>
+      <element name="taxtable:invisible">
+        <data type="boolean">
+          <param name="pattern">[01]</param>
+        </data>
+      </element>
+      <optional>
+        <element name="taxtable:child">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="taxtable:parent">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <element name="taxtable:entries">
+        <zeroOrMore>
+          <ref name="TaxTableEntry"/>
+        </zeroOrMore>
+      </element>
+    </element>
+  </define>
+  <!-- from ttentry_dom_tree_create in src/backend/xml/gnc-tax-table-xml-v2.c -->
+  <define name="TaxTableEntry">
+    <element name="gnc:GncTaxTableEntry">
+      <optional>
+        <element name="tte:acct">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <element name="tte:amount">
+        <ref name="GncNumeric"/>
+      </element>
+      <!-- from gncAmountTypeToString in src/engine/gncTaxTable.c -->
+      <element name="tte:type">
+        <choice>
+          <value>VALUE</value>
+          <value>PERCENT</value>
+        </choice>
+      </element>
+    </element>
+  </define>
+  <!-- from vendor_dom_tree_create in src/backend/xml/gnc-vendor-xml-v2.c -->
+  <define name="Vendor">
+    <element name="gnc:GncVendor">
+      <attribute name="version">
+        <value>2.0.0</value>
+      </attribute>
+      <element name="vendor:guid">
+        <attribute name="type">
+          <value>guid</value>
+        </attribute>
+        <ref name="GUID"/>
+      </element>
+      <element name="vendor:name">
+        <text/>
+      </element>
+      <element name="vendor:id">
+        <text/>
+      </element>
+      <element name="vendor:addr">
+        <ref name="AddressContent"/>
+      </element>
+      <optional>
+        <element name="vendor:notes">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="vendor:terms">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <!-- from gncTaxIncludedTypeToString in src/engine/gncTaxTable.c -->
+      <element name="vendor:taxincluded">
+        <choice>
+          <value>YES</value>
+          <value>NO</value>
+          <value>USEGLOBAL</value>
+        </choice>
+      </element>
+      <element name="vendor:active">
+        <data type="boolean">
+          <param name="pattern">[01]</param>
+        </data>
+      </element>
+      <element name="vendor:currency">
+        <element name="cmdty:space">
+          <text/>
+        </element>
+        <element name="cmdty:id">
+          <text/>
+        </element>
+      </element>
+      <element name="vendor:use-tt">
+        <data type="boolean">
+          <param name="pattern">[01]</param>
+        </data>
+      </element>
+      <optional>
+        <element name="vendor:taxtable">
+          <attribute name="type">
+            <value>guid</value>
+          </attribute>
+          <ref name="GUID"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="vendor:slots">
+          <oneOrMore>
+            <ref name="KvpSlot"/>
+          </oneOrMore>
+        </element>
+      </optional>
+    </element>
+  </define>
+</grammar>
