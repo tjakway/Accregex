@@ -6,7 +6,7 @@ import java.nio.file.Files
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.io.XMLValidator.{GnucashInitializeValidatorError, XMLValidationError}
 import com.jakway.gnucash.parser.{ValidateF, ValidationError}
-import com.jakway.util.runner.CheckCommandExists
+import com.jakway.util.runner._
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory}
@@ -86,6 +86,9 @@ trait ExternalValidator extends XMLValidator {
 class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidator {
   import XMLValidator._
 
+  val progName = "xmllint"
+  val checkArgs = Seq("--version")
+
   case class XMLLintValidator(override val msg: String)
     extends ValidationError(msg)
   implicit def errorType: String => ValidationError = XMLLintValidator.apply
@@ -131,19 +134,19 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
     }
   }
 
-  private def xmlToTmpFile(dir: File)(xml: String): Either[ValidationError, File] = {
+  private def stringToTempFile(dir: File)(str: String): Either[ValidationError, File] = {
     import java.io.PrintWriter
     //close over the XML and write it out to the passed file
     def write(dest: File): Either[ValidationError, Unit] = {
       val res = Try(new PrintWriter(dest))
         .foreach { p =>
-          p.println(xml)
+          p.println(str)
           p.close()
         }
       res match {
         case Success(_) => Right()
         case Failure(t) => Left(
-          XMLLintValidator(s"Failed to write XML `$xml` to file $dest").withCause(t))
+          XMLLintValidator(s"Failed to write `$str` to file $dest").withCause(t))
       }
     }
 
@@ -153,13 +156,37 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
     } yield f
   }
 
+  private def schemaToTempFile(tempDir: File): Either[ValidationError, File] = {
+    val res = getClass().getResourceAsStream(schemaResource)
+
+    for {
+      schema <- StreamReader.readStream(res)
+      f <- stringToTempFile(tempDir)(schema)
+    } yield f
+  }
+
 
   override def validate(inputName: String, xmlInput: InputStream): Either[ValidationError, Unit] = {
+    def findProgram(): Either[ValidationError, Unit] = Try(new CheckCommandExists(progName, checkArgs)) match {
+      case Success(_) => Right()
+      case Failure(t) => Left(XMLLintValidator(s"Could not find the program $progName," +
+        s" perhaps you need to install it").withCause(t))
+    }
+
+    def exec(schemaLoc: File, toVerify: File): Either[ValidationError, ProgramOutput] =
+      Runner.run(programName, Seq("--relaxng", schemaLoc.toString, toVerify.toString)) match {
+        case q: ZeroExitCode => Right(q)
+        case e: ExceptionOnRun => Left(XMLLintValidator(
+          s"Error while running $progName: $e").withCause(e.e))
+      }
+
     for {
       xmlStr <- StreamReader.readStream(xmlInput)
       tempDir <- getTmpDir()
-      file <- xmlToTmpFile(tempDir)(xmlStr)
-    }
+      xmlFile <- stringToTempFile(tempDir)(xmlStr)
+      schema <- schemaToTempFile(tempDir)
+      output <- exec(schema, xmlFile)
+    } yield {}
   }
 
   private lazy val validator: Either[ValidationError, javax.xml.validation.Validator] = {
