@@ -17,7 +17,8 @@ case class ValidatedConfig(inputPath: File,
                            skipInputValidation: Boolean,
                            skipOutputValidation: Boolean,
                            targetAccount: String,
-                           tempDir: Option[String]) {
+                           tempDir: Option[String],
+                           debug: Boolean) {
   /**
     * *highly* doubt this will ever be configurable
     */
@@ -32,7 +33,8 @@ case class UnvalidatedConfig(inputPath: String,
                              skipInputValidation: Boolean,
                              skipOutputValidation: Boolean,
                              targetAccount: String,
-                             tempDir: Option[String]) {
+                             tempDir: Option[String],
+                             debug: Boolean) {
 
   def validate(): Either[String, ValidatedConfig] = {
     for {
@@ -42,7 +44,7 @@ case class UnvalidatedConfig(inputPath: String,
     } yield {
       ValidatedConfig(input, rules, out,
         summarize, compress, skipInputValidation, skipOutputValidation,
-        targetAccount, tempDir)
+        targetAccount, tempDir, debug)
     }
   }
 
@@ -128,7 +130,7 @@ case class UnvalidatedConfig(inputPath: String,
 object UnvalidatedConfig {
   val default: UnvalidatedConfig =
     UnvalidatedConfig("", "rules.conf", None, true, true, false, false, "Unspecified",
-      None)
+      None, false)
 
   val parser = new scopt.OptionParser[UnvalidatedConfig](progName) {
     head(progName)
@@ -173,5 +175,9 @@ object UnvalidatedConfig {
     opt[String]("temp-dir")
       .action((x, c) => c.copy(tempDir = Some(x)))
       .text(s"The directory to store temporary files (default is that given by the operating system")
+
+    opt[Unit]("debug")
+      .action((x, c) => c.copy(debug = true))
+      .text(s"Enable debugging output (default=${default.debug}")
   }
 }

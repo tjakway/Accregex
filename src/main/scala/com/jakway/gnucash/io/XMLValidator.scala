@@ -27,7 +27,7 @@ object XMLValidator {
     val inputValidator = if(conf.skipInputValidation) {
       new SkipXMLValidator()
     } else {
-      new XMLLintValidator(tempDir)
+      new XMLLintValidator(conf.debug, tempDir)
     }
 
     val outputValidator = if(conf.skipOutputValidation) {
@@ -38,7 +38,7 @@ object XMLValidator {
       if(inputValidator.isInstanceOf[XMLLintValidator]) {
         inputValidator
       } else {
-        new XMLLintValidator(tempDir)
+        new XMLLintValidator(conf.debug, tempDir)
       }
     }
 
@@ -98,7 +98,7 @@ trait ExternalValidator extends XMLValidator {
 /**
   * validate the XML against our RELAX-NG schema
   */
-class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidator {
+class XMLLintValidator(logXmlLintOutput: Boolean = false, val tempDir: Option[File] = None) extends ExternalValidator {
   import XMLValidator._
 
   override val programName = "xmllint"
@@ -186,7 +186,7 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
       val xmllintArgs = args ++ Seq("--relaxng", schemaLoc.toString, toVerify.toString)
 
       def error(s: String) = new XMLValidationError(s"Error while running $programName " + s)
-      Runner.run(programName, xmllintArgs, true) match {
+      Runner.run(programName, xmllintArgs, logXmlLintOutput) match {
         case e: ExceptionOnRun => Left(error("ExceptionOnRun").withCause(e.e))
         case e: NonzeroExitCode => Left(error("NonzeroExitCode"))
         case q: ProgramOutput => Right(q)
