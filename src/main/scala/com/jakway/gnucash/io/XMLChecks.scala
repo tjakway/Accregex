@@ -139,7 +139,7 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
     //close over the XML and write it out to the passed file
     def write(dest: File): Either[ValidationError, Unit] = {
       val res = Try(new PrintWriter(dest))
-        .foreach { p =>
+        .map { p =>
           p.println(str)
           p.close()
         }
