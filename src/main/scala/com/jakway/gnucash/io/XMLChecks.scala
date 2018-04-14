@@ -5,7 +5,7 @@ import java.nio.file.Files
 
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.io.XMLValidator.{GnucashInitializeValidatorError, XMLValidationError}
-import com.jakway.gnucash.parser.ValidationError
+import com.jakway.gnucash.parser.{ValidateF, ValidationError}
 import com.jakway.util.runner.CheckCommandExists
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
@@ -88,6 +88,7 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
 
   case class XMLLintValidator(override val msg: String)
     extends ValidationError(msg)
+  implicit def errorType: String => ValidationError = XMLLintValidator.apply
 
   val defaultTmpDirPrefix = "accregexvalidator"
 
@@ -152,9 +153,11 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
   }
 
 
-  override def validate(inputName: String, xmlInput: StreamSource): Either[ValidationError, Unit] = {
+  override def validate(inputName: String, xmlInput: InputStream): Either[ValidationError, Unit] = {
     for {
-      xmlToFile() xmlInput.
+      xmlStr <- StreamReader.readStream(xmlInput)
+      tempDir <- getTmpDir()
+      file <- xmlToTmpFile(tempDir)(xmlStr)
     }
   }
 
@@ -204,10 +207,10 @@ class SkipXMLValidator extends XMLValidator {
 }
 
 
-private object StreamReader {
+object StreamReader {
 
   //see https://stackoverflow.com/questions/309424/read-convert-an-inputstream-to-a-string
-  def readStream(inputStream: InputStream): String = {
+  def jReadStream(inputStream: InputStream): String = {
     import java.io.InputStreamReader
 
     val bufferSize = 1024
@@ -226,4 +229,13 @@ private object StreamReader {
 
     out.toString()
   }
+
+  val readStream: ValidateF[InputStream, String] =
+    (i: InputStream, errorType: String => ValidationError) => {
+      Try(jReadStream(i)) match {
+        case Success(x) => Right(x)
+        case Failure(t) => Left(errorType(s"Failed to read from InputStream $i").withCause(t))
+      }
+    }
+
 }
