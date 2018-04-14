@@ -197,20 +197,19 @@ class SkipXMLValidator extends XMLValidator {
 object StreamReader {
 
   //see https://stackoverflow.com/questions/309424/read-convert-an-inputstream-to-a-string
-  def jReadStream(inputStream: InputStream): String = {
+  def jReadStream(in: InputStream): String = {
     import java.io.InputStreamReader
 
     val byteArrayOutputStream = new ByteArrayOutputStream()
     val bufferSize = 1024
-    val buffer = new Array[Char](bufferSize)
-    val in = new InputStreamReader(inputStream, "UTF-8")
+    val buffer = new Array[Byte](bufferSize)
 
     var rsz = 0
 
     do {
       rsz = in.read(buffer, 0, buffer.length)
       if(rsz >= 0) {
-        byteArrayOutputStream.write(buffer.asInstanceOf[Array[Byte]], 0, rsz)
+        byteArrayOutputStream.write(buffer, 0, rsz)
       }
     } while(rsz >= 0)
 
