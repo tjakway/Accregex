@@ -82,14 +82,15 @@ trait XMLValidator {
 
 trait ExternalValidator extends XMLValidator {
   val programName: String
+  val checkArgs = Seq("--version")
 
   case class ExternalValidatorError(override val msg: String)
     extends ValidationError(msg)
 
-  def testExists(testCmd: String): Either[ValidationError, Unit] = {
-    Try(new CheckCommandExists(programName, Seq("--version"))) match {
+  def testExists(): Either[ValidationError, Unit] = {
+    Try(new CheckCommandExists(programName, checkArgs)) match {
       case Success(_) => Right(())
-      case Failure(t) => Left(ExternalValidatorError(s"Program does not exist: $testCmd"))
+      case Failure(t) => Left(ExternalValidatorError(s"Program does not exist: $programName"))
     }
   }
 }
@@ -101,7 +102,7 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
   import XMLValidator._
 
   override val programName = "xmllint"
-  val checkArgs = Seq("--version")
+  val args = Seq("--noout", "--nowarning")
 
   case class XMLLintValidator(override val msg: String)
     extends ValidationError(msg)
@@ -181,21 +182,19 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
 
 
   override def validate(inputName: String, xmlInput: InputStream): Either[ValidationError, Unit] = {
-    def findProgram(): Either[ValidationError, Unit] = Try(new CheckCommandExists(programName, checkArgs)) match {
-      case Success(_) => Right(())
-      case Failure(t) => Left(XMLLintValidator(s"Could not find the program $programName," +
-        s" perhaps you need to install it").withCause(t))
-    }
+    def exec(schemaLoc: File, toVerify: File): Either[ValidationError, ProgramOutput] = {
+      val xmllintArgs = args ++ Seq("--relaxng", schemaLoc.toString, toVerify.toString)
 
-    def exec(schemaLoc: File, toVerify: File): Either[ValidationError, ProgramOutput] =
-      Runner.run(programName, Seq("--relaxng", schemaLoc.toString, toVerify.toString), true) match {
-        case e: ExceptionOnRun => Left(XMLLintValidator(
-          s"Error while running $programName: $e").withCause(e.e))
+      def error(s: String) = new XMLValidationError(s"Error while running $programName " + s)
+      Runner.run(programName, xmllintArgs, true) match {
+        case e: ExceptionOnRun => Left(error("ExceptionOnRun").withCause(e.e))
+        case e: NonzeroExitCode => Left(error("NonzeroExitCode"))
         case q: ProgramOutput => Right(q)
       }
+    }
 
     for {
-      _ <- findProgram()
+      _ <- testExists()
       xmlStr <- StreamReader.readStream(xmlInput)
       tempDir <- getTmpDir()
       xmlFile <- stringToTempFile(tempDir)(xmlStr)
