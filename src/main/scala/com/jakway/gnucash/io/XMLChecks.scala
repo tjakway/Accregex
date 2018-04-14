@@ -1,6 +1,6 @@
 package com.jakway.gnucash.io
 
-import java.io.{File, StringReader, StringWriter}
+import java.io._
 import java.nio.file.Files
 
 import com.jakway.gnucash.ValidatedConfig
@@ -11,7 +11,6 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory}
 
-import scala.sys.process.processInternal.InputStream
 import scala.util.{Failure, Success, Try}
 
 class CmpXML(val left: File, val right: File) {
@@ -36,7 +35,7 @@ object XMLValidator {
 }
 
 trait XMLValidator {
-  def validate(inputName: String, node: scala.xml.Node): Either[ValidationError, Unit] = {
+  def validateNode(inputName: String, node: scala.xml.Node): Either[ValidationError, Unit] = {
     Try {
       //need to render the node as a string then pass it on as a StreamSource
       val enc = "UTF-8"
@@ -56,14 +55,14 @@ trait XMLValidator {
   }
 
   def validate(inputName: String, xmlInput: String): Either[ValidationError, Unit] = {
-    validate(inputName, new StreamSource(new StringReader(xmlInput)))
+    validate(inputName, new ByteArrayInputStream(xmlInput.getBytes("UTF-8")))
   }
 
   def validate(xmlInput: File): Either[ValidationError, Unit] = {
-    validate(xmlInput.toString, new StreamSource(xmlInput))
+    validate(xmlInput.toString, new FileInputStream(xmlInput))
   }
 
-  def validate(inputName: String, xmlInput: StreamSource): Either[ValidationError, Unit]
+  def validate(inputName: String, xmlInput: InputStream): Either[ValidationError, Unit]
 }
 
 trait ExternalValidator extends XMLValidator {
@@ -74,7 +73,7 @@ trait ExternalValidator extends XMLValidator {
 
   def testExists(testCmd: String): Either[ValidationError, Unit] = {
     Try(new CheckCommandExists(programName, Seq("--version"))) match {
-      case Success(_) => Right()
+      case Success(_) => Right(())
       case Failure(t) => Left(ExternalValidatorError(s"Program does not exist: $testCmd"))
     }
   }
@@ -86,7 +85,7 @@ trait ExternalValidator extends XMLValidator {
 class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidator {
   import XMLValidator._
 
-  val progName = "xmllint"
+  override val programName = "xmllint"
   val checkArgs = Seq("--version")
 
   case class XMLLintValidator(override val msg: String)
@@ -144,7 +143,7 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
           p.close()
         }
       res match {
-        case Success(_) => Right()
+        case Success(_) => Right(())
         case Failure(t) => Left(
           XMLLintValidator(s"Failed to write `$str` to file $dest").withCause(t))
       }
@@ -167,9 +166,9 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
 
 
   override def validate(inputName: String, xmlInput: InputStream): Either[ValidationError, Unit] = {
-    def findProgram(): Either[ValidationError, Unit] = Try(new CheckCommandExists(progName, checkArgs)) match {
-      case Success(_) => Right()
-      case Failure(t) => Left(XMLLintValidator(s"Could not find the program $progName," +
+    def findProgram(): Either[ValidationError, Unit] = Try(new CheckCommandExists(programName, checkArgs)) match {
+      case Success(_) => Right(())
+      case Failure(t) => Left(XMLLintValidator(s"Could not find the program $programName," +
         s" perhaps you need to install it").withCause(t))
     }
 
@@ -177,48 +176,17 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
       Runner.run(programName, Seq("--relaxng", schemaLoc.toString, toVerify.toString)) match {
         case q: ZeroExitCode => Right(q)
         case e: ExceptionOnRun => Left(XMLLintValidator(
-          s"Error while running $progName: $e").withCause(e.e))
+          s"Error while running $programName: $e").withCause(e.e))
       }
 
     for {
+      _ <- findProgram()
       xmlStr <- StreamReader.readStream(xmlInput)
       tempDir <- getTmpDir()
       xmlFile <- stringToTempFile(tempDir)(xmlStr)
       schema <- schemaToTempFile(tempDir)
-      output <- exec(schema, xmlFile)
+      _ <- exec(schema, xmlFile)
     } yield {}
-  }
-
-  private lazy val validator: Either[ValidationError, javax.xml.validation.Validator] = {
-    //read the schema resource and set up the necessary JAX machinery
-    val res = for {
-      fac <- Try(SchemaFactory.newInstance(XMLConstants.RELAXNG_NS_URI))
-      schemaRes <- Try(getClass.getResourceAsStream(schemaResource))
-      stream <- Try(new StreamSource(schemaRes))
-      schema <- Try(fac.newSchema(stream))
-      v <- Try(schema.newValidator())
-    } yield (v)
-
-    res match {
-      case Success(x) => Right(x)
-      case Failure(t) => Left(new GnucashInitializeValidatorError().withCause(t))
-    }
-  }
-
-  override def validate(inputName: String, xmlInput: StreamSource): Either[ValidationError, Unit] = {
-    validator.flatMap { v =>
-      try {
-        Right(v.validate(xmlInput))
-      } catch {
-        //failed because the document wasn't an instance of the schema
-        case e: org.xml.sax.SAXException => Left(GnucashValidationError(inputName,
-          schemaName).withCause(e))
-
-          //failed for some other reason
-        case t: Throwable => Left(new XMLValidationError("Validation failed for unknown reasons, " +
-          "see exception for details").withCause(t))
-      }
-    }
   }
 }
 
@@ -226,12 +194,12 @@ class XMLLintValidator(val tempDir: Option[File] = None) extends ExternalValidat
   * do-nothing instance of XMLValidator
   */
 class SkipXMLValidator extends XMLValidator {
-  override def validate(inputName: String, xmlInput: String): Either[ValidationError, Unit] = Right()
+  override def validate(inputName: String, xmlInput: String): Either[ValidationError, Unit] = Right(())
 
-  override def validate(xmlInput: File): Either[ValidationError, Unit] = Right()
+  override def validate(xmlInput: File): Either[ValidationError, Unit] = Right(())
 
-  override def validate(inputName: String, xmlInput: StreamSource): Either[ValidationError, Unit] =
-    Right()
+  override def validate(inputName: String, xmlInput: InputStream): Either[ValidationError, Unit] =
+    Right(())
 }
 
 
@@ -241,9 +209,9 @@ object StreamReader {
   def jReadStream(inputStream: InputStream): String = {
     import java.io.InputStreamReader
 
+    val byteArrayOutputStream = new ByteArrayOutputStream()
     val bufferSize = 1024
     val buffer = new Array[Char](bufferSize)
-    val out = new StringBuilder
     val in = new InputStreamReader(inputStream, "UTF-8")
 
     var rsz = 0
@@ -251,11 +219,11 @@ object StreamReader {
     do {
       rsz = in.read(buffer, 0, buffer.length)
       if(rsz >= 0) {
-        out.append(buffer, 0, rsz)
+        byteArrayOutputStream.write(buffer.asInstanceOf[Array[Byte]], 0, rsz)
       }
     } while(rsz >= 0)
 
-    out.toString()
+    new String(byteArrayOutputStream.toByteArray, "UTF-8")
   }
 
   val readStream: ValidateF[InputStream, String] =
