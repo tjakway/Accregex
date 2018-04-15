@@ -23,7 +23,7 @@ libraryDependencies ++=
       //XMLUnit
       //https://github.com/xmlunit/xmlunit
       //for comparing XML documents
-      "xmlunit" % "xmlunit" % "1.6",
+      "org.xmlunit" % "xmlunit-core" % "2.5.1",
 
       //scalatest
       //see http://www.scalatest.org/install
