@@ -44,8 +44,8 @@ class Diff(val originalXML: String, val originalTransactions: Set[Transaction],
       left.value == right.value && left.id == right.id
 
     if(SetsEqual(cmpTransactionsIgnoreSplitAccounts)
-             (originalTransactions.toSet,
-               newTransactions.toSet)) {
+             (originalTransactions,
+               newTransactions)) {
       Right(())
     } else {
       Left(TransactionsNotBijectiveError(s"Expected ${originalTransactions} to match ${newTransactions}" +
@@ -121,8 +121,12 @@ class Diff(val originalXML: String, val originalTransactions: Set[Transaction],
 
 
 
-  def passes() = {
-    diff.getDifferences().forEach(_.)
+  def passes(): Either[ValidationError, Unit] = {
+    if(diff.hasDifferences()) {
+
+    } else {
+      Right(())
+    }
   }
 
 }
