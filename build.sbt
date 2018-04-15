@@ -41,3 +41,12 @@ excludeFilter in unmanagedSources := HiddenFileFilter || "snippets.scala"
 
 //enable more warnings
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-feature")
+
+enablePlugins(BuildInfoPlugin)
+
+buildInfoKeys := Seq[BuildInfoKey](name, 
+  version, 
+  scalaVersion, 
+  sbtVersion,
+  "issueTracker" -> "https://github.com/tjakway/Accregex/issues")
+buildInfoPackage := "autogen.buildinfo"
