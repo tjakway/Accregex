@@ -31,11 +31,11 @@ class TestXMLValidator(val regDocRoot: Node, val currencyTreeRoot: Node) extends
     tf
   }
 
-  "XMLValidator" should "validate reg_doc_example as a Node" in {
+  it should "validate reg_doc_example as a Node" in {
     new XMLLintValidator().validateNode(inputName, regDocRoot) shouldEqual Right(())
   }
 
-  "XMLValidator" should "validate reg_doc_example as a file" in {
+  it should "validate reg_doc_example as a file" in {
     val tf = toTempFile(regDocElem.copy())
     val res = new XMLLintValidator().validate(tf)
 
@@ -44,7 +44,7 @@ class TestXMLValidator(val regDocRoot: Node, val currencyTreeRoot: Node) extends
     res shouldEqual Right(())
   }
 
-  "XMLValidator" should "fail to validate currency tree" in {
+  it should "fail to validate currency tree" in {
     new XMLLintValidator().validateNode(inputName, currencyTreeRoot)
       .isLeft shouldEqual true
   }
