@@ -1,6 +1,89 @@
 package com.jakway.gnucash.parser.xml
 
-class Diff(val left: String, val right: String) {
+import com.jakway.gnucash.parser.ValidationError
+import com.jakway.gnucash.parser.rules.{Split, Transaction}
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.diff.{DefaultNodeMatcher, ElementSelectors}
 
+object SetsEqual {
+  def apply[A](cmp: (A, A) => Boolean)(left: Set[A], right: Set[A]): Boolean = {
+    //two sets are equal if their lengths are the same and for every item in
+    //set A there is a corresponding item in set B
+    left.size == right.size &&
+      left.forall(l => right.find(cmp(l, _)).isDefined)
+  }
+}
+
+class Diff(val originalXML: String, val originalTransactions: Seq[Transaction],
+           val newXML: String, val newTransactions: Seq[Transaction]) {
+
+  class DiffError(override val msg: String) extends ValidationError(msg)
+
+  case class TransactionsNotBijectiveError(override val msg: String)
+    extends DiffError(msg)
+
+  case class InvalidTransactionsError(override val msg: String)
+    extends DiffError(msg)
+
+
+  private def checkTransactionsAreBijective: Either[ValidationError, Unit] = {
+
+    def cmpTransactionsIgnoreSplitAccounts(left: Transaction, right: Transaction): Boolean =
+      left.description == right.description &&
+        left.id == right.id &&
+        SetsEqual(cmpSplitsIgnoreAccount)(left.splits, right.splits)
+
+
+    def cmpSplitsIgnoreAccount(left: Split, right: Split): Boolean =
+      left.value == right.value && left.id == right.id
+
+    if(SetsEqual(cmpTransactionsIgnoreSplitAccounts)
+             (originalTransactions.toSet,
+               newTransactions.toSet)) {
+      Right(())
+    } else {
+      Left(TransactionsNotBijectiveError(s"Expected ${originalTransactions} to match ${newTransactions}" +
+        s" except for the destination account changes"))
+    }
+  }
+
+  private def checkTransactionsValid(transactions: Seq[Transaction]): Either[ValidationError, Unit] =
+    if(transactions.forall(_.isValid)) {
+      Right(())
+    } else {
+      Left(InvalidTransactionsError(s"Invalid transactions passed to Diff: " +
+        s"${transactions.filter(!_.isValid)}"))
+    }
+
+  /**
+    * @return TODO: change to return a summary of the diffs
+    */
+  def check(): Either[ValidationError, Unit] = {
+    for {
+      _ <- checkTransactionsValid(originalTransactions)
+      _ <- checkTransactionsValid(newTransactions)
+      _ <- checkTransactionsAreBijective
+    } yield {}
+  }
+
+  private lazy val diff = DiffBuilder.compare(originalXML)
+    .withTest(newXML)
+    .ignoreComments()
+    .ignoreWhitespace()
+    //ignore order of elements
+    //see https://stackoverflow.com/questions/16540318/compare-two-xml-strings-ignoring-element-order?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+    .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byNameAndText))
+    .checkForSimilar()
+    .build()
+
+
+  val formattedDifferences: String = diff.toString()
+
+
+  //the node filter should return FALSE for elements that ought to be ignored
+
+  def passes() = {
+    diff.getDifferences().forEach(_.)
+  }
 
 }
