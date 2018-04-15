@@ -1,9 +1,14 @@
 package com.jakway.gnucash.parser.xml
 
-import com.jakway.gnucash.parser.ValidationError
+import java.io.StringReader
+
+import com.jakway.gnucash.parser.{Parser, ValidationError}
 import com.jakway.gnucash.parser.rules.{Split, Transaction}
+import com.jakway.gnucash.util.PrintNode
+import org.w3c.dom.Node
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.diff.{DefaultNodeMatcher, ElementSelectors}
+import org.xmlunit.util.Predicate
 
 object SetsEqual {
   def apply[A](cmp: (A, A) => Boolean)(left: Set[A], right: Set[A]): Boolean = {
@@ -14,8 +19,9 @@ object SetsEqual {
   }
 }
 
-class Diff(val originalXML: String, val originalTransactions: Seq[Transaction],
-           val newXML: String, val newTransactions: Seq[Transaction]) {
+class Diff(val originalXML: String, val originalTransactions: Set[Transaction],
+           val newXML: String, val newTransactions: Set[Transaction],
+           val parseTransaction: scala.xml.Node => Either[ValidationError, Transaction]) {
 
   class DiffError(override val msg: String) extends ValidationError(msg)
 
@@ -47,7 +53,7 @@ class Diff(val originalXML: String, val originalTransactions: Seq[Transaction],
     }
   }
 
-  private def checkTransactionsValid(transactions: Seq[Transaction]): Either[ValidationError, Unit] =
+  private def checkTransactionsValid(transactions: TraversableOnce[Transaction]): Either[ValidationError, Unit] =
     if(transactions.forall(_.isValid)) {
       Right(())
     } else {
@@ -73,14 +79,47 @@ class Diff(val originalXML: String, val originalTransactions: Seq[Transaction],
     //ignore order of elements
     //see https://stackoverflow.com/questions/16540318/compare-two-xml-strings-ignoring-element-order?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
     .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byNameAndText))
+    .withNodeFilter(new ModifiedTransactionFilter(originalTransactions ++ newTransactions))
     .checkForSimilar()
     .build()
 
 
   val formattedDifferences: String = diff.toString()
 
+  /**
+    * exclude the transactions we just modified from the comparison
+    * @param toIgnore
+    */
+  class ModifiedTransactionFilter(val toIgnore: Set[Transaction])
+    extends Predicate[org.w3c.dom.Node] {
 
-  //the node filter should return FALSE for elements that ought to be ignored
+    def stringToXML(s: String): scala.xml.Node =
+      scala.xml.XML.load(new StringReader(s))
+
+    def xmlToString(node: org.w3c.dom.Node): String =
+      PrintNode.printNode(node, true, true)
+
+    //the node filter should return FALSE for elements that ought to be ignored
+    override def test(toTest: org.w3c.dom.Node): Boolean = {
+      //TODO: SUPER hacky way to implement this...
+      //as is, we go from Java Node -> String -> Scala Node
+      //then try to parse the scala node as a transaction
+      //this is both slow and error prone
+      //the solution will be to replace scala's XML library
+      //with the native java one (javax.xml)
+      val scalaNode = stringToXML(xmlToString(toTest))
+
+      parseTransaction(scalaNode) match {
+          //only ignore nodes that are part of our toIgnore set
+        case Right(thisTrans)
+          if toIgnore.contains(thisTrans) => false
+
+        case _ => true
+      }
+    }
+  }
+
+
 
   def passes() = {
     diff.getDifferences().forEach(_.)
