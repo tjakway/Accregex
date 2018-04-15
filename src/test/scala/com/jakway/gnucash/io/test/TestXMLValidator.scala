@@ -8,7 +8,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 import scala.xml.{Elem, Node, XML}
 
-class TestXMLValidator(val regDocRoot: Node) extends FlatSpec with Matchers {
+class TestXMLValidator(val regDocRoot: Node, val currencyTreeRoot: Node) extends FlatSpec with Matchers {
   val inputName = "TestXMLValidatorInput"
 
   val regDocElem = regDocRoot.asInstanceOf[Elem]
@@ -42,6 +42,11 @@ class TestXMLValidator(val regDocRoot: Node) extends FlatSpec with Matchers {
     tf.delete()
 
     res shouldEqual Right(())
+  }
+
+  "XMLValidator" should "fail to validate currency tree" in {
+    new XMLLintValidator().validateNode(inputName, currencyTreeRoot)
+      .isLeft shouldEqual true
   }
 
 }

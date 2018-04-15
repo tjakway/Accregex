@@ -13,8 +13,10 @@ import scala.xml.XML
 
 object TestResources {
   val regDocXML = "/reg_doc_example.gnucash"
+  val currencyTreeXML = "/currency_tree_xml.gnucash"
 
   lazy val regDocRoot = XML.load(getClass().getResource(regDocXML))
+  lazy val currencyTreeRoot = XML.load(getClass().getResource(currencyTreeXML))
 }
 import TestResources._
 
@@ -30,4 +32,5 @@ class TestRuleApplicatorRegDocXML extends TestRuleApplicator(regDocRoot)
 
 class TestNodeReplaceRegDocXML extends TestNodeReplace(regDocRoot)
 
-class TestXMLValidatorRegDocXML extends TestXMLValidator(regDocRoot)
+class TestXMLValidatorRegDocXML
+  extends TestXMLValidator(regDocRoot, currencyTreeRoot)
