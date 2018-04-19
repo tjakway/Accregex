@@ -6,6 +6,7 @@ import java.nio.file.Files
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.io.XMLValidator.XMLValidationError
 import com.jakway.gnucash.parser.{ValidateF, ValidationError}
+import com.jakway.util.XMLUtils
 import com.jakway.util.runner._
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
@@ -46,24 +47,8 @@ object XMLValidator {
 }
 
 trait XMLValidator {
-  def validateNode(inputName: String, node: scala.xml.Node): Either[ValidationError, Unit] = {
-    Try {
-      //need to render the node as a string then pass it on as a StreamSource
-      val enc = "UTF-8"
-      val sw: StringWriter = new StringWriter()
-      scala.xml.XML.write(sw, node, enc,
-        true, null) //null means no doctype
-
-      sw.toString()
-    } match {
-      case Success(xmlStr) => {
-        validate(inputName, xmlStr)
-      }
-      case Failure(t) => Left(new XMLValidationError("Error rendering a scala XML node to a String")
-        .withCause(t))
-
-    }
-  }
+  def validateNode(inputName: String, node: scala.xml.Node): Either[ValidationError, Unit] =
+    XMLUtils.nodeToString(node).flatMap(validate(inputName, _))
 
   def validate(inputName: String, xmlInput: String): Either[ValidationError, Unit] = {
     validate(inputName, new ByteArrayInputStream(xmlInput.getBytes("UTF-8")))

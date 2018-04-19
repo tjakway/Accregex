@@ -4,7 +4,8 @@ import java.io.PrintWriter
 
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.parser._
-import com.jakway.gnucash.parser.rules.UnlinkedTransactionRule
+import com.jakway.gnucash.parser.rules.{Transaction, UnlinkedTransactionRule}
+import com.jakway.gnucash.parser.xml.{AlwaysPassesDiff, XMLUnitDiff}
 import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
 
 import scala.io.Source
@@ -80,6 +81,20 @@ class Driver(val config: ValidatedConfig) {
         newRootNode)
     } yield (newRootNode)
   }
+
+  def checkDiff(originalXML: String, originalTransactions: Set[Transaction],
+           newXML: String, newTransactions: Set[Transaction],
+           parseTransaction: scala.xml.Node => Either[ValidationError, Transaction]):
+    Either[ValidationError, Unit] = {
+    if(config.checkDiff) {
+      new XMLUnitDiff(originalXML, originalTransactions,
+        newXML, newTransactions,
+        parseTransaction).passes()
+    } else {
+      new AlwaysPassesDiff().passes()
+    }
+  }
+
 
   private def loadAccounts(book: Node) = {
     parser

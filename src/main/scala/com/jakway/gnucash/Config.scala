@@ -18,6 +18,7 @@ case class ValidatedConfig(inputPath: File,
                            skipOutputValidation: Boolean,
                            targetAccount: String,
                            tempDir: Option[String],
+                           checkDiff: Boolean,
                            debug: Boolean) {
   /**
     * *highly* doubt this will ever be configurable
@@ -34,6 +35,7 @@ case class UnvalidatedConfig(inputPath: String,
                              skipOutputValidation: Boolean,
                              targetAccount: String,
                              tempDir: Option[String],
+                             checkDiff: Boolean,
                              debug: Boolean) {
 
   def validate(): Either[String, ValidatedConfig] = {
@@ -44,7 +46,7 @@ case class UnvalidatedConfig(inputPath: String,
     } yield {
       ValidatedConfig(input, rules, out,
         summarize, compress, skipInputValidation, skipOutputValidation,
-        targetAccount, tempDir, debug)
+        targetAccount, tempDir, checkDiff, debug)
     }
   }
 
@@ -130,7 +132,7 @@ case class UnvalidatedConfig(inputPath: String,
 object UnvalidatedConfig {
   val default: UnvalidatedConfig =
     UnvalidatedConfig("", "rules.conf", None, true, true, false, false, "Unspecified",
-      None, false)
+      None, true, false)
 
   val parser = new scopt.OptionParser[UnvalidatedConfig](progName) {
     head(progName)
@@ -175,6 +177,10 @@ object UnvalidatedConfig {
     opt[String]("temp-dir")
       .action((x, c) => c.copy(tempDir = Some(x)))
       .text(s"The directory to store temporary files (default is that given by the operating system")
+
+    opt[Boolean]("check-diff")
+      .action((x, c) => c.copy(debug = true))
+      .text(s"Whether to check the output file using XMLUnit (default=${default.checkDiff}")
 
     opt[Unit]("debug")
       .action((x, c) => c.copy(debug = true))
