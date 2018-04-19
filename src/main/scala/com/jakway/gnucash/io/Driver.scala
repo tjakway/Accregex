@@ -7,6 +7,7 @@ import com.jakway.gnucash.parser._
 import com.jakway.gnucash.parser.rules.{Transaction, UnlinkedTransactionRule}
 import com.jakway.gnucash.parser.xml.{AlwaysPassesDiff, XMLUnitDiff}
 import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
+import com.jakway.util.XMLUtils
 
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
@@ -74,7 +75,7 @@ class Driver(val config: ValidatedConfig) {
       newRootNode <- Parser.replaceBookNode(rootNode)(newBookNode)
 
       //check that the output matches what we expected based on our transformations
-
+      checkDiff(rootNode, )
 
       //optionally validate the transformed XML document
       _ <- outputValidator.validateNode(s"output XML to be written to ${config.outputPath}",
@@ -82,14 +83,20 @@ class Driver(val config: ValidatedConfig) {
     } yield (newRootNode)
   }
 
-  def checkDiff(originalXML: String, originalTransactions: Set[Transaction],
-           newXML: String, newTransactions: Set[Transaction],
+  def checkDiff(originalXML: Node, originalTransactions: Set[Transaction],
+           newXML: Node, newTransactions: Set[Transaction],
            parseTransaction: scala.xml.Node => Either[ValidationError, Transaction]):
     Either[ValidationError, Unit] = {
     if(config.checkDiff) {
-      new XMLUnitDiff(originalXML, originalTransactions,
-        newXML, newTransactions,
-        parseTransaction).passes()
+      //convert the scala xml nodes to strings so we can run XMLUnit on them
+      for {
+        originalXMLString <- XMLUtils.nodeToString(originalXML)
+        newXMLString <- XMLUtils.nodeToString(newXML)
+
+        _ <- new XMLUnitDiff(originalXMLString, originalTransactions,
+                newXMLString, newTransactions,
+                parseTransaction).passes()
+      } yield {}
     } else {
       new AlwaysPassesDiff().passes()
     }

@@ -65,6 +65,32 @@ object NodeTests {
       queryElems(t)(errorType).flatMap(onlyOne(_)(errorType))
 
 
+  def checkNodesNotEqual: ValidateF[(Node, Node), Unit] =
+    (t: (Node, Node), errorType: String => ValidationError) => {
+      val (left, right) = t
+
+      def err(check: String) =
+        Left(errorType("Error in checkNodesNotEqual: expected left != right but" +
+        s" $left == $right (failed check $check)"))
+
+      //exhaustively check the nodes aren't equal and note which comparison fails
+      if(!left.xml_!=(right)) {
+        err("!left.xml_!=(right)")
+      } else if(!right.xml_!=(left)) {
+        err("!right.xml_!=(left)")
+      } else if(left.xml_==(right)) {
+        err("left.xml_==(right)")
+      } else if(right.xml_==(left)) {
+        err("right.xml_==(left)")
+      } else if(left == right) {
+        err("left == right")
+      } else if(right == left) {
+        err("right == left")
+      } else {
+        Right(())
+      }
+    }
+
   /**
     * @return the (trimmed) text of the Node or Left if there isn't any
     */
