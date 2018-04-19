@@ -5,7 +5,7 @@ import java.io.PrintWriter
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.parser._
 import com.jakway.gnucash.parser.rules.{Transaction, UnlinkedTransactionRule}
-import com.jakway.gnucash.parser.xml.{AlwaysPassesDiff, XMLUnitDiff}
+import com.jakway.gnucash.parser.xml.{AlwaysPassesDiff, NodeTests, XMLUnitDiff}
 import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
 import com.jakway.util.XMLUtils
 
@@ -47,6 +47,9 @@ class Driver(val config: ValidatedConfig) {
   lazy val (inputValidator, outputValidator) = XMLValidator.getValidators(config)
 
   def runEither(): Either[ValidationError, Node] = {
+    case class OrigEqualsOutputError(override val msg: String)
+      extends ValidationError(msg)
+
     for {
       //optionally validate the input file first
       _ <- inputValidator.validate(config.inputPath)
@@ -74,8 +77,12 @@ class Driver(val config: ValidatedConfig) {
       newBookNode <- Parser.replaceTransactionNodes(accountMap)(bookNode, outputTransactionNodes)
       newRootNode <- Parser.replaceBookNode(rootNode)(newBookNode)
 
+      _ <- NodeTests.checkNodesNotEqual((rootNode, newRootNode))(OrigEqualsOutputError.apply _)
+
       //check that the output matches what we expected based on our transformations
-      checkDiff(rootNode, )
+      _ <- checkDiff(rootNode, allTransactionNodes,
+        newRootNode, outputTransactionNodes,
+        Parser.parseTransaction(accountMap))
 
       //optionally validate the transformed XML document
       _ <- outputValidator.validateNode(s"output XML to be written to ${config.outputPath}",
@@ -83,18 +90,26 @@ class Driver(val config: ValidatedConfig) {
     } yield (newRootNode)
   }
 
-  def checkDiff(originalXML: Node, originalTransactions: Set[Transaction],
-           newXML: Node, newTransactions: Set[Transaction],
+  def checkDiff(originalXML: Node, originalTransactions: Seq[Node],
+           newXML: Node, newTransactions: Seq[Node],
            parseTransaction: scala.xml.Node => Either[ValidationError, Transaction]):
     Either[ValidationError, Unit] = {
     if(config.checkDiff) {
-      //convert the scala xml nodes to strings so we can run XMLUnit on them
       for {
+        //convert the scala xml nodes to strings so we can run XMLUnit on them
         originalXMLString <- XMLUtils.nodeToString(originalXML)
         newXMLString <- XMLUtils.nodeToString(newXML)
 
-        _ <- new XMLUnitDiff(originalXMLString, originalTransactions,
-                newXMLString, newTransactions,
+        //parse the transaction nodes
+        //TODO: reuse the internal variables of Parser.replaceTransactionNodes/RuleApplicator instead
+        //of redoing all parsing
+        originalTransactions <- ValidationError.accumulateAndWrap(
+          originalTransactions.map(parseTransaction))
+        newTransactions <- ValidationError.accumulateAndWrap(
+          newTransactions.map(parseTransaction))
+
+        _ <- new XMLUnitDiff(originalXMLString, originalTransactions.toSet,
+                newXMLString, newTransactions.toSet,
                 parseTransaction).passes()
       } yield {}
     } else {
