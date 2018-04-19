@@ -11,6 +11,10 @@ import org.xmlunit.diff.{DefaultNodeMatcher, Difference, ElementSelectors}
 import org.xmlunit.util.Predicate
 import scala.collection.JavaConverters
 
+trait BeforeAfterDiff {
+  def passes(): Either[ValidationError, Unit]
+}
+
 object SetsEqual {
   def apply[A](cmp: (A, A) => Boolean)(left: Set[A], right: Set[A]): Boolean = {
     //two sets are equal if their lengths are the same and for every item in
@@ -20,9 +24,10 @@ object SetsEqual {
   }
 }
 
-class Diff(val originalXML: String, val originalTransactions: Set[Transaction],
+class XMLUnitDiff(val originalXML: String, val originalTransactions: Set[Transaction],
            val newXML: String, val newTransactions: Set[Transaction],
-           val parseTransaction: scala.xml.Node => Either[ValidationError, Transaction]) {
+           val parseTransaction: scala.xml.Node => Either[ValidationError, Transaction])
+  extends BeforeAfterDiff {
 
   class DiffError(override val msg: String) extends ValidationError(msg)
 
@@ -127,9 +132,7 @@ class Diff(val originalXML: String, val originalTransactions: Set[Transaction],
   }
 
 
-
-
-  def passes(): Either[ValidationError, Unit] = {
+  override def passes(): Either[ValidationError, Unit] = {
     if(diff.hasDifferences()) {
       val diffSeq = JavaConverters.iterableAsScalaIterable(diff.getDifferences()).toSeq
       Left(UnexpectedDifferencesError(diffSeq))
@@ -138,4 +141,8 @@ class Diff(val originalXML: String, val originalTransactions: Set[Transaction],
     }
   }
 
+}
+
+class AlwaysPassesDiff extends BeforeAfterDiff {
+  override def passes(): Either[ValidationError, Unit] = Right(())
 }

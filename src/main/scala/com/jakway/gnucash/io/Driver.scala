@@ -34,7 +34,7 @@ class Driver(val config: ValidatedConfig) {
   def run(): Unit = runEither() match {
     case Right(newXML) => {
       XML.write(new PrintWriter(config.outputPath), newXML, config.enc,
-        true, null) //null means no doctyp
+        true, null) //null means no doctype
     }
     case Left(err) => {
       System.err.println(ErrorPrinter.format(err))
@@ -71,6 +71,9 @@ class Driver(val config: ValidatedConfig) {
 
       newBookNode <- Parser.replaceTransactionNodes(accountMap)(bookNode, outputTransactionNodes)
       newRootNode <- Parser.replaceBookNode(rootNode)(newBookNode)
+
+      //check that the output matches what we expected based on our transformations
+
 
       //optionally validate the transformed XML document
       _ <- outputValidator.validateNode(s"output XML to be written to ${config.outputPath}",
