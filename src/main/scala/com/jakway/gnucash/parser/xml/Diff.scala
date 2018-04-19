@@ -7,8 +7,9 @@ import com.jakway.gnucash.parser.rules.{Split, Transaction}
 import com.jakway.gnucash.util.PrintNode
 import org.w3c.dom.Node
 import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.diff.{DefaultNodeMatcher, ElementSelectors}
+import org.xmlunit.diff.{DefaultNodeMatcher, Difference, ElementSelectors}
 import org.xmlunit.util.Predicate
+import scala.collection.JavaConverters
 
 object SetsEqual {
   def apply[A](cmp: (A, A) => Boolean)(left: Set[A], right: Set[A]): Boolean = {
@@ -30,6 +31,13 @@ class Diff(val originalXML: String, val originalTransactions: Set[Transaction],
 
   case class InvalidTransactionsError(override val msg: String)
     extends DiffError(msg)
+
+  case class UnexpectedDifferencesError(val differences: Seq[Difference])
+    extends DiffError(s"Unexpected differences in comparison between " +
+      s"$originalXML and $newXML: $differences") {
+    val diffOriginalXML = originalXML
+    val diffNewXML = newXML
+  }
 
 
   private def checkTransactionsAreBijective: Either[ValidationError, Unit] = {
@@ -113,7 +121,6 @@ class Diff(val originalXML: String, val originalTransactions: Set[Transaction],
           //only ignore nodes that are part of our toIgnore set
         case Right(thisTrans)
           if toIgnore.contains(thisTrans) => false
-
         case _ => true
       }
     }
@@ -121,9 +128,11 @@ class Diff(val originalXML: String, val originalTransactions: Set[Transaction],
 
 
 
+
   def passes(): Either[ValidationError, Unit] = {
     if(diff.hasDifferences()) {
-
+      val diffSeq = JavaConverters.iterableAsScalaIterable(diff.getDifferences()).toSeq
+      Left(UnexpectedDifferencesError(diffSeq))
     } else {
       Right(())
     }
