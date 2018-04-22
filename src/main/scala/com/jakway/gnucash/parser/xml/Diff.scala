@@ -24,10 +24,37 @@ object SetsEqual {
   }
 }
 
-class XMLUnitDiff(val originalXML: String, val originalTransactions: Set[Transaction],
-           val newXML: String, val newTransactions: Set[Transaction],
+trait HasDiffEngine {
+  val originalXML: String
+  val newXML: String
+  val nodeFilter: Option[org.xmlunit.util.Predicate[org.w3c.dom.Node]] = None
+
+  protected lazy val diff = {
+    val base = DiffBuilder.compare(originalXML)
+      .withTest(newXML)
+      .ignoreComments()
+      .ignoreWhitespace()
+      //ignore order of elements
+      //see https://stackoverflow.com/questions/16540318/compare-two-xml-strings-ignoring-element-order?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+      .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byNameAndText))
+
+      def applyFilter(b: DiffBuilder) = nodeFilter match {
+        case Some(f) => b.withNodeFilter(f)
+        case None => b
+      }
+
+    applyFilter(base)
+      .checkForSimilar()
+      .build()
+  }
+
+  lazy val formattedDifferences: String = diff.toString()
+}
+
+class XMLUnitDiff(override val originalXML: String, val originalTransactions: Set[Transaction],
+           override val newXML: String, val newTransactions: Set[Transaction],
            val parseTransaction: scala.xml.Node => Either[ValidationError, Transaction])
-  extends BeforeAfterDiff {
+  extends HasDiffEngine with BeforeAfterDiff {
 
   class DiffError(override val msg: String) extends ValidationError(msg)
 
@@ -44,6 +71,8 @@ class XMLUnitDiff(val originalXML: String, val originalTransactions: Set[Transac
     val diffNewXML = newXML
   }
 
+  override val nodeFilter: Option[Predicate[Node]] =
+    Some(new ModifiedTransactionFilter(originalTransactions ++ newTransactions))
 
   private def checkTransactionsAreBijective: Either[ValidationError, Unit] = {
 
@@ -85,19 +114,6 @@ class XMLUnitDiff(val originalXML: String, val originalTransactions: Set[Transac
     } yield {}
   }
 
-  private lazy val diff = DiffBuilder.compare(originalXML)
-    .withTest(newXML)
-    .ignoreComments()
-    .ignoreWhitespace()
-    //ignore order of elements
-    //see https://stackoverflow.com/questions/16540318/compare-two-xml-strings-ignoring-element-order?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
-    .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byNameAndText))
-    .withNodeFilter(new ModifiedTransactionFilter(originalTransactions ++ newTransactions))
-    .checkForSimilar()
-    .build()
-
-
-  val formattedDifferences: String = diff.toString()
 
   /**
     * exclude the transactions we just modified from the comparison
