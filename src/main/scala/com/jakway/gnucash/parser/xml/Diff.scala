@@ -72,9 +72,9 @@ object HasDiffEngine {
   class DiffError(override val msg: String) extends ValidationError(msg)
 }
 
-class XMLUnitDiff(override val originalXML: String, val originalTransactions: Set[Transaction],
-           override val newXML: String, val newTransactions: Set[Transaction],
-           val parseTransaction: scala.xml.Node => Either[ValidationError, Transaction])
+class FilterTransactionsDiff(override val originalXML: String, val originalTransactions: Set[Transaction],
+                             override val newXML: String, val newTransactions: Set[Transaction],
+                             val parseTransaction: scala.xml.Node => Either[ValidationError, Transaction])
   extends HasDiffEngine {
   import HasDiffEngine._
 

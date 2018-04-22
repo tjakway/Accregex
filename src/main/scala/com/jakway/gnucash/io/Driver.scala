@@ -5,7 +5,7 @@ import java.io.PrintWriter
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.parser._
 import com.jakway.gnucash.parser.rules.{Transaction, UnlinkedTransactionRule}
-import com.jakway.gnucash.parser.xml.{AlwaysPassesDiff, NodeTests, XMLUnitDiff}
+import com.jakway.gnucash.parser.xml.{AlwaysPassesDiff, NodeTests, FilterTransactionsDiff}
 import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
 import com.jakway.util.XMLUtils
 
@@ -108,7 +108,7 @@ class Driver(val config: ValidatedConfig) {
         newTransactions <- ValidationError.accumulateAndWrap(
           newTransactions.map(parseTransaction))
 
-        _ <- new XMLUnitDiff(originalXMLString, originalTransactions.toSet,
+        _ <- new FilterTransactionsDiff(originalXMLString, originalTransactions.toSet,
                 newXMLString, newTransactions.toSet,
                 parseTransaction).passes()
       } yield {}
