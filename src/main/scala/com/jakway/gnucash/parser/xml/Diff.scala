@@ -2,7 +2,7 @@ package com.jakway.gnucash.parser.xml
 
 import java.io.StringReader
 
-import com.jakway.gnucash.parser.{Parser, ValidationError}
+import com.jakway.gnucash.parser.ValidationError
 import com.jakway.gnucash.parser.rules.{Split, Transaction}
 import com.jakway.gnucash.util.PrintNode
 import org.w3c.dom.Node
