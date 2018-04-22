@@ -24,7 +24,7 @@ object SetsEqual {
   }
 }
 
-trait HasDiffEngine {
+trait HasDiffEngine extends BeforeAfterDiff {
   val originalXML: String
   val newXML: String
   val nodeFilter: Option[org.xmlunit.util.Predicate[org.w3c.dom.Node]] = None
@@ -49,14 +49,34 @@ trait HasDiffEngine {
   }
 
   lazy val formattedDifferences: String = diff.toString()
+
+
+  override def passes(): Either[ValidationError, Unit] = {
+    if(diff.hasDifferences()) {
+      val diffSeq = JavaConverters.iterableAsScalaIterable(diff.getDifferences()).toSeq
+      Left(UnexpectedDifferencesError(diffSeq))
+    } else {
+      Right(())
+    }
+  }
+
+  case class UnexpectedDifferencesError(val differences: Seq[Difference])
+    extends HasDiffEngine.DiffError(s"Unexpected differences in comparison between " +
+      s"$originalXML and $newXML: $differences") {
+    val diffOriginalXML = originalXML
+    val diffNewXML = newXML
+  }
+}
+
+object HasDiffEngine {
+  class DiffError(override val msg: String) extends ValidationError(msg)
 }
 
 class XMLUnitDiff(override val originalXML: String, val originalTransactions: Set[Transaction],
            override val newXML: String, val newTransactions: Set[Transaction],
            val parseTransaction: scala.xml.Node => Either[ValidationError, Transaction])
-  extends HasDiffEngine with BeforeAfterDiff {
-
-  class DiffError(override val msg: String) extends ValidationError(msg)
+  extends HasDiffEngine {
+  import HasDiffEngine._
 
   case class TransactionsNotBijectiveError(override val msg: String)
     extends DiffError(msg)
@@ -64,12 +84,6 @@ class XMLUnitDiff(override val originalXML: String, val originalTransactions: Se
   case class InvalidTransactionsError(override val msg: String)
     extends DiffError(msg)
 
-  case class UnexpectedDifferencesError(val differences: Seq[Difference])
-    extends DiffError(s"Unexpected differences in comparison between " +
-      s"$originalXML and $newXML: $differences") {
-    val diffOriginalXML = originalXML
-    val diffNewXML = newXML
-  }
 
   override val nodeFilter: Option[Predicate[Node]] =
     Some(new ModifiedTransactionFilter(originalTransactions ++ newTransactions))
@@ -148,17 +162,12 @@ class XMLUnitDiff(override val originalXML: String, val originalTransactions: Se
   }
 
 
-  override def passes(): Either[ValidationError, Unit] = {
-    if(diff.hasDifferences()) {
-      val diffSeq = JavaConverters.iterableAsScalaIterable(diff.getDifferences()).toSeq
-      Left(UnexpectedDifferencesError(diffSeq))
-    } else {
-      Right(())
-    }
-  }
 
 }
 
 class AlwaysPassesDiff extends BeforeAfterDiff {
   override def passes(): Either[ValidationError, Unit] = Right(())
 }
+
+class XMLEqual(override val originalXML: String, override val newXML: String)
+  extends HasDiffEngine
