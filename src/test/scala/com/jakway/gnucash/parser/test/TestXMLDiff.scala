@@ -14,9 +14,9 @@ trait TestXMLDiffInstance { this: FlatSpec =>
   it should "validate a Node against itself" in {
     val res = for {
       str <- XMLUtils.nodeToString(node)
-    } yield {
-      getEngine(str, str).passes()
-    }
+      _ <- getEngine(str, str).passes()
+    } yield { () }
+
     assert(res == Right(()))
   }
 }
