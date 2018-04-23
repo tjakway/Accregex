@@ -1,7 +1,7 @@
 package com.jakway.gnucash.test
 
 import com.jakway.gnucash.io.test.TestXMLValidator
-import com.jakway.gnucash.parser.test.TestParser
+import com.jakway.gnucash.parser.test.{TestParser, TestXMLDiff}
 import com.jakway.gnucash.rules.test.{TestAccountNameParser, TestLinkAccounts, TestRuleApplicator}
 
 import scala.xml.XML
@@ -34,3 +34,6 @@ class TestNodeReplaceRegDocXML extends TestNodeReplace(regDocRoot)
 
 class TestXMLValidatorRegDocXML
   extends TestXMLValidator(regDocRoot, currencyTreeRoot)
+
+class TestXMLDiffRegDocXML
+  extends TestXMLDiff(regDocRoot)
