@@ -1,6 +1,7 @@
 package com.jakway.gnucash.parser
 
-import com.jakway.util.{StackTraceString, WithCause}
+import com.jakway.util.StackTraceString
+import com.jakway.util.error.WithCause
 
 class ValidationError(val msg: String)
   extends RuntimeException(msg)

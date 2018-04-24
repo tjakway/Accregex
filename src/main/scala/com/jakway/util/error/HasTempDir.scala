@@ -1,4 +1,4 @@
-package com.jakway.util
+package com.jakway.util.error
 
 import java.io.File
 import java.nio.file.Files

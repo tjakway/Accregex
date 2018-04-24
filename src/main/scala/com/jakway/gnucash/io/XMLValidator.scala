@@ -6,7 +6,8 @@ import java.nio.file.Files
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.io.XMLValidator.XMLValidationError
 import com.jakway.gnucash.parser.{ValidateF, ValidationError}
-import com.jakway.util.{UsesTempDir, XMLUtils}
+import com.jakway.util.XMLUtils
+import com.jakway.util.error.UsesTempDir
 import com.jakway.util.runner._
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
