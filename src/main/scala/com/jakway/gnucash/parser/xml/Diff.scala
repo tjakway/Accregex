@@ -155,6 +155,12 @@ class FilterTransactionsDiff(override val originalXML: String, val originalTrans
       ModifiedTransactionFilterTempDirError.apply
     override val defaultTempDirPrefix: String = "accregextransactionfilter"
 
+    // XXX TODO:
+    //repeatedly got SAXParserException: content not allowed in prolog
+    //exceptions when trying to call all varieties of scala.xml.XML.load(File)
+    //writing the XML out to file then loading it *does* work correctly
+    //but is VERY slow
+    //see https://github.com/scala/scala-xml/issues/95
     def stringToXML(s: String): Either[ValidationError, scala.xml.Node] = {
       for {
         dir <- getTempDir()
