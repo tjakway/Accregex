@@ -9,12 +9,12 @@ trait UsesTempDir[E <: WithCause[E]] {
   val tempDirParam: Option[File]
   val defaultTempDirPrefix: String
 
-  def errorType: String => E
+  def usesTempDirErrorTypeCTOR: String => E = (x: String) => new E(x)
 
   def getTmpDir(): Either[E, File] = {
 
     def checkDir(errHeader: String, d: File): Either[E, File] = {
-      def err = (x: String) => Left(errorType(errHeader + ": " + x))
+      def err = (x: String) => Left(usesTempDirErrorTypeCTOR(errHeader + ": " + x))
       //wrap IO actions in a Try to catch SecurityExceptions
       if(!d.exists() && !Try(d.mkdirs()).getOrElse(false)) {
         err(s"expected $d to exist")
@@ -36,7 +36,7 @@ trait UsesTempDir[E <: WithCause[E]] {
         Try(Files.createTempDirectory(defaultTempDirPrefix)) match {
           case Success(dir) => checkDir(s"Could not use generated temp dir $dir", dir.toFile)
             .map { x => x.deleteOnExit(); x }
-          case Failure(t) => Left(errorType("Could not create temporary dir").withCause(t))
+          case Failure(t) => Left(usesTempDirErrorTypeCTOR("Could not create temporary dir").withCause(t))
         }
       }
     }
@@ -46,7 +46,7 @@ trait UsesTempDir[E <: WithCause[E]] {
     Try(Files.createTempFile(dir.toPath, null, ".xml")) match {
       case Success(f) => Right(f.toFile)
       case Failure(t) => Left(
-        errorType(s"Could not create temp file in $dir").withCause(t))
+        usesTempDirErrorTypeCTOR(s"Could not create temp file in $dir").withCause(t))
     }
   }
 
@@ -62,7 +62,7 @@ trait UsesTempDir[E <: WithCause[E]] {
       res match {
         case Success(_) => Right(())
         case Failure(t) => Left(
-          errorType(s"Failed to write `$str` to file $dest").withCause(t))
+          usesTempDirErrorTypeCTOR(s"Failed to write `$str` to file $dest").withCause(t))
       }
     }
 

@@ -6,7 +6,7 @@ import java.nio.file.Files
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.io.XMLValidator.XMLValidationError
 import com.jakway.gnucash.parser.{ValidateF, ValidationError}
-import com.jakway.util.XMLUtils
+import com.jakway.util.{UsesTempDir, XMLUtils}
 import com.jakway.util.runner._
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
@@ -76,81 +76,26 @@ trait ExternalValidator extends XMLValidator {
   }
 }
 
+object XMLLintValidator {
+  case class XMLLintValidatorError(override val msg: String)
+    extends ValidationError(msg)
+}
+
 /**
   * validate the XML against our RELAX-NG schema
   */
-class XMLLintValidator(logXmlLintOutput: Boolean = false, val tempDir: Option[File] = None) extends ExternalValidator {
+class XMLLintValidator(val logXmlLintOutput: Boolean = false,
+                       override val tempDirParam: Option[File] = None)
+  extends ExternalValidator with UsesTempDir[XMLLintValidator.XMLLintValidatorError] {
   import XMLValidator._
+  import XMLLintValidator._
 
   override val programName = "xmllint"
   val args = Seq("--noout", "--nowarning")
 
-  case class XMLLintValidator(override val msg: String)
-    extends ValidationError(msg)
-  implicit def errorType: String => ValidationError = XMLLintValidator.apply
+  implicit def errorType: String => ValidationError = XMLLintValidatorError.apply
 
-  val defaultTempDirPrefix = "accregexvalidator"
-
-  private def getTmpDir(): Either[ValidationError, File] = {
-
-    def checkDir(errHeader: String, d: File): Either[ValidationError, File] = {
-      def err = (x: String) => Left(XMLLintValidator(errHeader + ": " + x))
-      //wrap IO actions in a Try to catch SecurityExceptions
-      if(!d.exists() && !Try(d.mkdirs()).getOrElse(false)) {
-        err(s"expected $d to exist")
-      } else if(!d.isDirectory) {
-        err(s"expected $d to be a directory")
-      } else if(!d.canWrite && !Try(d.setWritable(true)).getOrElse(false)) {
-        err(s"expected $d to be writeable")
-      } else {
-        Right(d)
-      }
-    }
-
-    tempDir match {
-      //fail if the passed dir isn't valid
-      case Some(dir) => checkDir(s"Could not use passed temp dir $tempDir", dir)
-
-      //try and generated one otherwise
-      case None => {
-        Try(Files.createTempDirectory(defaultTempDirPrefix)) match {
-          case Success(dir) => checkDir(s"Could not use generated temp dir $dir", dir.toFile)
-              .map { x => x.deleteOnExit(); x }
-          case Failure(t) => Left(XMLLintValidator("Could not create temporary dir").withCause(t))
-        }
-      }
-    }
-  }
-
-  private def getTempFile(dir: File): Either[ValidationError, File] = {
-    Try(Files.createTempFile(dir.toPath, null, ".xml")) match {
-      case Success(f) => Right(f.toFile)
-      case Failure(t) => Left(
-        XMLLintValidator(s"Could not create temp file in $dir").withCause(t))
-    }
-  }
-
-  private def stringToTempFile(dir: File)(str: String): Either[ValidationError, File] = {
-    import java.io.PrintWriter
-    //close over the XML and write it out to the passed file
-    def write(dest: File): Either[ValidationError, Unit] = {
-      val res = Try(new PrintWriter(dest))
-        .map { p =>
-          p.println(str)
-          p.close()
-        }
-      res match {
-        case Success(_) => Right(())
-        case Failure(t) => Left(
-          XMLLintValidator(s"Failed to write `$str` to file $dest").withCause(t))
-      }
-    }
-
-    for {
-      f <- getTempFile(dir)
-      _ <- write(f)
-    } yield f
-  }
+  override val defaultTempDirPrefix = "accregexvalidator"
 
   private def schemaToTempFile(tempDir: File): Either[ValidationError, File] = {
     val res = getClass().getResourceAsStream(schemaResource)
