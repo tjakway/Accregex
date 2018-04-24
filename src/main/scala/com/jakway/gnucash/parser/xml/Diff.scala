@@ -1,18 +1,19 @@
 package com.jakway.gnucash.parser.xml
 
-import java.io.{ByteArrayInputStream, StringReader}
+import java.io.{ByteArrayInputStream, File, StringReader}
 import java.nio.file.Files
 
-import com.jakway.gnucash.parser.ValidationError
+import com.jakway.gnucash.parser.{ValidateUsesTempDir, ValidationError}
 import com.jakway.gnucash.parser.rules.{Split, Transaction}
 import com.jakway.gnucash.util.PrintNode
+import com.jakway.util.error.UsesTempDir
 import org.w3c.dom.Node
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.diff.{DefaultNodeMatcher, Difference, ElementSelectors}
 import org.xmlunit.util.Predicate
 
 import scala.collection.JavaConverters
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 trait BeforeAfterDiff {
   def passes(): Either[ValidationError, Unit]
@@ -77,7 +78,8 @@ object HasDiffEngine {
 
 class FilterTransactionsDiff(override val originalXML: String, val originalTransactions: Set[Transaction],
                              override val newXML: String, val newTransactions: Set[Transaction],
-                             val parseTransaction: scala.xml.Node => Either[ValidationError, Transaction])
+                             val parseTransaction: scala.xml.Node => Either[ValidationError, Transaction],
+                             val tempDirParam: Option[File] = None)
   extends HasDiffEngine {
   import HasDiffEngine._
 
@@ -89,7 +91,8 @@ class FilterTransactionsDiff(override val originalXML: String, val originalTrans
 
 
   override val nodeFilter: Option[Predicate[Node]] =
-    Some(new ModifiedTransactionFilter(originalTransactions ++ newTransactions))
+    Some(new ModifiedTransactionFilter(originalTransactions ++ newTransactions,
+      tempDirParam))
 
   private def checkTransactionsAreBijective: Either[ValidationError, Unit] = {
 
@@ -131,17 +134,37 @@ class FilterTransactionsDiff(override val originalXML: String, val originalTrans
     } yield {}
   }
 
+  class ModifiedTransactionFilterError(override val msg: String)
+    extends ValidationError(msg)
+  case class ModifiedTransactionFilterTempDirError(override val msg: String)
+    extends ModifiedTransactionFilterError(msg)
+
+  case class ModifiedTransactionFilterXMLLoadError(override val msg: String)
+    extends ModifiedTransactionFilterError(msg)
 
   /**
     * exclude the transactions we just modified from the comparison
     * @param toIgnore
     */
-  class ModifiedTransactionFilter(val toIgnore: Set[Transaction])
-    extends Predicate[org.w3c.dom.Node] {
+  class ModifiedTransactionFilter(val toIgnore: Set[Transaction],
+                                  override val tempDirParam: Option[File])
+    extends Predicate[org.w3c.dom.Node]
+      with ValidateUsesTempDir {
 
-    def stringToXML(s: String): Try[scala.xml.Node] = Try {
-      Files.createTempFile()
-      scala.xml.XML.load()
+    override def usesTempDirErrorTypeCTOR: String => ModifiedTransactionFilterTempDirError =
+      ModifiedTransactionFilterTempDirError.apply
+    override val defaultTempDirPrefix: String = "accregextransactionfilter"
+
+    def stringToXML(s: String): Either[ValidationError, scala.xml.Node] = {
+      for {
+        dir <- getTempDir()
+        xmlFile <- stringToTempFile(dir)(s)
+        n <- Try(scala.xml.XML.loadFile(xmlFile)) match {
+          case Success(n) => Right(n)
+          case Failure(t) => Left(ModifiedTransactionFilterXMLLoadError(
+            "Exception thrown, see cause for details").withCause(t))
+        }
+      } yield n
     }
 
     def xmlToString(node: org.w3c.dom.Node): String =
@@ -157,7 +180,7 @@ class FilterTransactionsDiff(override val originalXML: String, val originalTrans
       //with the native java one (javax.xml)
       val scalaNode = stringToXML(xmlToString(toTest))
 
-      parseTransaction(scalaNode) match {
+      scalaNode.flatMap(parseTransaction) match {
           //only ignore nodes that are part of our toIgnore set
         case Right(thisTrans)
           if toIgnore.contains(thisTrans) => false
@@ -165,9 +188,6 @@ class FilterTransactionsDiff(override val originalXML: String, val originalTrans
       }
     }
   }
-
-
-
 }
 
 class AlwaysPassesDiff extends BeforeAfterDiff {

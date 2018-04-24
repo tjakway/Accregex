@@ -14,9 +14,9 @@ trait UsesTempDir[E <: WithCause[E]] {
 
   val defaultTempDirPrefix: String
 
-  def usesTempDirErrorTypeCTOR: String => E = (x: String) => new E(x)
+  def usesTempDirErrorTypeCTOR: String => E
 
-  def getTmpDir(): Either[E, File] = {
+  def getTempDir(): Either[E, File] = {
 
     def checkDir(errHeader: String, d: File): Either[E, File] = {
       def err = (x: String) => Left(usesTempDirErrorTypeCTOR(errHeader + ": " + x))

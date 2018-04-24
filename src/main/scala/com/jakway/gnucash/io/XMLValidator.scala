@@ -5,7 +5,7 @@ import java.nio.file.Files
 
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.io.XMLValidator.XMLValidationError
-import com.jakway.gnucash.parser.{ValidateF, ValidationError}
+import com.jakway.gnucash.parser.{ValidateF, ValidateUsesTempDir, ValidationError}
 import com.jakway.util.XMLUtils
 import com.jakway.util.error.UsesTempDir
 import com.jakway.util.runner._
@@ -87,9 +87,11 @@ object XMLLintValidator {
   */
 class XMLLintValidator(val logXmlLintOutput: Boolean = false,
                        override val tempDirParam: Option[File] = None)
-  extends ExternalValidator with UsesTempDir[XMLLintValidator.XMLLintValidatorError] {
+  extends ExternalValidator with ValidateUsesTempDir {
   import XMLValidator._
   import XMLLintValidator._
+
+  override def usesTempDirErrorTypeCTOR: String => XMLLintValidatorError = XMLLintValidatorError.apply
 
   override val programName = "xmllint"
   val args = Seq("--noout", "--nowarning")
@@ -123,7 +125,7 @@ class XMLLintValidator(val logXmlLintOutput: Boolean = false,
     for {
       _ <- testExists()
       xmlStr <- StreamReader.readStream(xmlInput)
-      tempDir <- getTmpDir()
+      tempDir <- getTempDir()
       xmlFile <- stringToTempFile(tempDir)(xmlStr)
       schema <- schemaToTempFile(tempDir)
       _ <- exec(schema, xmlFile)

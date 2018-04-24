@@ -1,7 +1,7 @@
 package com.jakway.gnucash.parser
 
 import com.jakway.util.StackTraceString
-import com.jakway.util.error.WithCause
+import com.jakway.util.error.{UsesTempDir, WithCause}
 
 class ValidationError(val msg: String)
   extends RuntimeException(msg)
@@ -83,3 +83,5 @@ object ValidationError {
     }
   }
 }
+
+trait ValidateUsesTempDir extends UsesTempDir[ValidationError]
