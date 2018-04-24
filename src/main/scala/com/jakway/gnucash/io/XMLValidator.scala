@@ -89,7 +89,7 @@ class XMLLintValidator(logXmlLintOutput: Boolean = false, val tempDir: Option[Fi
     extends ValidationError(msg)
   implicit def errorType: String => ValidationError = XMLLintValidator.apply
 
-  val defaultTmpDirPrefix = "accregexvalidator"
+  val defaultTempDirPrefix = "accregexvalidator"
 
   private def getTmpDir(): Either[ValidationError, File] = {
 
@@ -113,7 +113,7 @@ class XMLLintValidator(logXmlLintOutput: Boolean = false, val tempDir: Option[Fi
 
       //try and generated one otherwise
       case None => {
-        Try(Files.createTempDirectory(defaultTmpDirPrefix)) match {
+        Try(Files.createTempDirectory(defaultTempDirPrefix)) match {
           case Success(dir) => checkDir(s"Could not use generated temp dir $dir", dir.toFile)
               .map { x => x.deleteOnExit(); x }
           case Failure(t) => Left(XMLLintValidator("Could not create temporary dir").withCause(t))

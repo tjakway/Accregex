@@ -1,24 +1,10 @@
 package com.jakway.gnucash.parser
 
-import com.jakway.util.StackTraceString
+import com.jakway.util.{StackTraceString, WithCause}
 
 class ValidationError(val msg: String)
-  extends RuntimeException(msg) {
-
-  val stackTrace = StackTraceString.apply(new Throwable())
-
-  /**
-    * @param t
-    * @return
-    */
-  def withCause(t: Throwable): ValidationError = {
-    //use addSuppressed instead of initCause
-    // -thread safe
-    // -can be called more than once
-    addSuppressed(t)
-    this
-  }
-}
+  extends RuntimeException(msg)
+  with WithCause[ValidationError]
 
 class MultiValidationError(val errors: Seq[ValidationError])
   extends ValidationError(s"Errors: $errors")

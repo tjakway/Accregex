@@ -1,6 +1,7 @@
 package com.jakway.gnucash.parser.xml
 
-import java.io.StringReader
+import java.io.{ByteArrayInputStream, StringReader}
+import java.nio.file.Files
 
 import com.jakway.gnucash.parser.ValidationError
 import com.jakway.gnucash.parser.rules.{Split, Transaction}
@@ -9,7 +10,9 @@ import org.w3c.dom.Node
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.diff.{DefaultNodeMatcher, Difference, ElementSelectors}
 import org.xmlunit.util.Predicate
+
 import scala.collection.JavaConverters
+import scala.util.Try
 
 trait BeforeAfterDiff {
   def passes(): Either[ValidationError, Unit]
@@ -136,8 +139,10 @@ class FilterTransactionsDiff(override val originalXML: String, val originalTrans
   class ModifiedTransactionFilter(val toIgnore: Set[Transaction])
     extends Predicate[org.w3c.dom.Node] {
 
-    def stringToXML(s: String): scala.xml.Node =
-      scala.xml.XML.load(new StringReader(s))
+    def stringToXML(s: String): Try[scala.xml.Node] = Try {
+      Files.createTempFile()
+      scala.xml.XML.load()
+    }
 
     def xmlToString(node: org.w3c.dom.Node): String =
       PrintNode.printNode(node, true, true)
