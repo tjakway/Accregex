@@ -6,7 +6,12 @@ import java.nio.file.Files
 import scala.util.{Failure, Success, Try}
 
 trait UsesTempDir[E <: WithCause[E]] {
+  /**
+    * a user-specified temporary dir that will be checked first
+    * set to None if user input is not desirable
+    */
   val tempDirParam: Option[File]
+
   val defaultTempDirPrefix: String
 
   def usesTempDirErrorTypeCTOR: String => E = (x: String) => new E(x)
