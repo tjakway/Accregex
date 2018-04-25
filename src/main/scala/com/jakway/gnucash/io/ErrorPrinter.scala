@@ -5,7 +5,7 @@ import com.jakway.gnucash.parser.ValidationError
 import com.jakway.util.StackTraceString
 
 object ErrorPrinter {
-  def format(validationError: ValidationError): String = {
+  def format(validationError: ValidationError, includeIssueTrackerMessage: Boolean = true): String = {
     val suppressedExceptions = {
       val suppressed = validationError.getSuppressed()
       if(suppressed.isEmpty) {
@@ -17,11 +17,16 @@ object ErrorPrinter {
       }
     }
 
+    val issueTrackerMessage =
+      if(includeIssueTrackerMessage) {
+        s"Please report the following information to ${BuildInfo.issueTracker}:\n"
+      } else {
+        ""
+      }
+
     s"An error of type ${validationError.getClass.getCanonicalName} occurred with message " +
       s"${validationError.msg}\n\n" +
-      s"Please report the following information to ${BuildInfo.issueTracker}:" +
-      "\n" +
-      "\n" +
+      issueTrackerMessage +
       "\tStack Trace: \n" +
       "\t\t" + validationError.stackTrace +
       "\tSuppressed Exceptions: \n" + suppressedExceptions
