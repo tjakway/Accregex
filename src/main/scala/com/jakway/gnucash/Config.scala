@@ -22,6 +22,14 @@ object Config {
     def withPrintSummary(p: Boolean = true): Verbosity = copy(printSummary = p)
     def withPrintModifiedTransactionNodes(p: Boolean = true): Verbosity
       = copy(printModifiedTransactionNodes = p)
+
+
+    /**
+      * max length when printing transaction memos (in characters)
+      * used when printModifiedTransactionNodes == true
+      */
+    val transactionMemoMaxLength = 15
+    val ellipses = "..."
   }
 
   object Verbosity {
