@@ -5,7 +5,7 @@ import java.util.Formatter
 import com.jakway.gnucash.{Config, ValidatedConfig}
 import com.jakway.gnucash.rules.RuleApplicator.RuleApplicatorLogEvent
 
-class SummaryPrinter(val verbosity: Config.Verbosity) {
+class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity) {
   /**
     * truncate strings that are too long and append "..." to the end of them
     * @param s
@@ -29,7 +29,7 @@ class SummaryPrinter(val verbosity: Config.Verbosity) {
     }
   }
 
-  def formatSummary(events: Seq[RuleApplicatorLogEvent]): String = {
+  def formatSummary(events: Set[RuleApplicatorLogEvent]): String = {
     //for reasons unknown StringBuilder generated a compile
     //error when used as an Appendable
     //see https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4983949 for the bug report on the issue
