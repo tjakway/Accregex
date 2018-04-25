@@ -86,11 +86,12 @@ class RuleApplicator(val allAccounts: Map[String, LinkedAccount],
       case Left(err) => (RuleApplicatorLogEvent.Error(err), e)
       case Right((rule, newNode)) => {
         val oldNode = e
-        (RuleApplicatorLogEvent.Success(rule, oldNode), newNode)
+        (RuleApplicatorLogEvent.Success(rule, oldNode, newNode), newNode)
       }
     }
   }
 }
+
 object RuleApplicator {
 
   class RuleOrdering(override val toOrder: Seq[LinkedTransactionRule])
@@ -106,7 +107,7 @@ object RuleApplicator {
       extends RuntimeException(s"$validationError")
         with RuleApplicatorLogEvent
 
-    case class Success(ruleApplied: LinkedTransactionRule, node: Node)
+    case class Success(ruleApplied: LinkedTransactionRule, oldNode: Node, newNode: Node)
       extends RuleApplicatorLogEvent
   }
 
