@@ -4,10 +4,32 @@ import java.io.File
 
 object Config {
   val progName = "accregex"
+
+  case class Verbosity(printSummary: Boolean,
+                       printModifiedTransactionNodes: Boolean,
+                       debug: Boolean) {
+
+
+    /**
+      * debug implies printing modified transaction nodes
+      * @param p
+      * @return
+      */
+    def withDebug(p: Boolean = true): Verbosity = {
+      copy(debug = p)
+        .withPrintModifiedTransactionNodes(p)
+    }
+    def withPrintSummary(p: Boolean = true): Verbosity = copy(printSummary = p)
+    def withPrintModifiedTransactionNodes(p: Boolean = true): Verbosity
+      = copy(printModifiedTransactionNodes = p)
+  }
+
+  object Verbosity {
+    val default = Verbosity(true, false, false)
+  }
 }
 
 import Config._
-
 
 case class ValidatedConfig(inputPath: File,
                            rulesPath: File,
@@ -19,7 +41,7 @@ case class ValidatedConfig(inputPath: File,
                            targetAccount: String,
                            tempDir: Option[String],
                            checkDiff: Boolean,
-                           debug: Boolean) {
+                           verbosity: Verbosity) {
   /**
     * *highly* doubt this will ever be configurable
     */
@@ -36,7 +58,7 @@ case class UnvalidatedConfig(inputPath: String,
                              targetAccount: String,
                              tempDir: Option[String],
                              checkDiff: Boolean,
-                             debug: Boolean) {
+                             verbosity: Verbosity) {
 
   def validate(): Either[String, ValidatedConfig] = {
     for {
@@ -46,7 +68,7 @@ case class UnvalidatedConfig(inputPath: String,
     } yield {
       ValidatedConfig(input, rules, out,
         summarize, compress, skipInputValidation, skipOutputValidation,
-        targetAccount, tempDir, checkDiff, debug)
+        targetAccount, tempDir, checkDiff, verbosity)
     }
   }
 
@@ -132,7 +154,7 @@ case class UnvalidatedConfig(inputPath: String,
 object UnvalidatedConfig {
   val default: UnvalidatedConfig =
     UnvalidatedConfig("", "rules.conf", None, true, true, false, false, "Unspecified",
-      None, true, false)
+      None, true, Verbosity.default)
 
   val parser = new scopt.OptionParser[UnvalidatedConfig](progName) {
     head(progName)
@@ -179,11 +201,15 @@ object UnvalidatedConfig {
       .text(s"The directory to store temporary files (default is that given by the operating system")
 
     opt[Boolean]("check-diff")
-      .action((x, c) => c.copy(debug = true))
+      .action((x, c) => c.copy(checkDiff = true))
       .text(s"Whether to check the output file using XMLUnit (default=${default.checkDiff}")
 
     opt[Unit]("debug")
-      .action((x, c) => c.copy(debug = true))
-      .text(s"Enable debugging output (default=${default.debug}")
+      .action((x, c) => c.copy(verbosity = c.verbosity.withDebug(true)))
+      .text(s"Enable debugging output (default=${default.verbosity.debug}")
+
+    opt[Boolean]("print-summary")
+      .action((x, c) => c.copy(verbosity = c.verbosity.withPrintSummary(true)))
+      .text(s"Enable debugging output (default=${default.verbosity.printSummary}")
   }
 }

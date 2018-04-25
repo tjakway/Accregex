@@ -1,5 +1,6 @@
 package com.jakway.gnucash.rules
 
+import com.jakway.gnucash.Config
 import com.jakway.gnucash.parser.rules.Transaction
 import com.jakway.gnucash.parser.xml.ElemReplace
 import com.jakway.gnucash.parser.{LinkedAccount, Parser, ValidationError}
@@ -109,6 +110,21 @@ object RuleApplicator {
 
     case class Success(ruleApplied: LinkedTransactionRule, oldNode: Node, newNode: Node)
       extends RuleApplicatorLogEvent
-  }
 
+    private def formatLogEvents(events: Seq[RuleApplicatorLogEvent]): String = {
+      if(events.isEmpty) {
+        "No changes were applied."
+      } else {
+        //TODO
+      }
+    }
+
+    def formatSummary(verbosity: Config.Verbosity)(events: Seq[RuleApplicatorLogEvent]): String = {
+      if(verbosity.printSummary) {
+        "Below is a summary of changes made to the output file:\n" +
+      } else {
+        ""
+      }
+    }
+  }
 }

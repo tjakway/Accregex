@@ -71,8 +71,10 @@ class Driver(val config: ValidatedConfig) {
       allTransactionNodes <- Parser
         .getTransactionNodes((bookNode, accountMap))(LoadTransactionNodesError.apply)
 
-      //TODO: handle tags outputted by RuleApplicator.doReplace
-      outputTransactionNodes = allTransactionNodes.map(ruleApplicator.doReplace(_)._2)
+      //apply the rules and separate the results and log events
+      ruleApplicatorOut = allTransactionNodes.map(ruleApplicator.doReplace(_))
+      outputTransactionNodes = ruleApplicatorOut.map(_._2)
+      logEvents = ruleApplicatorOut.map(_._1)
 
       newBookNode <- Parser.replaceTransactionNodes(accountMap)(bookNode, outputTransactionNodes)
       newRootNode <- Parser.replaceBookNode(rootNode)(newBookNode)
