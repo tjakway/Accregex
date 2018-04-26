@@ -1,6 +1,6 @@
 package com.jakway.gnucash.io
 
-import java.util.Formatter
+import java.util.{Formatter, Locale}
 
 import com.jakway.gnucash.parser.{LinkedAccount, ValidationError}
 import com.jakway.gnucash.parser.rules.Transaction
@@ -21,6 +21,21 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
   import RuleApplicatorEventPrinter._
 
   val counts = new RuleApplicator.RuleApplicatorLogEvent.Counts(events)
+
+  //for reasons unknown StringBuilder generated a compile
+  //error when used as an Appendable
+  //see https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4983949 for the bug report on the issue
+  //the error seems to persist despite being listed as fixed
+  val _fmt = {
+    val buf: Appendable = new StringBuffer()
+    new Formatter(buf)
+  }
+  val locale = Locale.getDefault()
+
+  private def fmt(fmtStr: String, args: Any*) =
+    _fmt.format(locale, fmtStr, args)
+
+
 
   /**
     * truncate strings that are too long and append "..." to the end of them
@@ -52,9 +67,9 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
       l.name
     }
 
-  private def formatSuccessfulLogEvents(fmt: Formatter): Unit = {
+  private def formatSuccessfulLogEvents(): Unit = {
     if(counts.successEvents.isEmpty) {
-      "No changes were applied."
+      fmt("No changes were applied.")
     } else {
       counts.successEvents.foreach {
         case RuleApplicatorLogEvent.Success(ruleApplied: LinkedTransactionRule,
@@ -64,7 +79,7 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
                                             newNode: scala.xml.Node) => {
 
 
-          fmt.format("Rule '%-s' changed transaction '%-s':\t%s %s %s%n",
+          fmt("Rule '%-s' changed transaction '%-s':\t%s %s %s%n",
             ruleApplied.ruleName,
             truncateString(transaction.description),
 
@@ -74,7 +89,7 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
 
           //print a lot more stuff if this debugging flag is on
           if(verbosity.printModifiedTransactionNodes) {
-            fmt.format("\t%s, %s, %s%n",
+            fmt("\t%s, %s, %s%n",
               ruleApplied,
               XMLUtils.nodeToString(oldNode).right.getOrElse(s"ERROR FORMATTING NODE <$oldNode>"),
               XMLUtils.nodeToString(newNode).right.getOrElse(s"ERROR FORMATTING NODE <$newNode>"))
@@ -88,64 +103,60 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
   }
 
 
-  private def drawHorizontalLine(fmt: Formatter, unit: String = "*"): Unit = {
+  private def drawHorizontalLine(unit: String = "*"): Unit = {
 
-    fmt.format("%-s%n", (1 to verbosity.lineWidth).map(_ => unit))
+    fmt("%-s%n", (1 to verbosity.lineWidth).map(_ => unit))
   }
 
-  private def formatCounts(fmt: Formatter): Unit = {
-    fmt.format(s"%-s: %d", "Transactions successfully changed: ", counts.numSuccessEvents)
-    fmt.format("%-s: %d", "Transaction change errors: ", counts.numErrorEvents)
-    fmt.format("%d errors occurred out of %d events total (%%%,05.2f)%n",
+  private def formatCounts(): Unit = {
+    fmt(s"%-s: %d", "Transactions successfully changed: ", counts.numSuccessEvents)
+    fmt("%-s: %d", "Transaction change errors: ", counts.numErrorEvents)
+    fmt("%d errors occurred out of %d events total (%%%,05.2f)%n",
       counts.numSuccessEvents, events.size, counts.percentErrors)
 
     if(counts.numErrorEvents == 0) {
-      fmt.format("%-s%n", "No errors encountered!")
+      fmt("%-s%n", "No errors encountered!")
     }
   }
 
-  private def formatSummary(fmt: Formatter): Unit = {
-    fmt.format("Below is a summary of changes made to the output file:%n")
+  private def formatSummary(): Unit = {
+    fmt("Below is a summary of changes made to the output file:%n")
 
-    drawHorizontalLine(fmt)
-    formatCounts(fmt)
+    drawHorizontalLine()
+    formatCounts()
   }
 
-  private def formatErrorMessage(fmt: Formatter): Unit = {
+  private def formatErrorMessage(): Unit = {
     counts.errorEvents.zipWithIndex.foreach {
       case (RuleApplicatorLogEvent.Error(e), index) => {
-        drawHorizontalLine(fmt)
+        drawHorizontalLine()
 
         //left-justify the header to be consistent with the horizontal lines
-        val header = String.format("***** Error number %d *****", index)
-        fmt.format("%-s%n", header)
-        drawHorizontalLine(fmt, "-")
+        val header = String.format(locale, "***** Error number %d *****", index.asInstanceOf[Object])
+        fmt("%-s%n", header)
+        drawHorizontalLine("-")
 
-        fmt.format("%s", ErrorPrinter.format(e))
+        fmt("%s", ErrorPrinter.format(e))
 
-        drawHorizontalLine(fmt)
+        drawHorizontalLine()
       }
+
+      case r => throw new ValidationError(s"Expected error event but got $r")
     }
 
-    drawHorizontalLine(fmt)
-    formatCounts(fmt)
+    drawHorizontalLine()
+    formatCounts()
   }
 
   def format(): String = {
-    //for reasons unknown StringBuilder generated a compile
-    //error when used as an Appendable
-    //see https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4983949 for the bug report on the issue
-    //the error seems to persist despite being listed as fixed
-    val buf: Appendable = new StringBuffer()
-    val fmt = new Formatter(buf)
 
     if(counts.hasErrorEvents) {
-      formatErrorMessage(fmt)
+      formatErrorMessage()
     } else {
-      formatSummary(fmt)
+      formatSummary()
     }
 
-    fmt.toString()
+    _fmt.toString()
   }
 
 

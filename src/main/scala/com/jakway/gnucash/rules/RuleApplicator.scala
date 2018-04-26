@@ -125,9 +125,6 @@ object RuleApplicator {
         case _ => false
       }
 
-      val eventCounts: (Int, Int) =
-        (eventsGrouped._1.size, eventsGrouped._2.size)
-
       //group log events by type
       val eventsGrouped = {
         val empty: (Set[RuleApplicatorLogEvent], Set[RuleApplicatorLogEvent]) = (Set(), Set())
@@ -139,6 +136,9 @@ object RuleApplicator {
             (successes + e, errors)
         }
       }
+
+      val eventCounts: (Int, Int) =
+        (eventsGrouped._1.size, eventsGrouped._2.size)
 
       val successEvents = eventsGrouped._1
       val errorEvents = eventsGrouped._2
