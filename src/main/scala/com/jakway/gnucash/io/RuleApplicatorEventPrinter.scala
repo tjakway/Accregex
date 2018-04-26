@@ -13,7 +13,30 @@ object RuleApplicatorEventPrinter {
   case class FormatLogEventsError(override val msg: String)
     extends ValidationError(msg)
 
-  def rightArrow(verbosity: Config.Verbosity): String =
+}
+
+class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
+                                 val events: Set[RuleApplicatorLogEvent]) {
+
+  import RuleApplicatorEventPrinter._
+
+  val counts = new RuleApplicator.RuleApplicatorLogEvent.Counts(events)
+
+  /**
+    * truncate strings that are too long and append "..." to the end of them
+    * @param s
+    * @return
+    */
+  private def truncateString(s: String): String = {
+    if(s.length <= verbosity.transactionMemoMaxLength) {
+      s
+    } else {
+      s.substring(0, verbosity.transactionMemoMaxLength - verbosity.ellipses.length) +
+        verbosity.ellipses
+    }
+  }
+
+  private def rightArrow(verbosity: Config.Verbosity): String =
     if(verbosity.useUnicodeArrow) {
       //see https://stackoverflow.com/questions/5585919/creating-unicode-character-from-its-number
       //for getting a unicode character from its integer representation
@@ -22,28 +45,28 @@ object RuleApplicatorEventPrinter {
       "->"
     }
 
-  def formatSuccessfulLogEvents(fmt: Formatter, verbosity: Config.Verbosity)
-                               (events: Set[RuleApplicatorLogEvent]): Unit = {
-    if(events.isEmpty) {
+  private def accountName(l: LinkedAccount): String =
+    if(verbosity.useAccountFullName) {
+      l.fullName
+    } else {
+      l.name
+    }
+
+  private def formatSuccessfulLogEvents(fmt: Formatter): Unit = {
+    if(counts.successEvents.isEmpty) {
       "No changes were applied."
     } else {
-      events.foreach {
+      counts.successEvents.foreach {
         case RuleApplicatorLogEvent.Success(ruleApplied: LinkedTransactionRule,
                                             transaction: Transaction,
                                             targetAccount: LinkedAccount,
                                             oldNode: scala.xml.Node,
                                             newNode: scala.xml.Node) => {
 
-          def accountName(l: LinkedAccount): String =
-            if(verbosity.useAccountFullName) {
-              l.fullName
-            } else {
-              l.name
-            }
 
           fmt.format("Rule '%-s' changed transaction '%-s':\t%s %s %s%n",
             ruleApplied.ruleName,
-            transaction.description,
+            truncateString(transaction.description),
 
             accountName(targetAccount),
             rightArrow(verbosity),
@@ -63,28 +86,6 @@ object RuleApplicatorEventPrinter {
       }
     }
   }
-}
-
-class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
-                                 val events: Set[RuleApplicatorLogEvent]) {
-
-
-  val counts = new RuleApplicator.RuleApplicatorLogEvent.Counts(events)
-
-  /**
-    * truncate strings that are too long and append "..." to the end of them
-    * @param s
-    * @return
-    */
-  private def truncateString(fmt: Formatter)(s: String): String = {
-    if(s.length <= verbosity.transactionMemoMaxLength) {
-      s
-    } else {
-      s.substring(0, verbosity.transactionMemoMaxLength - verbosity.ellipses.length) +
-        verbosity.ellipses
-    }
-  }
-
 
 
   private def drawHorizontalLine(fmt: Formatter, unit: String = "*"): Unit = {
