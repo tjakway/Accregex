@@ -25,7 +25,7 @@ object XMLValidator {
     val inputValidator = if(conf.skipInputValidation) {
       new SkipXMLValidator()
     } else {
-      new XMLLintValidator(conf.debug, tempDir)
+      new XMLLintValidator(conf.verbosity.debug, tempDir)
     }
 
     val outputValidator = if(conf.skipOutputValidation) {
@@ -36,7 +36,7 @@ object XMLValidator {
       if(inputValidator.isInstanceOf[XMLLintValidator]) {
         inputValidator
       } else {
-        new XMLLintValidator(conf.debug, tempDir)
+        new XMLLintValidator(conf.verbosity.debug, tempDir)
       }
     }
 
