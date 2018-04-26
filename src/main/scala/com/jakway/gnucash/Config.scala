@@ -30,6 +30,7 @@ object Config {
       */
     val transactionMemoMaxLength = 15
     val ellipses = "..."
+    val lineWidth = 80
   }
 
   object Verbosity {

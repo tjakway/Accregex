@@ -15,20 +15,30 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
     case _ => false
   }
 
-  lazy val eventCounts: (Int, Int) = {
-    val start: (Int, Int) = (0, 0)
-    events.foldLeft(start) {
-      case ((successCount, errorCount), _: RuleApplicatorLogEvent.Error) =>
-        (successCount, errorCount + 1)
+  lazy val eventCounts: (Int, Int) =
+    (eventsGrouped._1.size, eventsGrouped._2.size)
 
-      case ((successCount, errorCount), _: RuleApplicatorLogEvent.Success) =>
-        (successCount + 1, errorCount)
+  //group log events by type
+  lazy val eventsGrouped = {
+    val empty: (Set[RuleApplicatorLogEvent], Set[RuleApplicatorLogEvent]) = (Set(), Set())
+    events.foldLeft(empty) {
+      case ((successes, errors), e: RuleApplicatorLogEvent.Error) =>
+        (successes, errors + e)
+
+      case ((successes, errors), e: RuleApplicatorLogEvent.Success) =>
+        (successes + e, errors)
     }
   }
+
+  lazy val successEvents = eventsGrouped._1
+  lazy val errorEvents = eventsGrouped._2
 
   lazy val numSuccessEvents = eventCounts._1
   lazy val numErrorEvents = eventCounts._2
   lazy val percentErrors: Double = (numErrorEvents.toDouble) / (events.size.toDouble)
+
+  /*********************************************/
+
 
   /**
     * truncate strings that are too long and append "..." to the end of them
@@ -49,24 +59,52 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
       "No changes were applied."
     } else {
       //TODO
+    }
+  }
 
+
+  private def drawHorizontalLine(fmt: Formatter, unit: String = "*"): Unit = {
+
+    //left-justify the line
+    fmt.format("%-s%n", (1 to verbosity.lineWidth).map(_ => unit))
+  }
+
+  private def formatCounts(fmt: Formatter): Unit = {
+    fmt.format("%-s: %d", "Transactions successfully changed: ", numSuccessEvents)
+    fmt.format("%-s: %d", "Transaction change errors: ", numErrorEvents)
+    fmt.format("%d errors occurred out of %d events total (%%%,05.2f)%n",
+      numSuccessEvents, events.size, percentErrors)
+
+    if(numErrorEvents == 0) {
+      fmt.format("%-s%n", "No errors encountered!")
     }
   }
 
   private def formatSummary(fmt: Formatter): Unit = {
+    fmt.format("Below is a summary of changes made to the output file:%n")
 
-    if(verbosity.printSummary) {
-      fmt.format("Below is a summary of changes made to the output file:%n")
-    }
-
-    fmt.toString()
+    drawHorizontalLine(fmt)
+    formatCounts(fmt)
   }
 
   private def formatErrorMessage(fmt: Formatter): Unit = {
-    fmt.format("%d errors occurred out of %d events total (%%%,05.2f)%n",
-      numSuccessEvents, events.size, percentErrors)
+    errorEvents.zipWithIndex.foreach {
+      case (RuleApplicatorLogEvent.Error(e), index) => {
+        drawHorizontalLine(fmt)
 
+        //left-justify the header to be consistent with the horizontal lines
+        val header = String.format("***** Error number %d *****", index)
+        fmt.format("%-s%n", header)
+        drawHorizontalLine(fmt, "-")
 
+        fmt.format("%s", ErrorPrinter.format(e))
+
+        drawHorizontalLine(fmt)
+      }
+    }
+
+    drawHorizontalLine(fmt)
+    formatCounts(fmt)
   }
 
   def format(): String = {
