@@ -112,5 +112,35 @@ object RuleApplicator {
 
     case class Success(ruleApplied: LinkedTransactionRule, oldNode: Node, newNode: Node)
       extends RuleApplicatorLogEvent
+
+    class Counts(events: Set[RuleApplicatorLogEvent]) {
+      val hasErrorEvents: Boolean = Util.anyOf(events) {
+        //check if there are any errors events
+        case RuleApplicatorLogEvent.Error(_) => true
+        case _ => false
+      }
+
+      val eventCounts: (Int, Int) =
+        (eventsGrouped._1.size, eventsGrouped._2.size)
+
+      //group log events by type
+      val eventsGrouped = {
+        val empty: (Set[RuleApplicatorLogEvent], Set[RuleApplicatorLogEvent]) = (Set(), Set())
+        events.foldLeft(empty) {
+          case ((successes, errors), e: RuleApplicatorLogEvent.Error) =>
+            (successes, errors + e)
+
+          case ((successes, errors), e: RuleApplicatorLogEvent.Success) =>
+            (successes + e, errors)
+        }
+      }
+
+      val successEvents = eventsGrouped._1
+      val errorEvents = eventsGrouped._2
+
+      val numSuccessEvents = eventCounts._1
+      val numErrorEvents = eventCounts._2
+      val percentErrors: Double = (numErrorEvents.toDouble) / (events.size.toDouble)
+    }
   }
 }

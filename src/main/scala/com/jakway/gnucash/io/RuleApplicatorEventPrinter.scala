@@ -2,6 +2,7 @@ package com.jakway.gnucash.io
 
 import java.util.Formatter
 
+import com.jakway.gnucash.rules.RuleApplicator
 import com.jakway.gnucash.{Config, ValidatedConfig}
 import com.jakway.gnucash.rules.RuleApplicator.RuleApplicatorLogEvent
 import com.jakway.util.Util
@@ -9,36 +10,8 @@ import com.jakway.util.Util
 class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
                                  val events: Set[RuleApplicatorLogEvent]) {
 
-  lazy val hasErrorEvents: Boolean = Util.anyOf(events) {
-    //check if there are any errors events
-    case RuleApplicatorLogEvent.Error(_) => true
-    case _ => false
-  }
 
-  lazy val eventCounts: (Int, Int) =
-    (eventsGrouped._1.size, eventsGrouped._2.size)
-
-  //group log events by type
-  lazy val eventsGrouped = {
-    val empty: (Set[RuleApplicatorLogEvent], Set[RuleApplicatorLogEvent]) = (Set(), Set())
-    events.foldLeft(empty) {
-      case ((successes, errors), e: RuleApplicatorLogEvent.Error) =>
-        (successes, errors + e)
-
-      case ((successes, errors), e: RuleApplicatorLogEvent.Success) =>
-        (successes + e, errors)
-    }
-  }
-
-  lazy val successEvents = eventsGrouped._1
-  lazy val errorEvents = eventsGrouped._2
-
-  lazy val numSuccessEvents = eventCounts._1
-  lazy val numErrorEvents = eventCounts._2
-  lazy val percentErrors: Double = (numErrorEvents.toDouble) / (events.size.toDouble)
-
-  /*********************************************/
-
+  val counts = new RuleApplicator.RuleApplicatorLogEvent.Counts(events)
 
   /**
     * truncate strings that are too long and append "..." to the end of them
@@ -65,17 +38,16 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
 
   private def drawHorizontalLine(fmt: Formatter, unit: String = "*"): Unit = {
 
-    //left-justify the line
     fmt.format("%-s%n", (1 to verbosity.lineWidth).map(_ => unit))
   }
 
   private def formatCounts(fmt: Formatter): Unit = {
-    fmt.format("%-s: %d", "Transactions successfully changed: ", numSuccessEvents)
-    fmt.format("%-s: %d", "Transaction change errors: ", numErrorEvents)
+    fmt.format("%-s: %d", "Transactions successfully changed: ", counts.numSuccessEvents)
+    fmt.format("%-s: %d", "Transaction change errors: ", counts.numErrorEvents)
     fmt.format("%d errors occurred out of %d events total (%%%,05.2f)%n",
-      numSuccessEvents, events.size, percentErrors)
+      counts.numSuccessEvents, events.size, counts.percentErrors)
 
-    if(numErrorEvents == 0) {
+    if(counts.numErrorEvents == 0) {
       fmt.format("%-s%n", "No errors encountered!")
     }
   }
@@ -88,7 +60,7 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
   }
 
   private def formatErrorMessage(fmt: Formatter): Unit = {
-    errorEvents.zipWithIndex.foreach {
+    counts.errorEvents.zipWithIndex.foreach {
       case (RuleApplicatorLogEvent.Error(e), index) => {
         drawHorizontalLine(fmt)
 
@@ -115,7 +87,7 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
     val buf: Appendable = new StringBuffer()
     val fmt = new Formatter(buf)
 
-    if(hasErrorEvents) {
+    if(counts.hasErrorEvents) {
       formatErrorMessage(fmt)
     } else {
       formatSummary(fmt)
@@ -130,7 +102,7 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
 
     //print to stderr or stdout as appropriate
     if(!str.isEmpty) {
-      if(hasErrorEvents) {
+      if(counts.hasErrorEvents) {
         System.err.print(str)
       } else {
         System.out.print(str)
