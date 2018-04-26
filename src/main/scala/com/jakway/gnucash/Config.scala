@@ -31,11 +31,18 @@ object Config {
     val transactionMemoMaxLength = 15
     val ellipses = "..."
     val lineWidth = 80
+
+    val useUnicodeArrow: Boolean = true
+
+    val useAccountFullName: Boolean = true
   }
 
   object Verbosity {
     val default = Verbosity(true, false, false)
   }
+
+
+  val accountNameSeparator: String = ":"
 }
 
 import Config._

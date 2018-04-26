@@ -2,10 +2,68 @@ package com.jakway.gnucash.io
 
 import java.util.Formatter
 
-import com.jakway.gnucash.rules.RuleApplicator
+import com.jakway.gnucash.parser.{LinkedAccount, ValidationError}
+import com.jakway.gnucash.parser.rules.Transaction
+import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
 import com.jakway.gnucash.{Config, ValidatedConfig}
 import com.jakway.gnucash.rules.RuleApplicator.RuleApplicatorLogEvent
-import com.jakway.util.Util
+import com.jakway.util.{Util, XMLUtils}
+
+object RuleApplicatorEventPrinter {
+  case class FormatLogEventsError(override val msg: String)
+    extends ValidationError(msg)
+
+  def rightArrow(verbosity: Config.Verbosity): String =
+    if(verbosity.useUnicodeArrow) {
+      //see https://stackoverflow.com/questions/5585919/creating-unicode-character-from-its-number
+      //for getting a unicode character from its integer representation
+      new String(Character.toChars(0x2192))
+    } else {
+      "->"
+    }
+
+  def formatSuccessfulLogEvents(fmt: Formatter, verbosity: Config.Verbosity)
+                               (events: Set[RuleApplicatorLogEvent]): Unit = {
+    if(events.isEmpty) {
+      "No changes were applied."
+    } else {
+      events.foreach {
+        case RuleApplicatorLogEvent.Success(ruleApplied: LinkedTransactionRule,
+                                            transaction: Transaction,
+                                            targetAccount: LinkedAccount,
+                                            oldNode: scala.xml.Node,
+                                            newNode: scala.xml.Node) => {
+
+          def accountName(l: LinkedAccount): String =
+            if(verbosity.useAccountFullName) {
+              l.fullName
+            } else {
+              l.name
+            }
+
+          fmt.format("Rule '%-s' changed transaction '%-s':\t%s %s %s%n",
+            ruleApplied.ruleName,
+            transaction.description,
+
+            accountName(targetAccount),
+            rightArrow(verbosity),
+            accountName(ruleApplied.destAccount))
+
+          //print a lot more stuff if this debugging flag is on
+          if(verbosity.printModifiedTransactionNodes) {
+            fmt.format("\t%s, %s, %s%n",
+              ruleApplied,
+              XMLUtils.nodeToString(oldNode).right.getOrElse(s"ERROR FORMATTING NODE <$oldNode>"),
+              XMLUtils.nodeToString(newNode).right.getOrElse(s"ERROR FORMATTING NODE <$newNode>"))
+          }
+        }
+
+        case other => throw FormatLogEventsError(s"formatLogEvents expected only successful log events but got " +
+          s"$other")
+      }
+    }
+  }
+}
 
 class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
                                  val events: Set[RuleApplicatorLogEvent]) {
@@ -27,13 +85,6 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
     }
   }
 
-  private def formatLogEvents(fmt: Formatter)(events: Set[RuleApplicatorLogEvent]): String = {
-    if(events.isEmpty) {
-      "No changes were applied."
-    } else {
-      //TODO
-    }
-  }
 
 
   private def drawHorizontalLine(fmt: Formatter, unit: String = "*"): Unit = {
@@ -42,7 +93,7 @@ class RuleApplicatorEventPrinter(val verbosity: Config.Verbosity,
   }
 
   private def formatCounts(fmt: Formatter): Unit = {
-    fmt.format("%-s: %d", "Transactions successfully changed: ", counts.numSuccessEvents)
+    fmt.format(s"%-s: %d", "Transactions successfully changed: ", counts.numSuccessEvents)
     fmt.format("%-s: %d", "Transaction change errors: ", counts.numErrorEvents)
     fmt.format("%d errors occurred out of %d events total (%%%,05.2f)%n",
       counts.numSuccessEvents, events.size, counts.percentErrors)

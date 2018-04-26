@@ -16,7 +16,8 @@ import scala.xml.{Elem, Node, Text}
   * @param sourceAccount
   * @param destAccount the account we're transferring to if the rule matches
   */
-case class LinkedTransactionRule(pattern: Regex,
+case class LinkedTransactionRule(ruleName: String,
+                                 pattern: Regex,
                                  priority: Double,
                                  sourceAccount: LinkedAccount,
                                  destAccount: LinkedAccount) {

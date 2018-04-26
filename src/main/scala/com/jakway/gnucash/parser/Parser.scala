@@ -1,5 +1,6 @@
 package com.jakway.gnucash.parser
 
+import com.jakway.gnucash.Config
 import com.jakway.gnucash.parser.rules.{Split, Transaction}
 import com.jakway.gnucash.parser.xml.NodeTests
 
@@ -25,6 +26,29 @@ case class LinkedAccount(version: String,
                    description: Option[String],
                    parent: Option[LinkedAccount]) {
   def isRootAccount: Boolean = parent.isEmpty
+
+  lazy val fullName: String = {
+    def helper(accum: List[String], current: LinkedAccount): List[String] = {
+      val nextAccum = {
+        //don't include the root account in the full name string
+        if(current.parent.isDefined) {
+          current.name :: accum
+        } else {
+          accum
+        }
+      }
+
+      //recurse up until there are no more parents to add
+      current.parent match {
+        case Some(parent) => helper(nextAccum, parent)
+        case None => nextAccum
+      }
+    }
+
+    helper(List(), this)
+      //join the names together
+      .reduceLeft(_ + Config.accountNameSeparator + _)
+  }
 }
 
 class Parser {

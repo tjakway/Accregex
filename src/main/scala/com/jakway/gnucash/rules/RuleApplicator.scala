@@ -82,14 +82,14 @@ class RuleApplicator(val allAccounts: Map[String, LinkedAccount],
         case Some(x) => Right(x)
       }
     } yield {
-      (r, r.replace(allAccounts, targetAccount.id)(e))
+      (r, t, r.replace(allAccounts, targetAccount.id)(e))
     }
 
     res match {
       case Left(err) => (RuleApplicatorLogEvent.Error(err), e)
-      case Right((rule, newNode)) => {
+      case Right((rule, transaction, newNode)) => {
         val oldNode = e
-        (RuleApplicatorLogEvent.Success(rule, oldNode, newNode), newNode)
+        (RuleApplicatorLogEvent.Success(rule, transaction, targetAccount, oldNode, newNode), newNode)
       }
     }
   }
@@ -110,7 +110,12 @@ object RuleApplicator {
       extends RuntimeException(s"$validationError")
         with RuleApplicatorLogEvent
 
-    case class Success(ruleApplied: LinkedTransactionRule, oldNode: Node, newNode: Node)
+    case class Success(ruleApplied: LinkedTransactionRule,
+                       transaction: Transaction,
+                      /* the transaction's original account (most likely Unspecified/Imbalance or similar) */
+                       targetAccount: LinkedAccount,
+                       oldNode: Node,
+                       newNode: Node)
       extends RuleApplicatorLogEvent
 
     class Counts(events: Set[RuleApplicatorLogEvent]) {
