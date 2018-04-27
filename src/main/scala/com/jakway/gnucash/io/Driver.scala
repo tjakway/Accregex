@@ -1,12 +1,13 @@
 package com.jakway.gnucash.io
 
-import java.io.{InputStream, PrintWriter}
+import java.io._
 
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.error.ValidationError
 import com.jakway.gnucash.parser._
 import com.jakway.gnucash.parser.rules.{Transaction, UnlinkedTransactionRule}
 import com.jakway.gnucash.parser.xml.{AlwaysPassesDiff, FilterTransactionsDiff, NodeTests}
+import com.jakway.gnucash.rules.RuleApplicator.RuleApplicatorLogEvent
 import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
 import com.jakway.util.XMLUtils
 
@@ -28,26 +29,69 @@ object Driver {
   object LoadTransactionNodesError {
     def apply: String => LoadTransactionNodesError = new LoadTransactionNodesError(_)
   }
+
+  case class WriteError(override val msg: String)
+    extends ValidationError(msg)
 }
 
 class Driver(val config: ValidatedConfig) {
   import Driver._
   val parser = new Parser()
 
-  def run(): Unit = runEither() match {
-    case Right(newXML) => {
-      XML.write(new PrintWriter(config.outputPath), newXML, config.enc,
-        true, null) //null means no doctype
+  def run(): Unit = {
+    {
+      for {
+        output <- runEither()
+        _ <- write(output)
+      } yield {
+        output
+      }
     }
-    case Left(err) => {
-      System.err.println(ErrorPrinter.format(err))
-      System.exit(1)
+    match {
+      case Right(o) => {
+        if(config.verbosity.printSummary) {
+          new RuleApplicatorEventPrinter(config.verbosity, o.events.toSet)
+            .print()
+
+          //we're done
+          System.exit(0)
+        }
+      }
+
+      case Left(err) => {
+        System.err.println(ErrorPrinter.format(err))
+        System.exit(1)
+      }
     }
   }
 
   lazy val (inputValidator, outputValidator) = XMLValidator.getValidators(config)
 
-  def runEither(): Either[ValidationError, Node] = {
+  class Output(val compressionHandler: CompressionHandler,
+               val node: scala.xml.Node,
+               val events: Seq[RuleApplicatorLogEvent])
+
+
+  def write(o: Output): Either[ValidationError, File] = {
+    def wrap[A](t: Try[A], onError: String): Either[ValidationError, A] = t match {
+      case Success(r) => Right(r)
+      case Failure(t) => Left(WriteError(onError).withCause(t))
+    }
+
+    for {
+      fos <- wrap(Try { new FileOutputStream(config.outputPath) },
+        s"Error opening ${config.outputPath}")
+      os <- o.compressionHandler.wrapOutputStream(fos)
+      osw <- wrap(Try { new OutputStreamWriter(os, config.enc) },
+        s"Error opening OutputStreamWriter around ${config.outputPath}")
+      _ <- wrap(Try { XML.write(osw, o.node, config.enc, true, null) },
+        s"Error while writing XML node to OutputStreamWriter")
+    } yield {
+      config.outputPath
+    }
+  }
+
+  def runEither(): Either[ValidationError, Output] = {
     case class OrigEqualsOutputError(override val msg: String)
       extends ValidationError(msg)
 
@@ -79,9 +123,9 @@ class Driver(val config: ValidatedConfig) {
         .getTransactionNodes((bookNode, accountMap))(LoadTransactionNodesError.apply)
 
       //apply the rules and separate the results and log events
-      ruleApplicatorOut = allTransactionNodes.map(ruleApplicator.doReplace(_))
+      ruleApplicatorOut <- Right(allTransactionNodes.map(ruleApplicator.doReplace(_)))
       outputTransactionNodes = ruleApplicatorOut.map(_._2)
-      logEvents = ruleApplicatorOut.map(_._1)
+      logEvents = ruleApplicatorOut.flatMap(_._1)
 
       newBookNode <- Parser.replaceTransactionNodes(accountMap)(bookNode, outputTransactionNodes)
       newRootNode <- Parser.replaceBookNode(rootNode)(newBookNode)
@@ -96,7 +140,9 @@ class Driver(val config: ValidatedConfig) {
       //optionally validate the transformed XML document
       _ <- outputValidator.validateNode(s"output XML to be written to ${config.outputPath}",
         newRootNode)
-    } yield (newRootNode)
+    } yield {
+      new Output(compressionHandler, newRootNode, logEvents.map(_._1))
+    }
   }
 
   private def checkDiff(originalXML: Node, originalTransactions: Seq[Node],
