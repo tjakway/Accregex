@@ -2,7 +2,7 @@ package com.jakway.gnucash.test
 
 import java.io.File
 
-import com.jakway.gnucash.error.ValidationError
+import com.jakway.gnucash.error.{ValidateUsesTempDir, ValidationError}
 import com.jakway.gnucash.util.StreamReader
 import com.jakway.util.error.{UsesTempDir, WithCause}
 
@@ -11,7 +11,7 @@ object ResourceFiles {
     extends AccregexTestSetupException(msg)
 }
 
-trait ResourceFiles extends UsesTempDir[ResourceFiles.ResourceFilesError] {
+trait ResourceFiles extends ValidateUsesTempDir {
   override val tempDirParam: Option[File] = None
   override val defaultTempDirPrefix: String = "accregexresourcefiles"
   override def usesTempDirErrorTypeCTOR: String => ResourceFiles.ResourceFilesError =
