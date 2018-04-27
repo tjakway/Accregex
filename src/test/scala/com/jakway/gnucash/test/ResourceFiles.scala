@@ -4,7 +4,6 @@ import java.io.File
 
 import com.jakway.gnucash.error.{ValidateUsesTempDir, ValidationError}
 import com.jakway.gnucash.util.StreamReader
-import com.jakway.util.error.{UsesTempDir, WithCause}
 
 object ResourceFiles {
   case class ResourceFilesError(override val msg: String)
