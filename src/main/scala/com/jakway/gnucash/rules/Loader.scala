@@ -7,6 +7,7 @@ import com.jakway.gnucash.parser.ValidationError
 import com.jakway.gnucash.parser.rules.UnlinkedTransactionRule
 import org.json4s.JObject
 import org.json4s.JsonAST.JValue
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.{Failure, Success, Try}
 
@@ -16,9 +17,17 @@ class TransactionRuleLoaderError(override val msg: String)
 /**
   * @param srcToParse JSON source to parse--DO NOT PASS A FILE
   */
-class Loader(val srcToParse: String) {
+class Loader(verbosity: Config.Verbosity)(val srcToParse: String) {
   import Loader._
   implicit def errorType: String => ValidationError = new TransactionRuleLoaderError(_)
+
+  val logger: Logger = LoggerFactory.getLogger(getClass())
+
+  class JsonParseError(override val msg: String)
+    extends TransactionRuleLoaderError(msg)
+
+  case class InvalidRootObjectError(override val msg: String)
+    extends JsonParseError(msg)
 
   def parsePriority(obj: JObject): Either[ValidationError, Double] = {
     import org.json4s.Formats
@@ -73,7 +82,7 @@ class Loader(val srcToParse: String) {
     })
   }
 
-  def parseRule(obj: JObject): Either[ValidationError, UnlinkedTransactionRule] = {
+  def parseRule(name: String, obj: JObject): Either[ValidationError, UnlinkedTransactionRule] = {
 
     def extract[A](key: String) = getKey[String, Any, A](obj.values)(key)
 
@@ -83,12 +92,12 @@ class Loader(val srcToParse: String) {
       destAccount <- extract[String]("destAccount")
       priority <- parsePriority(obj)
     } yield {
-      UnlinkedTransactionRule(pattern, priority.toString, sourceAccount, destAccount)
+      UnlinkedTransactionRule(name, pattern, priority.toString, sourceAccount, destAccount)
     }
   }
 
 
-  def parse: Either[Seq[ValidationError], Seq[UnlinkedTransactionRule]] = {
+  def parse: Either[ValidationError, Seq[UnlinkedTransactionRule]] = {
     import org.json4s._
 
     val jsonOpt = jsonParser(srcToParse)
@@ -100,15 +109,13 @@ class Loader(val srcToParse: String) {
 
     jsonOpt match {
       case None => {
-        case class JsonParseError(override val msg: String)
-          extends TransactionRuleLoaderError(msg)
 
-        Left(Seq(JsonParseError(s"Could not parse $srcToParse as JSON")))
+        Left(new JsonParseError(s"Could not parse $srcToParse as JSON"))
       }
       case Some(json) => {
 
-        def accF(a: AccumulatorType, b: JValue): AccumulatorType = (a, b) match {
-          case (Right(acc), obj@JObject(_)) => parseRule(obj) match {
+        def accF(a: AccumulatorType, b: (String, JValue)): AccumulatorType = (a, b) match {
+          case (Right(acc), (name, obj@JObject(_))) => parseRule(name, obj) match {
             case Left(r) => Left(r)
             case Right(q) => Right(acc.+:(q))
           }
@@ -116,7 +123,20 @@ class Loader(val srcToParse: String) {
           case (_, x) => Left(errorType(s"Expected object child of $json but got $x")): AccumulatorType
         }
 
-        ValidationError.accumulateEithers(json.children.map(_.children.foldLeft(empty)(accF)))
+        val ruleObjects = json match {
+          case JArray(children) => {
+            if(verbosity.warningsEnabled) {
+              logger.warn(s"Root object of rules JSON file is an array--all rules will be given " +
+                s"the name '${defaultRuleName}'")
+            }
+            Right(children.map(v => (defaultRuleName, v)))
+          }
+          case JObject(fields) => Right(fields)
+          case e => Left(InvalidRootObjectError("Expected root object to be either an object or an array but" +
+            s"got $e"))
+        }
+
+        ruleObjects.flatMap(r => r.foldLeft(empty)(accF))
       }
     }
 
@@ -125,17 +145,17 @@ class Loader(val srcToParse: String) {
 
 
 object Loader {
-  val jsonRoot = "rules"
+  val defaultRuleName = "Unnamed Rule"
 
-  def loadFromFile(path: String): Either[Seq[ValidationError], Seq[UnlinkedTransactionRule]] = {
+  def loadFromFile(v: Config.Verbosity, path: String): Either[ValidationError, Seq[UnlinkedTransactionRule]] = {
     case class TransactionLoaderFileError(override val msg: String)
       extends ValidationError(msg)
 
-    new Loader(path).parse
+    new Loader(v)(path).parse
   }
 
-  def loadFromFile(path: java.io.File): Either[Seq[ValidationError], Seq[UnlinkedTransactionRule]] =
-    loadFromFile(path.toString)
+  def loadFromFile(v: Config.Verbosity, path: java.io.File): Either[ValidationError, Seq[UnlinkedTransactionRule]] =
+    loadFromFile(v, path.toString)
 
 
 

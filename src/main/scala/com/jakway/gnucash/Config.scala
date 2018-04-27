@@ -35,6 +35,8 @@ object Config {
     val useUnicodeArrow: Boolean = true
 
     val useAccountFullName: Boolean = true
+
+    val warningsEnabled: Boolean = true
   }
 
   object Verbosity {
