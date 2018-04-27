@@ -30,7 +30,7 @@ class IntegrationTests
     UnvalidatedConfig.default.verbosity
   )
 
-  Config.progName should "pass the food test" in {
-    new Driver(foodTestConf).runEither().isRight shouldEqual true
+  "The Driver" should "pass the food test" in {
+    new Driver(foodTestConf).runEither() shouldEqual Right(null)
   }
 }
