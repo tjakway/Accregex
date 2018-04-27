@@ -1,12 +1,13 @@
 package com.jakway.gnucash.parser.test
 
+import com.jakway.gnucash.error.{ValidateF, ValidationError}
 import com.jakway.gnucash.parser._
 import com.jakway.gnucash.parser.rules.{Split, Transaction}
 import com.jakway.gnucash.parser.xml.NodeTests
 import com.jakway.util.XMLUtils
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.xml.{Node, XML}
+import scala.xml.Node
 
 class TestParser(val regDocRoot: Node) extends FlatSpec with Matchers {
   import com.jakway.gnucash.parser.xml.NodeTests._

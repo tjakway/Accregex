@@ -1,6 +1,6 @@
 package com.jakway.gnucash.rules
 
-import com.jakway.gnucash.parser.ValidationError
+import com.jakway.gnucash.error.ValidationError
 
 import scala.reflect.ClassTag
 

@@ -1,17 +1,11 @@
 package com.jakway.gnucash.io
 
 import java.io._
-import java.nio.file.Files
 
 import com.jakway.gnucash.ValidatedConfig
-import com.jakway.gnucash.io.XMLValidator.XMLValidationError
-import com.jakway.gnucash.parser.{ValidateF, ValidateUsesTempDir, ValidationError}
+import com.jakway.gnucash.error.{ValidateF, ValidateUsesTempDir, ValidationError}
 import com.jakway.util.XMLUtils
-import com.jakway.util.error.UsesTempDir
 import com.jakway.util.runner._
-import javax.xml.XMLConstants
-import javax.xml.transform.stream.StreamSource
-import javax.xml.validation.{Schema, SchemaFactory}
 
 import scala.util.{Failure, Success, Try}
 
@@ -88,8 +82,8 @@ object XMLLintValidator {
 class XMLLintValidator(val logXmlLintOutput: Boolean = false,
                        override val tempDirParam: Option[File] = None)
   extends ExternalValidator with ValidateUsesTempDir {
-  import XMLValidator._
   import XMLLintValidator._
+  import XMLValidator._
 
   override def usesTempDirErrorTypeCTOR: String => XMLLintValidatorError = XMLLintValidatorError.apply
 
@@ -150,7 +144,6 @@ object StreamReader {
 
   //see https://stackoverflow.com/questions/309424/read-convert-an-inputstream-to-a-string
   def jReadStream(in: InputStream): String = {
-    import java.io.InputStreamReader
 
     val byteArrayOutputStream = new ByteArrayOutputStream()
     val bufferSize = 1024

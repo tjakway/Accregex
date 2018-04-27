@@ -1,12 +1,10 @@
 package com.jakway.gnucash.parser.xml
 
-import java.io.{ByteArrayInputStream, File, StringReader}
-import java.nio.file.Files
+import java.io.File
 
-import com.jakway.gnucash.parser.{ValidateUsesTempDir, ValidationError}
+import com.jakway.gnucash.error.{ValidateUsesTempDir, ValidationError}
 import com.jakway.gnucash.parser.rules.{Split, Transaction}
 import com.jakway.gnucash.util.PrintNode
-import com.jakway.util.error.UsesTempDir
 import org.w3c.dom.Node
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.diff.{DefaultNodeMatcher, Difference, ElementSelectors}

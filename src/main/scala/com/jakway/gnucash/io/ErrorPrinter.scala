@@ -1,7 +1,7 @@
 package com.jakway.gnucash.io
 
 import autogen.buildinfo.BuildInfo
-import com.jakway.gnucash.parser.ValidationError
+import com.jakway.gnucash.error.ValidationError
 import com.jakway.util.StackTraceString
 
 object ErrorPrinter {

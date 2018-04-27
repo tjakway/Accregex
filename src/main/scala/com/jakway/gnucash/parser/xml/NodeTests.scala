@@ -1,6 +1,6 @@
 package com.jakway.gnucash.parser.xml
 
-import com.jakway.gnucash.parser.{ValidateF, ValidationError}
+import com.jakway.gnucash.error.{ValidateF, ValidationError}
 import com.jakway.util.XMLUtils
 
 import scala.xml.{Node, NodeSeq}

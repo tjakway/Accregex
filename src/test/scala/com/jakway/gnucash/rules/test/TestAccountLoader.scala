@@ -3,6 +3,7 @@
   */
 package com.jakway.gnucash.rules.test
 
+import com.jakway.gnucash.error.ValidationError
 import com.jakway.gnucash.parser._
 import com.jakway.gnucash.test.objects.RegDocTestObjects
 import org.scalatest.{FlatSpec, Matchers}

@@ -1,5 +1,6 @@
 package com.jakway.gnucash.parser
 
+import com.jakway.gnucash.error.ValidationError
 import com.jakway.util.Util
 
 import scala.annotation.tailrec

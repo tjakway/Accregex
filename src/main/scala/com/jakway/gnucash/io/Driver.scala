@@ -3,9 +3,10 @@ package com.jakway.gnucash.io
 import java.io.PrintWriter
 
 import com.jakway.gnucash.ValidatedConfig
+import com.jakway.gnucash.error.ValidationError
 import com.jakway.gnucash.parser._
 import com.jakway.gnucash.parser.rules.{Transaction, UnlinkedTransactionRule}
-import com.jakway.gnucash.parser.xml.{AlwaysPassesDiff, NodeTests, FilterTransactionsDiff}
+import com.jakway.gnucash.parser.xml.{AlwaysPassesDiff, FilterTransactionsDiff, NodeTests}
 import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
 import com.jakway.util.XMLUtils
 
@@ -92,7 +93,7 @@ class Driver(val config: ValidatedConfig) {
     } yield (newRootNode)
   }
 
-  def checkDiff(originalXML: Node, originalTransactions: Seq[Node],
+  private def checkDiff(originalXML: Node, originalTransactions: Seq[Node],
            newXML: Node, newTransactions: Seq[Node],
            parseTransaction: scala.xml.Node => Either[ValidationError, Transaction]):
     Either[ValidationError, Unit] = {

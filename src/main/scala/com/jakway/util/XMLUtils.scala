@@ -2,7 +2,7 @@ package com.jakway.util
 
 import java.io.StringWriter
 
-import com.jakway.gnucash.parser.ValidationError
+import com.jakway.gnucash.error.ValidationError
 
 import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}

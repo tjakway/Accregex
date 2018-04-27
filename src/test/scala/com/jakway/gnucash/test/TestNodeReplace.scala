@@ -1,6 +1,6 @@
 package com.jakway.gnucash.test
 
-import com.jakway.gnucash.parser.ValidationError
+import com.jakway.gnucash.error.ValidationError
 import com.jakway.gnucash.parser.xml.{ElemReplace, NodeReplace}
 import com.jakway.gnucash.test.objects.BooksLiteral
 import com.jakway.util.XMLUtils

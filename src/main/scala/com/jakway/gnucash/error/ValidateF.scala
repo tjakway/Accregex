@@ -1,7 +1,6 @@
-package com.jakway.gnucash.parser
+package com.jakway.gnucash.error
 
 import scala.util.{Failure, Success, Try}
-import scala.xml.Node
 
 //validation function class
 //see https://stackoverflow.com/questions/49353695/type-synonyms-for-implicits

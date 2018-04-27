@@ -2,7 +2,8 @@ package com.jakway.gnucash.parser.rules
 
 import java.util.regex.PatternSyntaxException
 
-import com.jakway.gnucash.parser.{AccountNameParser, ValidationError}
+import com.jakway.gnucash.error.{ValidateF, ValidationError}
+import com.jakway.gnucash.parser.AccountNameParser
 import com.jakway.gnucash.rules.LinkedTransactionRule
 
 import scala.util.{Failure, Success, Try}
@@ -30,8 +31,6 @@ object UnlinkedTransactionRule {
     case class LinkTransactionRuleError(override val msg: String) extends ValidationError(msg)
     implicit def errorType: String => ValidationError = LinkTransactionRuleError.apply
 
-    import com.jakway.gnucash.parser.ValidateF.MiscTests._
-
     def compileRegex(r: String): Either[ValidationError, Regex] = {
       val rgxMsg = s"$r is an invalid regular expression.  This program follows java regular" +
         s" expression conventions; see " +
@@ -52,7 +51,7 @@ object UnlinkedTransactionRule {
     rule match {
       case UnlinkedTransactionRule(ruleName, pattern, priority, sourceAccount, destAccount) => {
         for {
-          priorityNum <- isNumeric(priority)
+          priorityNum <- ValidateF.MiscTests.isNumeric(priority)
           rgx <- compileRegex(pattern)
           src <- accountNameParser.findReferencedAccount(sourceAccount)
           dst <- accountNameParser.findReferencedAccount(destAccount)

@@ -1,6 +1,7 @@
 package com.jakway.gnucash.parser
 
 import com.jakway.gnucash.Config
+import com.jakway.gnucash.error.{ValidateF, ValidationError}
 import com.jakway.gnucash.parser.rules.{Split, Transaction}
 import com.jakway.gnucash.parser.xml.NodeTests
 

@@ -1,4 +1,4 @@
-package com.jakway.gnucash.parser
+package com.jakway.gnucash.error
 
 import com.jakway.util.StackTraceString
 import com.jakway.util.error.{UsesTempDir, WithCause}

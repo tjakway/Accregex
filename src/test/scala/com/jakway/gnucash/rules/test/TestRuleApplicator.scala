@@ -1,8 +1,9 @@
 package com.jakway.gnucash.rules.test
 
+import com.jakway.gnucash.error.ValidationError
 import com.jakway.gnucash.parser.rules.{Transaction, UnlinkedTransactionRule}
 import com.jakway.gnucash.parser.xml.NodeTests
-import com.jakway.gnucash.parser.{AccountNameParser, LinkedAccount, Parser, ValidationError}
+import com.jakway.gnucash.parser.{AccountNameParser, LinkedAccount, Parser}
 import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
 import com.jakway.gnucash.test.objects.RegDocTestObjects
 import org.scalatest.{FlatSpec, Matchers}

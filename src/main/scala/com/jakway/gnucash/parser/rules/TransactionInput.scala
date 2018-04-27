@@ -1,6 +1,6 @@
 package com.jakway.gnucash.parser.rules
 
-import com.jakway.gnucash.parser.{LinkedAccount, ValidationError}
+import com.jakway.gnucash.parser.LinkedAccount
 
 
 /**

@@ -1,7 +1,7 @@
 package com.jakway.gnucash.rules.test
 
 import com.jakway.gnucash.Config
-import com.jakway.gnucash.parser.ValidationError
+import com.jakway.gnucash.error.ValidationError
 import com.jakway.gnucash.parser.rules.UnlinkedTransactionRule
 import com.jakway.gnucash.rules.Loader
 import org.json4s.jackson.JsonMethods._

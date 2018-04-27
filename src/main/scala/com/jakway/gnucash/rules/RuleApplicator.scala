@@ -3,9 +3,10 @@ package com.jakway.gnucash.rules
 import java.util.Formatter
 
 import com.jakway.gnucash.Config
+import com.jakway.gnucash.error.ValidationError
 import com.jakway.gnucash.parser.rules.Transaction
 import com.jakway.gnucash.parser.xml.ElemReplace
-import com.jakway.gnucash.parser.{LinkedAccount, Parser, ValidationError}
+import com.jakway.gnucash.parser.{LinkedAccount, Parser}
 import com.jakway.util.Util
 
 import scala.xml.{Elem, Node}

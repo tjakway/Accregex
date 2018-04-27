@@ -2,7 +2,8 @@ package com.jakway.gnucash.io
 
 import java.util.{Formatter, Locale}
 
-import com.jakway.gnucash.parser.{LinkedAccount, ValidationError}
+import com.jakway.gnucash.error.ValidationError
+import com.jakway.gnucash.parser.LinkedAccount
 import com.jakway.gnucash.parser.rules.Transaction
 import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
 import com.jakway.gnucash.{Config, ValidatedConfig}

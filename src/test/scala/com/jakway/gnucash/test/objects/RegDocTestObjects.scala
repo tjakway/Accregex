@@ -1,6 +1,7 @@
 package com.jakway.gnucash.test.objects
 
-import com.jakway.gnucash.parser.{LinkedAccount, Parser, UnlinkedAccount, ValidationError}
+import com.jakway.gnucash.error.ValidationError
+import com.jakway.gnucash.parser.{LinkedAccount, Parser, UnlinkedAccount}
 
 import scala.xml.Node
 

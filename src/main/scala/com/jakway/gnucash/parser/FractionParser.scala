@@ -1,5 +1,7 @@
 package com.jakway.gnucash.parser
 
+import com.jakway.gnucash.error.ValidationError
+
 import scala.util.{Failure, Success, Try}
 
 object FractionParser {
