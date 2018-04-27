@@ -13,6 +13,6 @@ import IntegrationTests._
 class IntegrationTests
   extends FlatSpec
     with Matchers
-    with UsesTempDir[IntegrationTestError] {
+    with ResourceFiles {
 
 }
