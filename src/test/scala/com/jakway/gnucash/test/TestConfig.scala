@@ -16,6 +16,10 @@ object TestResources {
   val regDocXML = "/reg_doc_example.gnucash"
   val currencyTreeXML = "/currency_tree_xml.gnucash"
 
+  val foodTest = "/food_test.gnucash"
+  val foodTestExpected = "/food_test_expected.gnucash"
+  val foodTestRules = "/food_test_rules.json"
+
   lazy val regDocRoot = XML.load(getClass().getResource(regDocXML))
   lazy val currencyTreeRoot = XML.load(getClass().getResource(currencyTreeXML))
 

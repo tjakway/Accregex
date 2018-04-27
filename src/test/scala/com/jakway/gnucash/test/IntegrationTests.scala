@@ -1,7 +1,8 @@
 package com.jakway.gnucash.test
 
+import com.jakway.gnucash.{Config, UnvalidatedConfig, ValidatedConfig}
 import com.jakway.gnucash.error.ValidationError
-import com.jakway.util.error.UsesTempDir
+import com.jakway.gnucash.io.Driver
 import org.scalatest.{FlatSpec, Matchers}
 
 object IntegrationTests {
@@ -15,4 +16,21 @@ class IntegrationTests
     with Matchers
     with ResourceFiles {
 
+  val foodTestConf = ValidatedConfig(
+    copyResourceToFile(TestResources.foodTest),
+    copyResourceToFile(TestResources.foodTestRules),
+    getTempFile(tempDir).right.get,
+    false,
+    false,
+    false,
+    false,
+    "Imbalance-USD",
+    None,
+    true,
+    UnvalidatedConfig.default.verbosity
+  )
+
+  Config.progName should "pass the food test" in {
+    new Driver(foodTestConf).runEither().isRight shouldEqual true
+  }
 }
