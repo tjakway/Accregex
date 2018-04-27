@@ -15,7 +15,8 @@ import scala.util.matching.Regex
   * @param sourceAccount
   * @param destAccount
   */
-case class UnlinkedTransactionRule(pattern: String,
+case class UnlinkedTransactionRule(ruleName: String,
+                                   pattern: String,
                                    priority: String,
                                    sourceAccount: String,
                                    destAccount: String)
@@ -49,14 +50,14 @@ object UnlinkedTransactionRule {
     }
 
     rule match {
-      case UnlinkedTransactionRule(pattern, priority, sourceAccount, destAccount) => {
+      case UnlinkedTransactionRule(ruleName, pattern, priority, sourceAccount, destAccount) => {
         for {
           priorityNum <- isNumeric(priority)
           rgx <- compileRegex(pattern)
           src <- accountNameParser.findReferencedAccount(sourceAccount)
           dst <- accountNameParser.findReferencedAccount(destAccount)
         } yield {
-          LinkedTransactionRule(rgx, priorityNum, src, dst)
+          LinkedTransactionRule(ruleName, rgx, priorityNum, src, dst)
         }
       }
     }
