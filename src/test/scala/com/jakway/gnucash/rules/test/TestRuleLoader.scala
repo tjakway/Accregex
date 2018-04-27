@@ -1,12 +1,13 @@
 package com.jakway.gnucash.rules.test
 
+import com.jakway.gnucash.Config
 import com.jakway.gnucash.parser.ValidationError
 import com.jakway.gnucash.parser.rules.UnlinkedTransactionRule
 import com.jakway.gnucash.rules.Loader
 import org.json4s.jackson.JsonMethods._
 import org.scalatest.{FlatSpec, Matchers}
 
-class TestRuleLoader extends FlatSpec with Matchers {
+class TestRuleLoader(verbosity: Config.Verbosity) extends FlatSpec with Matchers {
   import org.json4s._
 
   implicit val formats = DefaultFormats
@@ -14,8 +15,10 @@ class TestRuleLoader extends FlatSpec with Matchers {
   object TestObjects {
     import org.json4s.JsonDSL._
 
-    val oneRuleJson: JValue = (Loader.jsonRoot ->
-      ("foo" ->
+    val oneRuleName = "My Rule"
+
+    val oneRuleJson: JValue = (
+      (oneRuleName ->
         ("pattern" -> ".*") ~
         ("priority" -> 1) ~
         ("sourceAccount" -> "bar") ~
@@ -23,18 +26,19 @@ class TestRuleLoader extends FlatSpec with Matchers {
       )
 
     val oneRuleExpected = UnlinkedTransactionRule(
-      ".*", 1.toDouble.toString, "bar", "baz")
+      oneRuleName, ".*", 1.toDouble.toString, "bar", "baz")
 
     lazy val oneRuleCommented = insertComments("//examplecomment")(pretty(render(oneRuleJson)))
 
 
-    val multipleRules = (Loader.jsonRoot ->
-      ("qjdfss" ->
+    val multipleRuleNames = Seq("bar", "baz")
+    val multipleRules = (
+      (multipleRuleNames(0) ->
         ("pattern" -> "\\s+") ~
         ("priority" -> 2433) ~
         ("sourceAccount" -> "sklje") ~
         ("destAccount" -> "qjeeew")) ~
-      ("wes" ->
+      (multipleRuleNames(1) ->
         ("pattern" -> "\\d*") ~
         ("priority" -> 30) ~
         ("sourceAccount" -> "xxzl") ~
@@ -42,8 +46,8 @@ class TestRuleLoader extends FlatSpec with Matchers {
       )
 
     val multipleRulesExpected = Seq(
-      UnlinkedTransactionRule("\\s+", 2433.toDouble.toString, "sklje", "qjeeew"),
-      UnlinkedTransactionRule("\\d*", 30.toDouble.toString, "xxzl", "jy422"))
+        UnlinkedTransactionRule(multipleRuleNames(0), "\\s+", 2433.toDouble.toString, "sklje", "qjeeew"),
+        UnlinkedTransactionRule(multipleRuleNames(1), "\\d*", 30.toDouble.toString, "xxzl", "jy422"))
 
     lazy val multipleRulesCommented = {
       val randomStr: String = (0 to Math.random().floor.toInt).map(_ => Math.random()).toString()
@@ -70,18 +74,18 @@ class TestRuleLoader extends FlatSpec with Matchers {
   }
 
   "The Transaction Rule Loader" should "load a single transaction" in {
-    new Loader(compact(render(oneRuleJson))).parse shouldEqual
+    new Loader(verbosity, compact(render(oneRuleJson))).parse shouldEqual
       Right(Seq(oneRuleExpected))
   }
 
   it should "handle comments" in {
-    val actual = ValidationError.accumulateEithers(oneRuleCommented.map(new Loader(_).parse))
+    val actual = ValidationError.accumulateEithers(oneRuleCommented.map(new Loader(verbosity, _).parse))
     actual shouldEqual Right((0 to 2).toList.map(_ => oneRuleExpected))
   }
 
   it should "handle comments in multiple rules" in {
     //need to sort them to compare them properly so put them in a set
-    val actual = ValidationError.accumulateEithers(multipleRulesCommented.map(new Loader(_).parse))
+    val actual = ValidationError.accumulateEithers(multipleRulesCommented.map(new Loader(verbosity, _).parse))
       .right.map(_.toSet)
     actual shouldEqual
       Right((0 to 2).toList.flatMap(_ => multipleRulesExpected).toSet)

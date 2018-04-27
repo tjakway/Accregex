@@ -29,7 +29,7 @@ class TestRuleApplicator(val regDocRoot: Node) extends FlatSpec with Matchers {
 
     val targetAccountString = "Expenses:Auto:Gas"
     val description = "Car Repair"
-    val unlinkedChangeGasRule = UnlinkedTransactionRule(description,
+    val unlinkedChangeGasRule = UnlinkedTransactionRule("Charity Rule", description,
       "1", "Assets:Current Assets:Checking Account", "Expenses:Charity")
 
     val nameParser = new AccountNameParser(allAccounts.values.toSeq)

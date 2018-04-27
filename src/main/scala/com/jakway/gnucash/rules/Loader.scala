@@ -17,7 +17,7 @@ class TransactionRuleLoaderError(override val msg: String)
 /**
   * @param srcToParse JSON source to parse--DO NOT PASS A FILE
   */
-class Loader(verbosity: Config.Verbosity)(val srcToParse: String) {
+class Loader(verbosity: Config.Verbosity, val srcToParse: String) {
   import Loader._
   implicit def errorType: String => ValidationError = new TransactionRuleLoaderError(_)
 
@@ -151,7 +151,7 @@ object Loader {
     case class TransactionLoaderFileError(override val msg: String)
       extends ValidationError(msg)
 
-    new Loader(v)(path).parse
+    new Loader(v, path).parse
   }
 
   def loadFromFile(v: Config.Verbosity, path: java.io.File): Either[ValidationError, Seq[UnlinkedTransactionRule]] =

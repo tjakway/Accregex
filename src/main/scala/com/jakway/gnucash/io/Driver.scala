@@ -148,8 +148,8 @@ class Driver(val config: ValidatedConfig) {
 
     for {
       rawString <- read()
-      transactionRuleLoader = new com.jakway.gnucash.rules.Loader(rawString)
-      unlinkedRules <- MultiValidationError.wrap(transactionRuleLoader.parse)
+      transactionRuleLoader = new com.jakway.gnucash.rules.Loader(config.verbosity, rawString)
+      unlinkedRules <- transactionRuleLoader.parse
 
       linkedRules <- ValidationError.accumulateAndWrap(
         unlinkedRules.map(UnlinkedTransactionRule.link(accountNameParser)))

@@ -1,8 +1,9 @@
 package com.jakway.gnucash.test
 
+import com.jakway.gnucash.Config
 import com.jakway.gnucash.io.test.TestXMLValidator
 import com.jakway.gnucash.parser.test.{TestFilterTransactionsDiff, TestParser, TestXMLEqualDiff}
-import com.jakway.gnucash.rules.test.{TestAccountNameParser, TestLinkAccounts, TestRuleApplicator}
+import com.jakway.gnucash.rules.test.{TestAccountNameParser, TestLinkAccounts, TestRuleApplicator, TestRuleLoader}
 
 import scala.xml.XML
 
@@ -17,11 +18,15 @@ object TestResources {
 
   lazy val regDocRoot = XML.load(getClass().getResource(regDocXML))
   lazy val currencyTreeRoot = XML.load(getClass().getResource(currencyTreeXML))
+
+  val testConfigVerbosity: Config.Verbosity = Config.Verbosity(false, false, false)
 }
 import TestResources._
 
-
 //test class instantiations
+class TestRuleLoaderInst extends TestRuleLoader(testConfigVerbosity)
+
+//XML test class instantiations
 class TestLinkAccountsRegDocXML extends TestLinkAccounts(regDocRoot)
 
 class TestParserRegDocXML extends TestParser(regDocRoot)
