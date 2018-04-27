@@ -1,6 +1,6 @@
 package com.jakway.gnucash.io
 
-import java.io.PrintWriter
+import java.io.{InputStream, PrintWriter}
 
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.error.ValidationError
@@ -52,11 +52,17 @@ class Driver(val config: ValidatedConfig) {
       extends ValidationError(msg)
 
     for {
-      //optionally validate the input file first
-      _ <- inputValidator.validate(config.inputPath)
+      //decompress the input stream if it's gzipped
+      //otherwise return it unchanged
+      compressionHandler <- CompressionHandler.newGZIPHandler(config)
+      xmlInputStream <- compressionHandler.inputToStream()
 
-      //load the input XML file
-      rootNode <- loadGnucashXMLFile()
+      //optionally validate the input file against the schema first
+      //(note: XMLValidator will write the decompressed XML out to a temporary file)
+      _ <- inputValidator.validate(config.inputPath.getName(), xmlInputStream)
+
+      //parse the input stream as XML
+      rootNode <- loadGnucashXML(xmlInputStream)
       bookNode <- parser.findBookNode(rootNode)(GnucashXMLLoadError.apply(_))
 
       //parse & extract the accounts
@@ -160,11 +166,11 @@ class Driver(val config: ValidatedConfig) {
   }
 
   //TODO: handle (gzip) compressed gnucash input files
-  private def loadGnucashXMLFile(): Either[ValidationError, Elem] =
-    Try(XML.loadFile(config.inputPath)) match {
+  private def loadGnucashXML(is: InputStream): Either[ValidationError, Elem] =
+    Try(XML.load(is)) match {
       case Success(x) => Right(x)
-      case Failure(t) => Left(new GnucashXMLLoadError(s"Error while loading GNUCash input file" +
-        s" ${config.inputPath} (XML.loadFile threw an exception)")
+      case Failure(t) => Left(new GnucashXMLLoadError(s"Error while loading GNUCash input stream" +
+        s" (XML.load threw an exception)")
         .withCause(t))
     }
 }
