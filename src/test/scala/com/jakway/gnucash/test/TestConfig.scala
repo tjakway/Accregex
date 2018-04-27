@@ -10,8 +10,8 @@ import scala.xml.XML
 /**
   * Test configuration file containing test resources and instantiations
   * of test classes with those resources
+  * TODO: merge with trait ResourceFiles
   */
-
 object TestResources {
   val regDocXML = "/reg_doc_example.gnucash"
   val currencyTreeXML = "/currency_tree_xml.gnucash"
