@@ -38,7 +38,8 @@ object XMLValidator {
     (inputValidator, outputValidator)
   }
 
-  val schemaName = "gnucash-v2.rng"
+  val schemaSuffix = ".rng"
+  val schemaName = "gnucash-v2" + schemaSuffix
   val schemaResource = "/" + schemaName
 }
 
@@ -100,7 +101,7 @@ class XMLLintValidator(val logXmlLintOutput: Boolean = false,
 
     for {
       schema <- StreamReader.readStream(res)
-      f <- stringToTempFile(tempDir)(schema)
+      f <- stringToTempFile(tempDir, suffix = schemaSuffix)(schema)
     } yield f
   }
 

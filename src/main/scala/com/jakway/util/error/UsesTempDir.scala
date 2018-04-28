@@ -13,6 +13,7 @@ trait UsesTempDir[E <: WithCause[E]] {
   val tempDirParam: Option[File]
 
   val defaultTempDirPrefix: String
+  val defaultSuffix = ".xml"
 
   def usesTempDirErrorTypeCTOR: String => E
 
@@ -47,21 +48,22 @@ trait UsesTempDir[E <: WithCause[E]] {
     }
   }
 
-  def getTempFile(dir: File): Either[E, File] = {
-    Try(Files.createTempFile(dir.toPath, null, ".xml")) match {
+  def getTempFile(dir: File, suffix: String = defaultSuffix): Either[E, File] = {
+    Try(Files.createTempFile(dir.toPath, null, suffix)) match {
       case Success(f) => Right(f.toFile)
       case Failure(t) => Left(
         usesTempDirErrorTypeCTOR(s"Could not create temp file in $dir").withCause(t))
     }
   }
 
-  def stringToTempFile(dir: File)(str: String): Either[E, File] = {
+  def stringToTempFile(dir: File, suffix: String = defaultSuffix)(str: String): Either[E, File] = {
     import java.io.PrintWriter
     //close over the XML and write it out to the passed file
     def write(dest: File): Either[E, Unit] = {
       val res = Try(new PrintWriter(dest))
         .map { p =>
           p.println(str)
+          p.flush()
           p.close()
         }
       res match {

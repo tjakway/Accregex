@@ -20,8 +20,8 @@ trait ResourceFiles extends ValidateUsesTempDir {
 
   private def getResourceStream(name: String) = getClass().getResourceAsStream(name)
   private def readResource(name: String): String = {
-    implicit def errorType: String => ValidationError = ((msg: String) => new ValidationError(
-                                      s"Could not read resource $name, error message: " + msg))
+    implicit def errorType: String => ValidationError = (msg: String) => new ValidationError(
+                                      s"Could not read resource $name, error message: " + msg)
     StreamReader.readStream(getResourceStream(name))
       .right.get
   }

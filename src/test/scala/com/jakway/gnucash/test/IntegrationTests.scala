@@ -27,7 +27,7 @@ class IntegrationTests
     "Imbalance-USD",
     None,
     true,
-    UnvalidatedConfig.default.verbosity
+    UnvalidatedConfig.default.verbosity.withDebug()
   )
 
   "The Driver" should "pass the food test" in {
