@@ -74,7 +74,7 @@ trait UsesTempDir[E <: WithCause[E]] {
     }
 
     for {
-      f <- getTempFile(dir)
+      f <- getTempFile(dir, suffix)
       _ <- write(f)
     } yield f
   }
