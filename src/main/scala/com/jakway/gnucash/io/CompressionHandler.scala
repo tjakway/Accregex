@@ -50,12 +50,12 @@ object CompressionHandler {
     var res = false
 
     try {
-      stream = Some(new GZIPInputStream(new FileInputStream(inputPath)))
+      stream = Some(new GZIPInputStream(new FileInputStream(inputPath), bufSize))
       res = true
     } catch {
       case e: ZipException => {
         if(verbosity.debug) {
-          logger.debug(s"Caught ZipException: $e")
+          logger.debug(s"Caught ZipException for $inputPath: $e")
         }
         res = false
       }
