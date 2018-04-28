@@ -22,6 +22,7 @@ trait CompressionHandler {
 
 object CompressionHandler {
   private val bufSize: Int = 16384
+  private val logger: Logger = LoggerFactory.getLogger(classOf[CompressionHandler])
 
   class CompressionHandlerError(override val msg: String)
     extends ValidationError(msg)
@@ -33,9 +34,10 @@ object CompressionHandler {
     extends CompressionHandlerError(msg)
 
 
+
   def newGZIPHandler(config: ValidatedConfig): Either[ValidationError, CompressionHandler] = {
     for {
-      isCompressed <- inputIsCompressed(config.inputPath)
+      isCompressed <- inputIsCompressed(config.inputPath, config.verbosity)
     } yield {
       new GzipCompressionHandler(config.inputPath,
         isCompressed, bufSize, config.verbosity)
@@ -43,7 +45,7 @@ object CompressionHandler {
   }
 
 
-  private def inputIsCompressed(inputPath: File): Either[ValidationError, Boolean] = Try {
+  def inputIsCompressed(inputPath: File, verbosity: Config.Verbosity): Either[ValidationError, Boolean] = Try {
     var stream: Option[InputStream] = None
     var res = false
 
@@ -51,7 +53,10 @@ object CompressionHandler {
       stream = Some(new GZIPInputStream(new FileInputStream(inputPath)))
       res = true
     } catch {
-      case _: ZipException => {
+      case e: ZipException => {
+        if(verbosity.debug) {
+          logger.debug(s"Caught ZipException: $e")
+        }
         res = false
       }
     }

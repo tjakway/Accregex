@@ -10,7 +10,16 @@ object ResourceFiles {
     extends AccregexTestSetupException(msg)
 }
 
-trait ResourceFiles extends ValidateUsesTempDir {
+trait ResourceNames {
+  val regDocXML = "/reg_doc_example.gnucash"
+  val currencyTreeXML = "/currency_tree_xml.gnucash"
+
+  val foodTest = "/food_test.gnucash"
+  val foodTestExpected = "/food_test_expected.gnucash"
+  val foodTestRules = "/food_test_rules.json"
+}
+
+trait ResourceFiles extends ValidateUsesTempDir with ResourceNames {
   override val tempDirParam: Option[File] = None
   override val defaultTempDirPrefix: String = "accregexresourcefiles"
   override def usesTempDirErrorTypeCTOR: String => ResourceFiles.ResourceFilesError =

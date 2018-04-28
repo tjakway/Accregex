@@ -7,28 +7,26 @@ import com.jakway.gnucash.rules.test.{TestAccountNameParser, TestLinkAccounts, T
 
 import scala.xml.XML
 
+trait TestConfig {
+  val quiet: Config.Verbosity = Config.Verbosity(false, false, false)
+}
+
+object TestConfig extends TestConfig
+
 /**
   * Test configuration file containing test resources and instantiations
   * of test classes with those resources
   * TODO: merge with trait ResourceFiles
   */
-object TestResources {
-  val regDocXML = "/reg_doc_example.gnucash"
-  val currencyTreeXML = "/currency_tree_xml.gnucash"
-
-  val foodTest = "/food_test.gnucash"
-  val foodTestExpected = "/food_test_expected.gnucash"
-  val foodTestRules = "/food_test_rules.json"
-
+object TestResources extends ResourceNames {
   lazy val regDocRoot = XML.load(getClass().getResource(regDocXML))
   lazy val currencyTreeRoot = XML.load(getClass().getResource(currencyTreeXML))
 
-  val testConfigVerbosity: Config.Verbosity = Config.Verbosity(false, false, false)
 }
 import TestResources._
 
 //test class instantiations
-class TestRuleLoaderInst extends TestRuleLoader(testConfigVerbosity)
+class TestRuleLoaderInst extends TestRuleLoader(TestConfig.quiet)
 
 //XML test class instantiations
 class TestLinkAccountsRegDocXML extends TestLinkAccounts(regDocRoot)

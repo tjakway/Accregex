@@ -17,8 +17,8 @@ class IntegrationTests
     with ResourceFiles {
 
   val foodTestConf = ValidatedConfig(
-    copyResourceToFile(TestResources.foodTest),
-    copyResourceToFile(TestResources.foodTestRules),
+    copyResourceToFile(foodTest),
+    copyResourceToFile(foodTestRules),
     getTempFile(tempDir).right.get,
     false,
     false,
