@@ -90,7 +90,7 @@ class XMLLintValidator(val logXmlLintOutput: Boolean = false,
   override def usesTempDirErrorTypeCTOR: String => XMLLintValidatorError = XMLLintValidatorError.apply
 
   override val programName = "xmllint"
-  val args = Seq("--noout", "--nowarning")
+  val args = Seq("--noout"/*,"--nowarning"*/)
 
   implicit def errorType: String => ValidationError = XMLLintValidatorError.apply
 
@@ -110,10 +110,10 @@ class XMLLintValidator(val logXmlLintOutput: Boolean = false,
     def exec(schemaLoc: File, toVerify: File): Either[ValidationError, ProgramOutput] = {
       val xmllintArgs = args ++ Seq("--relaxng", schemaLoc.toString, toVerify.toString)
 
-      def error(s: String) = new XMLValidationError(s"Error while running $programName " + s)
+      def error(s: String) = new XMLValidationError(s"Error while running $programName: " + s)
       Runner.run(programName, xmllintArgs, logXmlLintOutput) match {
         case e: ExceptionOnRun => Left(error("ExceptionOnRun").withCause(e.e))
-        case e: NonzeroExitCode => Left(error("NonzeroExitCode"))
+        case e: NonzeroExitCode => Left(error(s"NonzeroExitCode: ${e.exitCode}"))
         case q: ProgramOutput => Right(q)
       }
     }
