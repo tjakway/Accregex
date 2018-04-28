@@ -65,7 +65,7 @@ class Driver(val config: ValidatedConfig) {
     }
   }
 
-  lazy val (inputValidator, outputValidator) = XMLValidator.getValidators(config)
+
 
   class Output(val compressionHandler: CompressionHandler,
                val node: scala.xml.Node,
@@ -101,6 +101,7 @@ class Driver(val config: ValidatedConfig) {
       compressionHandler <- CompressionHandler.newGZIPHandler(config)
       xmlInputStream <- compressionHandler.inputToStream()
 
+      (inputValidator, outputValidator) = XMLValidator.getValidators(config)
       //optionally validate the input file against the schema first
       //(note: XMLValidator will write the decompressed XML out to a temporary file)
       _ <- inputValidator.validate(config.inputPath.getName(), xmlInputStream)
