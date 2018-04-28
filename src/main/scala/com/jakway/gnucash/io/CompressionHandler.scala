@@ -45,7 +45,7 @@ object CompressionHandler {
   }
 
 
-  def inputIsCompressed(inputPath: File, verbosity: Config.Verbosity): Either[ValidationError, Boolean] = Try {
+  private[io] def inputIsCompressed(inputPath: File, verbosity: Config.Verbosity): Either[ValidationError, Boolean] = Try {
     var stream: Option[InputStream] = None
     var res = false
 
