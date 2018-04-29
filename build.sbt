@@ -25,8 +25,6 @@ libraryDependencies ++=
       //for comparing XML documents
       "org.xmlunit" % "xmlunit-core" % "2.5.1",
 
-      "org.apache.commons" % "commons-compress" % "1.16.1",
-
       //scalatest
       //see http://www.scalatest.org/install
       "org.scalatest" %% "scalatest" % "3.0.4" % "test",
