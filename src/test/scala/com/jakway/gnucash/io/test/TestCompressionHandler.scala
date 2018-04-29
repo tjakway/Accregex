@@ -13,7 +13,7 @@ class TestCompressionHandler
     with ResourceFiles
     with TestConfig {
 
-  "CompressionHandler" should "correctly detect compression" in {
+  ignore should "correctly detect compression" in {
     val foodTestFile: File = copyResourceToFile(foodTest)
 
     CompressionHandler.inputIsCompressed(foodTestFile, quiet) shouldEqual Right(true)
