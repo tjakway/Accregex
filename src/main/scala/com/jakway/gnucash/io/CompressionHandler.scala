@@ -1,10 +1,11 @@
 package com.jakway.gnucash.io
 
-import java.io.{File, FileInputStream, InputStream, OutputStream}
-import java.util.zip.{GZIPInputStream, GZIPOutputStream, ZipException}
+import java.io._
+import java.util.zip.{GZIPOutputStream, ZipException}
 
 import com.jakway.gnucash.{Config, ValidatedConfig}
 import com.jakway.gnucash.error.{ValidateUsesTempDir, ValidationError}
+import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.{Failure, Success, Try}
@@ -44,13 +45,18 @@ object CompressionHandler {
     }
   }
 
+  def mkCompressedInputStream(is: InputStream): InputStream =
+    new org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream(is, true)
+
+  def mkCompressedOutputStream(os: OutputStream): OutputStream =
+    new GZIPOutputStream(os)
 
   private[io] def inputIsCompressed(inputPath: File, verbosity: Config.Verbosity): Either[ValidationError, Boolean] = Try {
     var stream: Option[InputStream] = None
     var res = false
 
     try {
-      stream = Some(new GZIPInputStream(new FileInputStream(inputPath), bufSize))
+      stream = Some(mkCompressedInputStream(new BufferedInputStream(new FileInputStream(inputPath))))
       res = true
     } catch {
       case e: ZipException => {
@@ -86,9 +92,7 @@ private class GzipCompressionHandler(inputPath: File,
     lazy val origStream = mkStream()
 
     Try {
-      new GZIPInputStream(origStream, bufSize)
-
-      origStream
+      mkCompressedInputStream(origStream)
     } recover {
       case _: ZipException => {
         if(verbosity.debug) {
@@ -117,7 +121,7 @@ private class GzipCompressionHandler(inputPath: File,
     }
 
     if (inputIsCompressed) {
-      f(new GZIPOutputStream(_), "Error occurred while wrapping with GZIPOutputStream")
+      f(mkCompressedOutputStream(_), "Error occurred while wrapping with GZIPOutputStream")
     } else {
       f(x => x, "Error occurred without wrapping with GZIPOutputStream")
     }
