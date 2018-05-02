@@ -20,14 +20,14 @@ class IntegrationTests
     copyResourceToFile(foodTest),
     copyResourceToFile(foodTestRules),
     getTempFile(tempDir).right.get,
-    false,
-    false,
-    false,
-    false,
+    summarize = false,
+    compress = false,
+    skipInputValidation = false,
+    skipOutputValidation = false,
     "Imbalance-USD",
     None,
-    true,
-    UnvalidatedConfig.default.verbosity.withDebug()
+    checkDiff = true,
+    UnvalidatedConfig.default.verbosity.withDebug(false)
   )
 
   "The Driver" should "pass the food test" in {
