@@ -176,7 +176,7 @@ object UnvalidatedConfig {
       compress = true,
       skipInputValidation = true,
       skipOutputValidation = false,
-      "Unspecified",
+      "Imbalance-USD",
       None,
       checkDiff = true,
       Verbosity.default)
