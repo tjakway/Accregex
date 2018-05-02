@@ -418,12 +418,6 @@ object Parser {
   def getTransactionNodes: ValidateF[(Node, Map[String, LinkedAccount]), Seq[Node]] =
     opTransactionNodes(isTransaction)
 
-  def filterAllTransactionNodes: ValidateF[(Node, Map[String, LinkedAccount]), Seq[Node]] = {
-    def isNotTransaction(x: Map[String, LinkedAccount])(y: Node) = !(isTransaction(x)(y))
-
-    opTransactionNodes(isNotTransaction)
-  }
-
   //both of these filters *should* give the same result
   def filterSingleLevelTransactionNodes(accountMap: Map[String, LinkedAccount])(n: Node): Seq[Node] =
       n.child.filter(!isTransaction(accountMap)(_))
@@ -445,18 +439,8 @@ object Parser {
 
     bookAsElem.flatMap { (bookElem: Elem) =>
 
-      val eitherFilteredChildren = {
-        //TODO: test & refactor
-        val f1 = Right(filterSingleLevelTransactionNodes(accountMap)(bookElem))
-        val f2 = filterAllTransactionNodes((bookElem, accountMap))(ReplaceTransactionNodesError.apply _)
-        if(f1 != f2) {
-          Left(ReplaceTransactionNodesError(
-            s"Expected filter functions to give identical results " +
-              s"but got f1=$f1, f2=$f2"))
-        } else {
-          f1
-        }
-      }
+      val eitherFilteredChildren =
+        Right(filterSingleLevelTransactionNodes(accountMap)(bookElem))
 
       val res = for {
         filteredChildren <- eitherFilteredChildren
