@@ -213,7 +213,6 @@ class Driver(val config: ValidatedConfig) {
     }
   }
 
-  //TODO: handle (gzip) compressed gnucash input files
   private def loadGnucashXML(is: InputStream): Either[ValidationError, Elem] =
     Try(XML.load(is)) match {
       case Success(x) => Right(x)
