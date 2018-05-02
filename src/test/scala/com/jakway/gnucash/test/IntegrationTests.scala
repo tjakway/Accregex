@@ -31,6 +31,7 @@ class IntegrationTests
   )
 
   "The Driver" should "pass the food test" in {
-    new Driver(foodTestConf).runEither() shouldEqual Right(null)
+    //see http://www.scalatest.org/user_guide/other_goodies#eitherValues
+    new Driver(foodTestConf).runEither() should be ('right)
   }
 }
