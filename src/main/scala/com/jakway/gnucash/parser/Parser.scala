@@ -447,14 +447,14 @@ object Parser {
 
       val eitherFilteredChildren = {
         //TODO: test & refactor
-        val f1 = filterSingleLevelTransactionNodes(accountMap)(bookElem)
+        val f1 = Right(filterSingleLevelTransactionNodes(accountMap)(bookElem))
         val f2 = filterAllTransactionNodes((bookElem, accountMap))(ReplaceTransactionNodesError.apply _)
-        if(Right(f1) != f2) {
+        if(f1 != f2) {
           Left(ReplaceTransactionNodesError(
             s"Expected filter functions to give identical results " +
               s"but got f1=$f1, f2=$f2"))
         } else {
-          Right(f1)
+          f1
         }
       }
 
