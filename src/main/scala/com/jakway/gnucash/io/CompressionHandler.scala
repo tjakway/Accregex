@@ -40,7 +40,7 @@ object CompressionHandler {
       isCompressed <- inputIsCompressed(config.inputPath, config.verbosity)
     } yield {
       new GzipCompressionHandler(config.inputPath,
-        isCompressed, bufSize, config.verbosity)
+        isCompressed, config.compress, bufSize, config.verbosity)
     }
   }
 
@@ -73,6 +73,7 @@ object CompressionHandler {
 
 private class GzipCompressionHandler(inputPath: File,
                                  inputIsCompressed: Boolean,
+                                 compressOutput: Boolean,
                                  bufSize: Int,
                                  verbosity: Config.Verbosity)
   extends CompressionHandler {
@@ -116,7 +117,7 @@ private class GzipCompressionHandler(inputPath: File,
       }
     }
 
-    if (inputIsCompressed) {
+    if (compressOutput) {
       f(new GZIPOutputStream(_), "Error occurred while wrapping with GZIPOutputStream")
     } else {
       f(x => x, "Error occurred without wrapping with GZIPOutputStream")
