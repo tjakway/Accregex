@@ -4,8 +4,7 @@ import java.io._
 
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.error.{ValidateF, ValidateUsesTempDir, ValidationError}
-import com.jakway.gnucash.util.StreamReader
-import com.jakway.util.XMLUtils
+import com.jakway.util.{StreamReader, XMLUtils}
 import com.jakway.util.runner._
 
 import scala.util.{Failure, Success, Try}

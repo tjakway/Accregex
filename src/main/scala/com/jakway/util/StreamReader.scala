@@ -1,4 +1,4 @@
-package com.jakway.gnucash.util
+package com.jakway.util
 
 import java.io.{ByteArrayOutputStream, InputStream}
 

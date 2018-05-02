@@ -3,7 +3,7 @@ package com.jakway.gnucash.test
 import java.io.File
 
 import com.jakway.gnucash.error.{ValidateUsesTempDir, ValidationError}
-import com.jakway.gnucash.util.StreamReader
+import com.jakway.util.StreamReader
 
 object ResourceFiles {
   case class ResourceFilesError(override val msg: String)
