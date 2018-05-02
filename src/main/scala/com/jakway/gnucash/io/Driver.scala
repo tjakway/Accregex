@@ -1,6 +1,7 @@
 package com.jakway.gnucash.io
 
 import java.io._
+import java.nio.channels.Channels
 
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.error.ValidationError
@@ -95,20 +96,27 @@ class Driver(val config: ValidatedConfig) {
     case class OrigEqualsOutputError(override val msg: String)
       extends ValidationError(msg)
 
+    def mkInputStream(raf: RandomAccessFile): InputStream = {
+      raf.seek(0)
+      Channels.newInputStream(raf.getChannel())
+    }
+
     for {
       //decompress the input stream if it's gzipped
       //otherwise return it unchanged
       compressionHandler <- CompressionHandler.newGZIPHandler(config)
       //xmlInputStream <- compressionHandler.inputToStream()
-      xmlInputStream = new FileInputStream(config.inputPath)
+      //xmlInputStream = new FileInputStream(config.inputPath)
+      raf = new RandomAccessFile(config.inputPath, "r")
 
       (inputValidator, outputValidator) = XMLValidator.getValidators(config)
       //optionally validate the input file against the schema first
       //(note: XMLValidator will write the decompressed XML out to a temporary file)
-      _ <- inputValidator.validate(config.inputPath.getName(), xmlInputStream)
+      _ <- inputValidator.validate(config.inputPath.getName(),
+        mkInputStream(raf))
 
       //parse the input stream as XML
-      rootNode <- loadGnucashXML(xmlInputStream)
+      rootNode <- loadGnucashXML(mkInputStream(raf))
       bookNode <- parser.findBookNode(rootNode)(GnucashXMLLoadError.apply(_))
 
       //parse & extract the accounts
