@@ -99,7 +99,8 @@ class Driver(val config: ValidatedConfig) {
       //decompress the input stream if it's gzipped
       //otherwise return it unchanged
       compressionHandler <- CompressionHandler.newGZIPHandler(config)
-      xmlInputStream <- compressionHandler.inputToStream()
+      //xmlInputStream <- compressionHandler.inputToStream()
+      xmlInputStream = new FileInputStream(config.inputPath)
 
       (inputValidator, outputValidator) = XMLValidator.getValidators(config)
       //optionally validate the input file against the schema first
