@@ -1,13 +1,13 @@
 {
     "Food Rule" : {
         "pattern" : "(?i).*food.*",
-        "sourceAccount" : "Assets:Current Assets:B of A Checking Account",
+        "sourceAccount" : "Assets:Current Assets:Checking Account",
         "destAccount" : "Expenses:Dining"
     },
 
     "Seamless Rule" : {
         "pattern" : ".*Seamless.*",
-        "sourceAccount" : "Assets:Current Assets:B of A Checking Account",
+        "sourceAccount" : "Assets:Current Assets:Checking Account",
         "destAccount" : "Expenses:Dining:Delivery"
     }
 }
