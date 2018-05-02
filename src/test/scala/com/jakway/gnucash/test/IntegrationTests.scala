@@ -52,6 +52,7 @@ class IntegrationTests
     foodTestConf.copy(checkDiff = false))
 
 
+  //TODO: need to call run() instead of runEither()
   runFoodTest("pass the food test when outputting a summary",
     foodTestConf.copy(verbosity = foodTestConf.verbosity.withPrintSummary(true)))
 }
