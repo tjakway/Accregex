@@ -33,6 +33,24 @@ class RuleApplicator(val allAccounts: Map[String, LinkedAccount],
   }
 
   /**
+    * group rules by source account
+    */
+  private lazy val partitionedRules: Map[LinkedAccount, Set[LinkedTransactionRule]] = {
+    val empty: Map[LinkedAccount, Set[LinkedTransactionRule]] = Map.empty
+
+    rules.foldLeft(empty) {
+      case (acc, thisRule) => {
+        val thisSourceAccount = thisRule.sourceAccount
+        val thisSourceAccountRules = acc.getOrElse(thisSourceAccount, Set.empty[LinkedTransactionRule])
+
+        acc.updated(thisSourceAccount, thisSourceAccountRules)
+      }
+    }
+  }
+
+  lazy val numSourceAccounts = partitionedRules.keys.size
+
+  /**
     *
     * @param transactionInput
     * @return the rule to apply or None if no rule matches
