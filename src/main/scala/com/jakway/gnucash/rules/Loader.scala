@@ -1,14 +1,18 @@
 package com.jakway.gnucash.rules
 
+import java.util.regex.PatternSyntaxException
+
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jakway.gnucash.error.ValidationError
 import com.jakway.gnucash.{Config, ValidatedConfig}
 import com.jakway.gnucash.parser.rules.UnlinkedTransactionRule
+import com.jakway.util.{StackTraceString, Util}
 import org.json4s.JObject
-import org.json4s.JsonAST.JValue
+import org.json4s.JsonAST.{JString, JValue}
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
 
 class TransactionRuleLoaderError(override val msg: String)
@@ -28,6 +32,11 @@ class Loader(verbosity: Config.Verbosity, val srcToParse: String) {
 
   case class InvalidRootObjectError(override val msg: String)
     extends JsonParseError(msg)
+
+  case class ParseAccountPatternsError(val errors: Seq[String])
+    extends JsonParseError(s"Found the following errors while" +
+      s" parsing account patterns: " +
+      errors.reduce(_ + System.lineSeparator() + _))
 
   def parsePriority(obj: JObject): Either[ValidationError, Double] = {
     import org.json4s.Formats
@@ -55,6 +64,71 @@ class Loader(verbosity: Config.Verbosity, val srcToParse: String) {
 
       //otherwise use the default priority
       case None => Right(UnlinkedTransactionRule.defaultPriority)
+    }
+  }
+
+  def parseAccountPatterns(obj: JObject): Either[ValidationError, Map[String, Regex]] = {
+    val empty: (Seq[String], Seq[(String, Regex)]) = (Seq(), Seq())
+    val res = obj.values.foldLeft(empty) {
+
+      case ((errors, patterns), (patternName, JString(pattern))) => {
+        //try compiling the account name pattern as a regex expression and check for errors
+        val patternNameError: Option[String] =
+          if(patternName.trim.isEmpty) {
+            Some("Account pattern name cannot be empty")
+          } else {
+            None
+          }
+
+        val compileRes: Either[String, Regex] = try {
+          Right(Regex(pattern))
+        } catch {
+          case e: PatternSyntaxException => Left("Error while compiling regex for Account pattern" +
+            s"$patternName: " + StackTraceString.stackTraceToString(e))
+        }
+
+        val compileResError = compileRes match {
+          case Left(msg) => Seq(msg)
+          case _ => Seq()
+        }
+
+        val errorFound = patternNameError.isDefined || compileRes.isLeft
+
+        val newErrors = errors ++ patternNameError.toSeq ++ compileResError
+
+
+        if(errorFound) {
+          (newErrors, patterns)
+        } else {
+          (newErrors, patterns :+ (patternName, compileRes.right.get))
+        }
+      }
+
+        //error if the json object isn't a string
+      case ((errors, p), (patternName, jobj)) => {
+        val errMsg = "Expected account patterns to have the format 'pattern name' -> '<regex pattern>'" +
+          s" (expected a JSON string but got $jobj for pattern named $patternName)"
+        (errors :+ errMsg, p)
+      }
+    }
+
+    val names = res._2.map(_._1)
+    val duplicateNames = Util.countOccurrences(names).filter(_._2 > 1)
+
+    val duplicateNameErrors =
+      if(duplicateNames.isEmpty) {
+        Seq()
+      } else {
+        Seq("Found duplicate account pattern names:" + System.lineSeparator() +
+          duplicateNames.map {
+            case (name, count) => s"$name: $count times"
+          }.reduce(_ + System.lineSeparator() + _))
+      }
+
+    //bundle any errors we found and return
+    (res._1 ++ duplicateNameErrors, res._2) match {
+      case (Seq(), patterns) => Right(patterns.toMap)
+      case (errors, _) => Left(ParseAccountPatternsError(errors))
     }
   }
 
