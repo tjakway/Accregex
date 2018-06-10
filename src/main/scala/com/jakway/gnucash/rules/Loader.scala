@@ -67,70 +67,12 @@ class Loader(verbosity: Config.Verbosity, val srcToParse: String) {
     }
   }
 
-  def parseAccountPatterns(obj: JObject): Either[ValidationError, Map[String, Regex]] = {
-    val empty: (Seq[String], Seq[(String, Regex)]) = (Seq(), Seq())
-    val res = obj.values.foldLeft(empty) {
-
-      case ((errors, patterns), (patternName, JString(pattern))) => {
-        //try compiling the account name pattern as a regex expression and check for errors
-        val patternNameError: Option[String] =
-          if(patternName.trim.isEmpty) {
-            Some("Account pattern name cannot be empty")
-          } else {
-            None
-          }
-
-        val compileRes: Either[String, Regex] = try {
-          Right(Regex(pattern))
-        } catch {
-          case e: PatternSyntaxException => Left("Error while compiling regex for Account pattern" +
-            s"$patternName: " + StackTraceString.stackTraceToString(e))
-        }
-
-        val compileResError = compileRes match {
-          case Left(msg) => Seq(msg)
-          case _ => Seq()
-        }
-
-        val errorFound = patternNameError.isDefined || compileRes.isLeft
-
-        val newErrors = errors ++ patternNameError.toSeq ++ compileResError
-
-
-        if(errorFound) {
-          (newErrors, patterns)
-        } else {
-          (newErrors, patterns :+ (patternName, compileRes.right.get))
-        }
-      }
-
-        //error if the json object isn't a string
-      case ((errors, p), (patternName, jobj)) => {
-        val errMsg = "Expected account patterns to have the format 'pattern name' -> '<regex pattern>'" +
-          s" (expected a JSON string but got $jobj for pattern named $patternName)"
-        (errors :+ errMsg, p)
-      }
-    }
-
-    val names = res._2.map(_._1)
-    val duplicateNames = Util.countOccurrences(names).filter(_._2 > 1)
-
-    val duplicateNameErrors =
-      if(duplicateNames.isEmpty) {
-        Seq()
-      } else {
-        Seq("Found duplicate account pattern names:" + System.lineSeparator() +
-          duplicateNames.map {
-            case (name, count) => s"$name: $count times"
-          }.reduce(_ + System.lineSeparator() + _))
-      }
-
-    //bundle any errors we found and return
-    (res._1 ++ duplicateNameErrors, res._2) match {
-      case (Seq(), patterns) => Right(patterns.toMap)
-      case (errors, _) => Left(ParseAccountPatternsError(errors))
-    }
-  }
+  def parseAccountPatterns:
+    JObject => Either[ValidationError, Map[String, Regex]] =
+      Loader.parseOptionalField(
+        Loader.accountPatternKey,
+        Loader.parseAccountPatternsObject _,
+        Right(Map.empty))
 
   /**
     * get a key from the map and convert it to the indicated type
@@ -183,7 +125,6 @@ class Loader(verbosity: Config.Verbosity, val srcToParse: String) {
 
     jsonOpt match {
       case None => {
-
         Left(new JsonParseError(s"Could not parse $srcToParse as JSON"))
       }
       case Some(json) => {
@@ -220,6 +161,8 @@ class Loader(verbosity: Config.Verbosity, val srcToParse: String) {
 
 object Loader {
   val defaultRuleName = "Unnamed Rule"
+
+  val accountPatternKey = "accountPatterns"
 
   def loadFromFile(v: Config.Verbosity, path: String): Either[ValidationError, Seq[UnlinkedTransactionRule]] = {
     case class TransactionLoaderFileError(override val msg: String)
@@ -258,6 +201,77 @@ object Loader {
       assert(m.isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE))
 
       m
+    }
+  }
+
+  def parseOptionalField[A](fieldName: String,
+                            ifFound: JObject => A,
+                            default: A)(obj: JObject): A = {
+    (obj \ fieldName).extractOpt[JObject].map(ifFound).getOrElse(default)
+  }
+
+  def parseAccountPatternsObject(obj: JObject): Either[ValidationError, Map[String, Regex]] = {
+    val empty: (Seq[String], Seq[(String, Regex)]) = (Seq(), Seq())
+    val res = obj.values.foldLeft(empty) {
+
+      case ((errors, patterns), (patternName, JString(pattern))) => {
+        //try compiling the account name pattern as a regex expression and check for errors
+        val patternNameError: Option[String] =
+          if(patternName.trim.isEmpty) {
+            Some("Account pattern name cannot be empty")
+          } else {
+            None
+          }
+
+        val compileRes: Either[String, Regex] = try {
+          Right(Regex(pattern))
+        } catch {
+          case e: PatternSyntaxException => Left("Error while compiling regex for Account pattern" +
+            s"$patternName: " + StackTraceString.stackTraceToString(e))
+        }
+
+        val compileResError = compileRes match {
+          case Left(msg) => Seq(msg)
+          case _ => Seq()
+        }
+
+        val errorFound = patternNameError.isDefined || compileRes.isLeft
+
+        val newErrors = errors ++ patternNameError.toSeq ++ compileResError
+
+
+        if(errorFound) {
+          (newErrors, patterns)
+        } else {
+          (newErrors, patterns :+ (patternName, compileRes.right.get))
+        }
+      }
+
+      //error if the json object isn't a string
+      case ((errors, p), (patternName, jobj)) => {
+        val errMsg = "Expected account patterns to have the format 'pattern name' -> '<regex pattern>'" +
+          s" (expected a JSON string but got $jobj for pattern named $patternName)"
+        (errors :+ errMsg, p)
+      }
+    }
+
+    val names = res._2.map(_._1)
+    val duplicateNames = Util.countOccurrences(names).filter(_._2 > 1)
+
+    val duplicateNameErrors =
+      if(duplicateNames.isEmpty) {
+        Seq()
+      } else {
+        Seq("Found duplicate account pattern names:" + System.lineSeparator() +
+          duplicateNames.map {
+            case (name, count) => s"$name: $count times"
+          }.reduce(_ + System.lineSeparator() + _))
+      }
+
+    //bundle any errors we found and return
+    (res._1 ++ duplicateNameErrors, res._2) match {
+      case (Seq(), patterns) => Right(patterns.toMap)
+      case (errors, _) => Left(ParseAccountPatternsError(errors))
     }
   }
 }
