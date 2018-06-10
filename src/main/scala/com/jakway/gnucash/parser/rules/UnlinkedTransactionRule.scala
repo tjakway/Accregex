@@ -1,3 +1,8 @@
+/**
+  * this file is in [com.jakway.gnucash.]parser.rules instead of [com.jakway.gnucash.]rules because
+  * the Unlinked version of the rule only exists while we're parsing the transaction rules file
+  * it represents the raw (unvalidated) fields of the user's configuration file
+  */
 package com.jakway.gnucash.parser.rules
 
 import java.util.regex.PatternSyntaxException
@@ -13,13 +18,13 @@ import scala.util.matching.Regex
   * the raw output of parsing a rule from the user's json config
   * @param pattern
   * @param priority
-  * @param sourceAccount
+  * @param sourceAccountPattern a regex that determines whether this rule applies to a source account
   * @param destAccount
   */
 case class UnlinkedTransactionRule(ruleName: String,
                                    pattern: String,
                                    priority: String,
-                                   sourceAccount: String,
+                                   sourceAccountPattern: String,
                                    destAccount: String)
 
 object UnlinkedTransactionRule {
