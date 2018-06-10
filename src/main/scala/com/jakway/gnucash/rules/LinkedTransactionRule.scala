@@ -10,24 +10,37 @@ import scala.util.matching.Regex
 import scala.xml.{Elem, Node, Text}
 
 
+trait SourceAccountMatcher {
+  def sourceAccountMatches(account: LinkedAccount): Boolean
+}
+
+abstract class SourceAccountRegex(val sourceAccountPattern: Regex)
+  extends SourceAccountMatcher {
+
+  override def sourceAccountMatches(account: LinkedAccount): Boolean =
+    //see https://stackoverflow.com/questions/3021813/how-to-check-whether-a-string-fully-matches-a-regex-in-scala
+    sourceAccountPattern.pattern.matcher(account.fullName).matches()
+}
+
+
 /**
   *
   * @param pattern
   * @param priority
-  * @param sourceAccount
+  * @param sourceAccountPattern a regex object that determines whether a source account matches
   * @param destAccount the account we're transferring to if the rule matches
   */
 case class LinkedTransactionRule(ruleName: String,
                                  pattern: Regex,
                                  priority: Double,
-                                 sourceAccount: LinkedAccount,
-                                 destAccount: LinkedAccount) {
+                                 override val sourceAccountPattern: Regex,
+                                 destAccount: LinkedAccount)
+  extends SourceAccountRegex(sourceAccountPattern) {
   import com.jakway.gnucash.parser.xml.NodeTests._
 
   case class LinkedTransactionRuleError(override val msg: String)
     extends ValidationError(msg)
   implicit def errorType: String => ValidationError = LinkedTransactionRuleError.apply
-
 
   /**
     * TODO: handle debits and credits differently
