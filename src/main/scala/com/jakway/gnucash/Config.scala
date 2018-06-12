@@ -171,7 +171,7 @@ case class UnvalidatedConfig(inputPath: String,
 
 object UnvalidatedConfig {
   val default: UnvalidatedConfig =
-    UnvalidatedConfig("", "rules.conf", None, true, true, false, false, "Unspecified",
+    UnvalidatedConfig("", "rules.json", None, true, true, false, false, "Unspecified",
       None, true, Verbosity.default)
 
   val parser = new scopt.OptionParser[UnvalidatedConfig](progName) {
