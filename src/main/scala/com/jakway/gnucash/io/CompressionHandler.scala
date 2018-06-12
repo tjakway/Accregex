@@ -3,7 +3,7 @@ package com.jakway.gnucash.io
 import java.io.{File, FileInputStream, InputStream, OutputStream}
 import java.util.zip.{GZIPInputStream, GZIPOutputStream, ZipException}
 
-import com.jakway.gnucash.{Config, ValidatedConfig}
+import com.jakway.gnucash.{Config, ValidatedConfig, io}
 import com.jakway.gnucash.error.{ValidateUsesTempDir, ValidationError}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -20,6 +20,7 @@ trait CompressionHandler {
   def wrapOutputStream(os: OutputStream): Either[ValidationError, OutputStream]
 }
 
+
 object CompressionHandler {
   private val bufSize: Int = 16384
   private val logger: Logger = LoggerFactory.getLogger(classOf[CompressionHandler])
@@ -33,9 +34,18 @@ object CompressionHandler {
   case class WrapOutputStreamError(override val msg: String)
     extends CompressionHandlerError(msg)
 
+  /**
+    * get the compression handler appropriate for this configuration
+    * @param config
+    * @return
+    */
+  def apply(config: ValidatedConfig): Either[ValidationError, CompressionHandler] = {
+    //TODO: fix compression handling, currently ignoring all compression settings
+    Right(new NoCompression(config.inputPath))
+  }
 
 
-  def newGZIPHandler(config: ValidatedConfig): Either[ValidationError, CompressionHandler] = {
+  private def newGZIPHandler(config: ValidatedConfig): Either[ValidationError, CompressionHandler] = {
     for {
       isCompressed <- inputIsCompressed(config.inputPath, config.verbosity)
     } yield {
@@ -70,6 +80,17 @@ object CompressionHandler {
   }
 }
 
+
+private class NoCompression(val input: File) extends CompressionHandler {
+  override def inputToStream(): Either[ValidationError, InputStream] =
+    Try(new FileInputStream(input)) match {
+      case Success(i) => Right(i)
+      case Failure(t) => Left(
+        new io.CompressionHandler.CompressionHandlerError(s"Exception thrown while opening ${input}"))
+    }
+
+  override def wrapOutputStream(os: OutputStream): Either[ValidationError, OutputStream] = Right(os)
+}
 
 private class GzipCompressionHandler(inputPath: File,
                                  inputIsCompressed: Boolean,

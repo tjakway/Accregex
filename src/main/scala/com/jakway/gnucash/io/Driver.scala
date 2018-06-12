@@ -98,7 +98,7 @@ class Driver(val config: ValidatedConfig) {
     for {
       //decompress the input stream if it's gzipped
       //otherwise return it unchanged
-      compressionHandler <- CompressionHandler.newGZIPHandler(config)
+      compressionHandler <- CompressionHandler(config)
       //xmlInputStream <- compressionHandler.inputToStream()
       xmlInputStream = new FileInputStream(config.inputPath)
 
