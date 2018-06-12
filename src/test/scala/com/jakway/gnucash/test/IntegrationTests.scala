@@ -30,7 +30,7 @@ class IntegrationTests
     UnvalidatedConfig.default.verbosity.withDebug()
   )
 
-  "The Driver" should "pass the food test" in {
+  /*"The Driver"*/ ignore should "pass the food test" in {
     new Driver(foodTestConf).runEither() shouldEqual Right(null)
   }
 }
