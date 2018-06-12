@@ -153,8 +153,7 @@ case class UnvalidatedConfig(inputPath: String,
 
   def checkOutputFile(outFile: File): Either[String, File] = {
     iterateChecks(Seq(
-      (outFile.exists(), s"$outFile already exists"),
-      (!outFile.canWrite(), s"cannot write to $outFile")))(outFile)
+      (outFile.exists(), s"$outFile already exists")))(outFile)
   }
 
   def checkRuleInputFile(rules: File): Either[String, File] = {
