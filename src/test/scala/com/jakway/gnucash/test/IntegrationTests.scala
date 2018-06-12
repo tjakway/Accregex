@@ -30,7 +30,8 @@ class IntegrationTests
     UnvalidatedConfig.default.verbosity.withDebug()
   )
 
-  /*"The Driver"*/ ignore should "pass the food test" in {
-    new Driver(foodTestConf).runEither() shouldEqual Right(null)
+  "The Driver" should "pass the food test" in {
+    val r = new Driver(foodTestConf).runEither()
+    r shouldEqual Right(null)
   }
 }

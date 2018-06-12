@@ -9,7 +9,7 @@ import com.jakway.gnucash.parser.rules.{Transaction, UnlinkedTransactionRule}
 import com.jakway.gnucash.parser.xml.{AlwaysPassesDiff, FilterTransactionsDiff, NodeTests}
 import com.jakway.gnucash.rules.RuleApplicator.RuleApplicatorLogEvent
 import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
-import com.jakway.util.XMLUtils
+import com.jakway.util.{StreamReader, XMLUtils}
 
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
@@ -100,12 +100,17 @@ class Driver(val config: ValidatedConfig) {
       //otherwise return it unchanged
       compressionHandler <- CompressionHandler(config)
       //xmlInputStream <- compressionHandler.inputToStream()
-      xmlInputStream = new FileInputStream(config.inputPath)
+      //TODO: move into CompressionHandler
+      xmlInputStream <- StreamReader.readFileToByteArrayInputStream((config.inputPath, config.enc))(GnucashXMLLoadError.apply)
 
       (inputValidator, outputValidator) = XMLValidator.getValidators(config)
       //optionally validate the input file against the schema first
       //(note: XMLValidator will write the decompressed XML out to a temporary file)
       _ <- inputValidator.validate(config.inputPath.getName(), xmlInputStream)
+
+      //we get read errors if we don't reset the stream here...
+      //TODO: exception handling
+      _ <- Right(xmlInputStream.reset())
 
       //parse the input stream as XML
       rootNode <- loadGnucashXML(xmlInputStream)

@@ -1,7 +1,8 @@
 package com.jakway.util
 
-import java.io.{ByteArrayOutputStream, InputStream}
+import java.io._
 
+import com.jakway.gnucash.{Config, ValidatedConfig}
 import com.jakway.gnucash.error.{ValidateF, ValidationError}
 
 import scala.util.{Failure, Success, Try}
@@ -35,4 +36,30 @@ object StreamReader {
       }
     }
 
+
+  def readFileToByteArrayInputStream: ValidateF[(File, String), ByteArrayInputStream] =
+    (n: (File, String), errorType: String => ValidationError) => {
+
+      val (f: File, encoding: String) = n
+
+      for {
+        //open the stream
+        stream <- Try(new BufferedInputStream(new FileInputStream(f))) match {
+          case Success(x) => Right(x)
+          case Failure(t) => Left(errorType(s"Could not open stream for file $f").withCause(t))
+        }
+
+        //read the data
+        data <- readStream(stream)(errorType)
+
+        //close the stream
+        _ <- Try(stream.close()) match {
+          case Success(_) => Right(())
+          case Failure(t) => Left(errorType(s"Could not close stream for file $f").withCause(t))
+        }
+      } yield {
+        //wrap the read data in a new stream
+        new ByteArrayInputStream(data.getBytes(encoding))
+      }
+    }
 }

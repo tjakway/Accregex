@@ -1,6 +1,6 @@
 package com.jakway.gnucash.io
 
-import java.io.{File, FileInputStream, InputStream, OutputStream}
+import java.io._
 import java.util.zip.{GZIPInputStream, GZIPOutputStream, ZipException}
 
 import com.jakway.gnucash.{Config, ValidatedConfig, io}
@@ -18,6 +18,9 @@ import scala.util.{Failure, Success, Try}
 trait CompressionHandler {
   def inputToStream(): Either[ValidationError, InputStream]
   def wrapOutputStream(os: OutputStream): Either[ValidationError, OutputStream]
+
+
+  def mkStream(i: File): InputStream = new BufferedInputStream(new FileInputStream(i))
 }
 
 
@@ -83,7 +86,7 @@ object CompressionHandler {
 
 private class NoCompression(val input: File) extends CompressionHandler {
   override def inputToStream(): Either[ValidationError, InputStream] =
-    Try(new FileInputStream(input)) match {
+    Try(mkStream(input)) match {
       case Success(i) => Right(i)
       case Failure(t) => Left(
         new io.CompressionHandler.CompressionHandlerError(s"Exception thrown while opening ${input}"))
@@ -101,11 +104,9 @@ private class GzipCompressionHandler(inputPath: File,
   import CompressionHandler._
   val logger: Logger = LoggerFactory.getLogger(getClass())
 
-  def mkStream() = new FileInputStream(inputPath)
-
 
   override def inputToStream(): Either[ValidationError, InputStream] = {
-    lazy val origStream = mkStream()
+    lazy val origStream = mkStream(inputPath)
 
     Try {
       new GZIPInputStream(origStream, bufSize)
@@ -119,7 +120,7 @@ private class GzipCompressionHandler(inputPath: File,
 
         //reopen the stream just to be sure
         origStream.close()
-        mkStream()
+        mkStream(inputPath)
       }
     }
   } match {
