@@ -36,13 +36,8 @@ class IntegrationTests
   }
 
   "The Driver" should "pass the food test" in {
-<<<<<<< HEAD
-    val r = new Driver(foodTestConf).runEither()
-    r shouldEqual Right(null)
-=======
     //see http://www.scalatest.org/user_guide/other_goodies#eitherValues
     new Driver(foodTestConf).runEither() should be ('right)
->>>>>>> origin/scala-integration-tests
   }
 
   runFoodTest("pass the food test when skipping input validation",
