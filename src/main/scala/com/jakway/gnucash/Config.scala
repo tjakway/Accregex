@@ -45,6 +45,7 @@ object Config {
 
 
   val accountNameSeparator: String = ":"
+  val rulesPath = "rules.json"
 }
 
 import Config._
@@ -52,7 +53,6 @@ import Config._
 case class ValidatedConfig(inputPath: File,
                            rulesPath: File,
                            outputPath: File,
-                           summarize: Boolean,
                            compress: Boolean,
                            skipInputValidation: Boolean,
                            skipOutputValidation: Boolean,
@@ -69,7 +69,6 @@ case class ValidatedConfig(inputPath: File,
 case class UnvalidatedConfig(inputPath: String,
                              rulesPath: String,
                              outputPath: Option[String],
-                             summarize: Boolean,
                              compress: Boolean,
                              skipInputValidation: Boolean,
                              skipOutputValidation: Boolean,
@@ -85,7 +84,7 @@ case class UnvalidatedConfig(inputPath: String,
       rules <-checkRuleInputFile(new File(rulesPath))
     } yield {
       ValidatedConfig(input, rules, out,
-        summarize, compress, skipInputValidation, skipOutputValidation,
+        compress, skipInputValidation, skipOutputValidation,
         targetAccount, tempDir, checkDiff, verbosity)
     }
   }
@@ -170,7 +169,7 @@ case class UnvalidatedConfig(inputPath: String,
 
 object UnvalidatedConfig {
   val default: UnvalidatedConfig =
-    UnvalidatedConfig("", "rules.json", None, true, true, false, false, "Unspecified",
+    UnvalidatedConfig("", Config.rulesPath, None, true, false, false, "Unspecified",
       None, true, Verbosity.default)
 
   val parser = new scopt.OptionParser[UnvalidatedConfig](progName) {
@@ -181,9 +180,9 @@ object UnvalidatedConfig {
       .text(s"The file to load transaction rules from (default=${default.rulesPath})")
 
     opt[Boolean]('s', "summarize")
-      .action((x, c) => c.copy(summarize = x))
-      //TODO
-      .text(s"(NOT IMPLEMENTED) Whether to print a summary of changes (default=${default.summarize})")
+      .action((x, c) => c.copy(verbosity = c.verbosity.withPrintSummary(true)))
+      .text(s"Whether to print a summary of changes " +
+        s"(default=${default.verbosity.printSummary})")
 
     opt[String]('i', "input")
       .action((x, c) => c.copy(inputPath = x))
@@ -224,9 +223,5 @@ object UnvalidatedConfig {
     opt[Unit]("debug")
       .action((x, c) => c.copy(verbosity = c.verbosity.withDebug(true)))
       .text(s"Enable debugging output (default=${default.verbosity.debug}")
-
-    opt[Boolean]("print-summary")
-      .action((x, c) => c.copy(verbosity = c.verbosity.withPrintSummary(true)))
-      .text(s"Enable debugging output (default=${default.verbosity.printSummary}")
   }
 }

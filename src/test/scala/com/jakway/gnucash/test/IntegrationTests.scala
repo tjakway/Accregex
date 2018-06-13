@@ -20,18 +20,44 @@ class IntegrationTests
     copyResourceToFile(foodTest),
     copyResourceToFile(foodTestRules),
     getTempFile(tempDir).right.get,
-    false,
-    false,
-    false,
-    false,
+    compress = false,
+    skipInputValidation = false,
+    skipOutputValidation = false,
     "Imbalance-USD",
     None,
-    true,
-    UnvalidatedConfig.default.verbosity.withDebug()
+    checkDiff = true,
+    UnvalidatedConfig.default.verbosity.withDebug(false)
   )
 
+  def runFoodTest(testName: String, conf: ValidatedConfig = foodTestConf) = {
+    it should testName in {
+      new Driver(conf).runEither() should be ('right)
+    }
+  }
+
   "The Driver" should "pass the food test" in {
+<<<<<<< HEAD
     val r = new Driver(foodTestConf).runEither()
     r shouldEqual Right(null)
+=======
+    //see http://www.scalatest.org/user_guide/other_goodies#eitherValues
+    new Driver(foodTestConf).runEither() should be ('right)
+>>>>>>> origin/scala-integration-tests
   }
+
+  runFoodTest("pass the food test when skipping input validation",
+    foodTestConf.copy(skipInputValidation = true))
+
+
+  runFoodTest("pass the food test when skipping output validation",
+    foodTestConf.copy(skipOutputValidation = true))
+
+
+  runFoodTest("pass the food test when skipping checkDiff",
+    foodTestConf.copy(checkDiff = false))
+
+
+  //TODO: need to call run() instead of runEither()
+  runFoodTest("pass the food test when outputting a summary",
+    foodTestConf.copy(verbosity = foodTestConf.verbosity.withPrintSummary(true)))
 }

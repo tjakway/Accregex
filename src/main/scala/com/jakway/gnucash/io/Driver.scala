@@ -1,6 +1,7 @@
 package com.jakway.gnucash.io
 
 import java.io._
+import java.nio.channels.Channels
 
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.error.ValidationError
@@ -95,22 +96,29 @@ class Driver(val config: ValidatedConfig) {
     case class OrigEqualsOutputError(override val msg: String)
       extends ValidationError(msg)
 
+    def resetInputStream(is: InputStream): Either[ValidationError, Unit] =
+      Try (is.reset()) match {
+        case Success(_) => Right(())
+        case Failure(t) => Left(throw new GnucashXMLLoadError("Failed to close XML input stream").withCause(t))
+      }
+
     for {
       //decompress the input stream if it's gzipped
       //otherwise return it unchanged
       compressionHandler <- CompressionHandler(config)
       //xmlInputStream <- compressionHandler.inputToStream()
       //TODO: move into CompressionHandler
-      xmlInputStream <- StreamReader.readFileToByteArrayInputStream((config.inputPath, config.enc))(GnucashXMLLoadError.apply)
+      xmlInputStream <- StreamReader
+        .readFileToByteArrayInputStream((config.inputPath, config.enc))(GnucashXMLLoadError.apply)
 
       (inputValidator, outputValidator) = XMLValidator.getValidators(config)
+
       //optionally validate the input file against the schema first
       //(note: XMLValidator will write the decompressed XML out to a temporary file)
       _ <- inputValidator.validate(config.inputPath.getName(), xmlInputStream)
 
       //we get read errors if we don't reset the stream here...
-      //TODO: exception handling
-      _ <- Right(xmlInputStream.reset())
+      _ <- resetInputStream(xmlInputStream)
 
       //parse the input stream as XML
       rootNode <- loadGnucashXML(xmlInputStream)
