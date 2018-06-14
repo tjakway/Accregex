@@ -5,6 +5,19 @@ import java.nio.file.Files
 
 import scala.util.{Failure, Success, Try}
 
+object UsesTempDir {
+
+  /**
+    * get or create a temp dir usable by the passed object
+    * @param u
+    * @tparam E
+    * @return
+    */
+  def mkTempDir[E <: WithCause[E]](u: UsesTempDir[E]): Either[E, File] = {
+    u.getTempDir()
+  }
+}
+
 trait UsesTempDir[E <: WithCause[E]] {
   /**
     * a user-specified temporary dir that will be checked first

@@ -1,10 +1,12 @@
 package com.jakway.gnucash.parser.xml
 
 import java.io.File
+import java.nio.file.Files
 
 import com.jakway.gnucash.error.{ValidateUsesTempDir, ValidationError}
 import com.jakway.gnucash.parser.rules.{Split, Transaction}
 import com.jakway.gnucash.util.PrintNode
+import com.jakway.util.error.UsesTempDir
 import org.w3c.dom.Node
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.diff.{DefaultNodeMatcher, Difference, ElementSelectors}
@@ -17,7 +19,7 @@ trait BeforeAfterDiff {
   def passes(): Either[ValidationError, Unit]
 }
 
-object SetsEqual {
+private object SetsEqual {
   def apply[A](cmp: (A, A) => Boolean)(left: Set[A], right: Set[A]): Boolean = {
     //two sets are equal if their lengths are the same and for every item in
     //set A there is a corresponding item in set B
@@ -74,12 +76,39 @@ object HasDiffEngine {
   class DiffError(override val msg: String) extends ValidationError(msg)
 }
 
-class FilterTransactionsDiff(override val originalXML: String, val originalTransactions: Set[Transaction],
-                             override val newXML: String, val newTransactions: Set[Transaction],
-                             val parseTransaction: scala.xml.Node => Either[ValidationError, Transaction],
-                             val tempDirParam: Option[File] = None)
-  extends HasDiffEngine {
-  import HasDiffEngine._
+object FilterTransactionsDiff {
+  val defaultTempDirPrefix: String = "accregextransactionfilter"
+
+  case class FilterTransactionsDiffConstructionError(override val msg: String)
+    extends ValidationError(msg)
+
+  def apply(originalXML: String, originalTransactions: Set[Transaction],
+            newXML: String, newTransactions: Set[Transaction],
+            parseTransaction: scala.xml.Node => Either[ValidationError, Transaction]):
+    Either[ValidationError, HasDiffEngine] = {
+
+    val tempDir = Try(Files.createTempDirectory(defaultTempDirPrefix)) match {
+      case Success(d) => Right(d)
+      case Failure(t) => Left(FilterTransactionsDiffConstructionError("Error while creating temp" +
+        s" dir with prefix $defaultTempDirPrefix for FilterTransactionsDiff")
+        .withCause(t))
+    }
+
+    tempDir.map( d =>
+      new FilterTransactionsDiff(originalXML,
+        originalTransactions, newXML, newTransactions, parseTransaction, Some(d.toFile)))
+  }
+}
+
+class FilterTransactionsDiff(override val originalXML: String,
+                                     val originalTransactions: Set[Transaction],
+                                     override val newXML: String,
+                                     val newTransactions: Set[Transaction],
+                                     val parseTransaction: scala.xml.Node =>
+                                                           Either[ValidationError, Transaction],
+                                     val tempDirParam: Option[File] = None)
+extends HasDiffEngine {
+import HasDiffEngine._
 
   case class TransactionsNotBijectiveError(override val msg: String)
     extends DiffError(msg)
@@ -151,7 +180,7 @@ class FilterTransactionsDiff(override val originalXML: String, val originalTrans
 
     override def usesTempDirErrorTypeCTOR: String => ModifiedTransactionFilterTempDirError =
       ModifiedTransactionFilterTempDirError.apply
-    override val defaultTempDirPrefix: String = "accregextransactionfilter"
+    override val defaultTempDirPrefix: String = FilterTransactionsDiff.defaultTempDirPrefix
 
     // XXX TODO:
     //repeatedly got SAXParserException: content not allowed in prolog
