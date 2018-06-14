@@ -82,21 +82,18 @@ object FilterTransactionsDiff {
   case class FilterTransactionsDiffConstructionError(override val msg: String)
     extends ValidationError(msg)
 
-  def apply(originalXML: String, originalTransactions: Set[Transaction],
-            newXML: String, newTransactions: Set[Transaction],
-            parseTransaction: scala.xml.Node => Either[ValidationError, Transaction]):
-    Either[ValidationError, HasDiffEngine] = {
-
-    val tempDir = Try(Files.createTempDirectory(defaultTempDirPrefix)) match {
-      case Success(d) => Right(d)
+  /**
+    * call this BEFORE constructing any FilterTransactionsDiff instances and reuse this
+    * every time we remake it
+    * @return
+    */
+  def mkTempDir(): Either[ValidationError, File] = {
+    Try(Files.createTempDirectory(defaultTempDirPrefix)) match {
+      case Success(d) => Right(d.toFile)
       case Failure(t) => Left(FilterTransactionsDiffConstructionError("Error while creating temp" +
         s" dir with prefix $defaultTempDirPrefix for FilterTransactionsDiff")
         .withCause(t))
     }
-
-    tempDir.map( d =>
-      new FilterTransactionsDiff(originalXML,
-        originalTransactions, newXML, newTransactions, parseTransaction, Some(d.toFile)))
   }
 }
 
@@ -106,7 +103,7 @@ class FilterTransactionsDiff(override val originalXML: String,
                                      val newTransactions: Set[Transaction],
                                      val parseTransaction: scala.xml.Node =>
                                                            Either[ValidationError, Transaction],
-                                     val tempDirParam: Option[File] = None)
+                                     val tempDirParam: File)
 extends HasDiffEngine {
 import HasDiffEngine._
 
@@ -119,7 +116,7 @@ import HasDiffEngine._
 
   override val nodeFilter: Option[Predicate[Node]] =
     Some(new ModifiedTransactionFilter(originalTransactions ++ newTransactions,
-      tempDirParam))
+      Some(tempDirParam)))
 
   private def checkTransactionsAreBijective: Either[ValidationError, Unit] = {
 
@@ -169,6 +166,9 @@ import HasDiffEngine._
   case class ModifiedTransactionFilterXMLLoadError(override val msg: String)
     extends ModifiedTransactionFilterError(msg)
 
+  case class ModifiedTransactionFilterCouldNotDeleteTempFile(f: File)
+    extends ModifiedTransactionFilterError(s"Could not delete temp file $f")
+
   /**
     * exclude the transactions we just modified from the comparison
     * @param toIgnore
@@ -181,6 +181,16 @@ import HasDiffEngine._
     override def usesTempDirErrorTypeCTOR: String => ModifiedTransactionFilterTempDirError =
       ModifiedTransactionFilterTempDirError.apply
     override val defaultTempDirPrefix: String = FilterTransactionsDiff.defaultTempDirPrefix
+
+    def deleteTempFile(f: File): Either[ValidationError, Unit] =
+      Try {
+        f.delete()
+      } match {
+        case Success(false) => Left(
+          ModifiedTransactionFilterCouldNotDeleteTempFile(f))
+        case Success(_) => Right(())
+        case Failure(t) => Left(ModifiedTransactionFilterCouldNotDeleteTempFile(f).withCause(t))
+      }
 
     // XXX TODO:
     //repeatedly got SAXParserException: content not allowed in prolog
@@ -197,6 +207,8 @@ import HasDiffEngine._
           case Failure(t) => Left(ModifiedTransactionFilterXMLLoadError(
             "Exception thrown, see cause for details").withCause(t))
         }
+
+        _ <- deleteTempFile(xmlFile)
       } yield n
     }
 

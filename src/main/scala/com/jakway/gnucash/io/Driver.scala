@@ -10,7 +10,7 @@ import com.jakway.gnucash.parser.rules.{Transaction, UnlinkedTransactionRule}
 import com.jakway.gnucash.parser.xml.{AlwaysPassesDiff, FilterTransactionsDiff, NodeTests}
 import com.jakway.gnucash.rules.RuleApplicator.RuleApplicatorLogEvent
 import com.jakway.gnucash.rules.{LinkedTransactionRule, RuleApplicator}
-import com.jakway.util.{StreamReader, XMLUtils}
+import com.jakway.util.{FileUtilsValidateF, StreamReader, XMLUtils}
 
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
@@ -32,6 +32,9 @@ object Driver {
   }
 
   case class WriteError(override val msg: String)
+    extends ValidationError(msg)
+
+  case class CheckDiffError(override val msg: String)
     extends ValidationError(msg)
 }
 
@@ -178,9 +181,15 @@ class Driver(val config: ValidatedConfig) {
         newTransactions <- ValidationError.accumulateAndWrap(
           newTransactions.map(parseTransaction))
 
+        //keep the temp dir in our scope
+        tempDir <- FilterTransactionsDiff.mkTempDir()
+
         _ <- new FilterTransactionsDiff(originalXMLString, originalTransactions.toSet,
                 newXMLString, newTransactions.toSet,
-                parseTransaction).passes()
+                parseTransaction, tempDir).passes()
+
+        //explicitly delete the temp dir
+        _ <- FileUtilsValidateF.rmAll(tempDir)(CheckDiffError.apply)
       } yield {}
     } else {
       new AlwaysPassesDiff().passes()

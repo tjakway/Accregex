@@ -27,7 +27,7 @@ class TestFilterTransactionsDiff(val regDocXML: Node) extends FlatSpec with Test
 
   override def getEngine(originalXML: String, newXML: String): HasDiffEngine =
     new FilterTransactionsDiff(originalXML,
-      Set(), newXML, Set(), _ => Right(null))
+      Set(), newXML, Set(), _ => Right(null), FilterTransactionsDiff.mkTempDir().right.get)
 }
 
 class TestXMLEqualDiff(val regDocXML: Node)
