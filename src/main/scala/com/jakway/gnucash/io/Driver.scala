@@ -1,7 +1,6 @@
 package com.jakway.gnucash.io
 
 import java.io._
-import java.nio.channels.Channels
 
 import com.jakway.gnucash.ValidatedConfig
 import com.jakway.gnucash.error.ValidationError
