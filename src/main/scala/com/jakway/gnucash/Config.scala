@@ -217,7 +217,7 @@ object UnvalidatedConfig {
       .text(s"The directory to store temporary files (default is that given by the operating system")
 
     opt[Boolean]("check-diff")
-      .action((x, c) => c.copy(checkDiff = true))
+      .action((x, c) => c.copy(checkDiff = x))
       .text(s"Whether to check the output file using XMLUnit (default=${default.checkDiff})")
 
     opt[Unit]("debug")
