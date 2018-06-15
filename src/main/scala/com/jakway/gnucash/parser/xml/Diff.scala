@@ -192,23 +192,14 @@ import HasDiffEngine._
         case Failure(t) => Left(ModifiedTransactionFilterCouldNotDeleteTempFile(f).withCause(t))
       }
 
-    // XXX TODO:
-    //repeatedly got SAXParserException: content not allowed in prolog
-    //exceptions when trying to call all varieties of scala.xml.XML.load(File)
-    //writing the XML out to file then loading it *does* work correctly
-    //but is VERY slow
-    //see https://github.com/scala/scala-xml/issues/95
     def stringToXML(s: String): Either[ValidationError, scala.xml.Node] = {
       for {
-        dir <- getTempDir()
-        xmlFile <- stringToTempFile(dir)(s)
-        n <- Try(scala.xml.XML.loadFile(xmlFile)) match {
+        n <- Try(scala.xml.XML.load(new java.io.StringReader(s))) match {
           case Success(n) => Right(n)
           case Failure(t) => Left(ModifiedTransactionFilterXMLLoadError(
             "Exception thrown, see cause for details").withCause(t))
         }
 
-        _ <- deleteTempFile(xmlFile)
       } yield n
     }
 
