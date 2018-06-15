@@ -218,7 +218,7 @@ object UnvalidatedConfig {
 
     opt[Boolean]("check-diff")
       .action((x, c) => c.copy(checkDiff = true))
-      .text(s"Whether to check the output file using XMLUnit (default=${default.checkDiff}")
+      .text(s"Whether to check the output file using XMLUnit (default=${default.checkDiff})")
 
     opt[Unit]("debug")
       .action((x, c) => c.copy(verbosity = c.verbosity.withDebug(true)))
