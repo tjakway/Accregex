@@ -180,7 +180,7 @@ object UnvalidatedConfig {
       .text(s"The file to load transaction rules from (default=${default.rulesPath})")
 
     opt[Boolean]('s', "summarize")
-      .action((x, c) => c.copy(verbosity = c.verbosity.withPrintSummary(true)))
+      .action((x, c) => c.copy(verbosity = c.verbosity.withPrintSummary(x)))
       .text(s"Whether to print a summary of changes " +
         s"(default=${default.verbosity.printSummary})")
 
