@@ -54,8 +54,8 @@ case class ValidatedConfig(inputPath: File,
                            rulesPath: File,
                            outputPath: File,
                            compress: Boolean,
-                           skipInputValidation: Boolean,
-                           skipOutputValidation: Boolean,
+                           validateInput: Boolean,
+                           validateOutput: Boolean,
                            targetAccount: String,
                            tempDir: Option[String],
                            checkDiff: Boolean,
@@ -70,8 +70,8 @@ case class UnvalidatedConfig(inputPath: String,
                              rulesPath: String,
                              outputPath: Option[String],
                              compress: Boolean,
-                             skipInputValidation: Boolean,
-                             skipOutputValidation: Boolean,
+                             validateInput: Boolean,
+                             validateOutput: Boolean,
                              targetAccount: String,
                              tempDir: Option[String],
                              checkDiff: Boolean,
@@ -84,7 +84,7 @@ case class UnvalidatedConfig(inputPath: String,
       rules <-checkRuleInputFile(new File(rulesPath))
     } yield {
       ValidatedConfig(input, rules, out,
-        compress, skipInputValidation, skipOutputValidation,
+        compress, validateInput, validateOutput,
         targetAccount, tempDir, checkDiff, verbosity)
     }
   }
@@ -199,13 +199,13 @@ object UnvalidatedConfig {
       .text(s"(NOT IMPLEMENTED) Whether to compress the output file (default=${default.compress})")
 
     opt[Boolean]("validate-input")
-        .action((x, c) => c.copy(skipInputValidation = x))
-        .text(s"Whether to check the input against our schema (default=${default.skipInputValidation})" +
+        .action((x, c) => c.copy(validateInput = x))
+        .text(s"Whether to check the input against our schema (default=${default.validateInput})" +
           s".  Note that this is only one of many checks.")
 
     opt[Boolean]("validate-output")
-      .action((x, c) => c.copy(skipOutputValidation = x))
-      .text(s"Whether to check the output against our schema (default=${default.skipOutputValidation})" +
+      .action((x, c) => c.copy(validateOutput = x))
+      .text(s"Whether to check the output against our schema (default=${default.validateOutput})" +
         s".  Note that this is only one of many checks.")
 
     opt[String]('t', "target-account")
