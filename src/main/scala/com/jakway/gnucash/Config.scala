@@ -214,7 +214,7 @@ object UnvalidatedConfig {
 
     opt[String]("temp-dir")
       .action((x, c) => c.copy(tempDir = Some(x)))
-      .text(s"The directory to store temporary files (default is that given by the operating system")
+      .text(s"The directory to store temporary files (default is that given by the operating system)")
 
     opt[Boolean]("check-diff")
       .action((x, c) => c.copy(checkDiff = x))
@@ -222,6 +222,6 @@ object UnvalidatedConfig {
 
     opt[Unit]("debug")
       .action((x, c) => c.copy(verbosity = c.verbosity.withDebug(true)))
-      .text(s"Enable debugging output (default=${default.verbosity.debug}")
+      .text(s"Enable debugging output (default=${default.verbosity.debug})")
   }
 }
