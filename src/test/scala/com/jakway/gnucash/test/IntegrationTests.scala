@@ -21,8 +21,8 @@ class IntegrationTests
     copyResourceToFile(foodTestRules),
     getTempFile(tempDir).right.get,
     compress = false,
-    skipInputValidation = false,
-    skipOutputValidation = false,
+    validateInput = true,
+    validateOutput = true,
     "Imbalance-USD",
     None,
     checkDiff = true,
@@ -41,11 +41,11 @@ class IntegrationTests
   }
 
   runFoodTest("pass the food test when skipping input validation",
-    foodTestConf.copy(skipInputValidation = true))
+    foodTestConf.copy(validateInput = false))
 
 
   runFoodTest("pass the food test when skipping output validation",
-    foodTestConf.copy(skipOutputValidation = true))
+    foodTestConf.copy(validateOutput = false))
 
 
   runFoodTest("pass the food test when skipping checkDiff",
