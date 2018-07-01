@@ -2,8 +2,7 @@ package com.jakway.gnucash.parser.xml
 
 import com.jakway.gnucash.error.{ValidateF, ValidationError}
 import com.jakway.util.XMLUtils
-
-import scala.xml.{Node, NodeSeq}
+import org.w3c.dom.Node
 
 /**
   * the downside to using SAM here is that to call other ValidationF's from a ValidationF we need to
@@ -21,8 +20,7 @@ object NodeTests {
       Right(s.head)
     } else if (s.isEmpty) {
       Left(errorType(msg + "empty seq"))
-    }
-    else {
+    } else {
       Left(errorType(msg + s.toString))
     }
   }
@@ -69,25 +67,11 @@ object NodeTests {
     (t: (Node, Node), errorType: String => ValidationError) => {
       val (left, right) = t
 
-      def err(check: String) =
-        Left(errorType("Error in checkNodesNotEqual: expected left != right but" +
-        s" $left == $right (failed check $check)"))
-
-      //exhaustively check the nodes aren't equal and note which comparison fails
-      if(!left.xml_!=(right)) {
-        err("!left.xml_!=(right)")
-      } else if(!right.xml_!=(left)) {
-        err("!right.xml_!=(left)")
-      } else if(left.xml_==(right)) {
-        err("left.xml_==(right)")
-      } else if(right.xml_==(left)) {
-        err("right.xml_==(left)")
-      } else if(left == right) {
-        err("left == right")
-      } else if(right == left) {
-        err("right == left")
-      } else {
+      if(left == right) {
         Right(())
+      } else {
+        Left(errorType("Error in checkNodesNotEqual: expected left != right but" +
+          s" left = $left, right = $right"))
       }
     }
 
@@ -96,7 +80,7 @@ object NodeTests {
     */
   def getNodeText: ValidateF[Node, String] =
     (n: Node, errorType: String => ValidationError) => {
-      val text = n.text.trim
+      val text = n.getTextContent.trim
       if(text.isEmpty) {
         Left(errorType(s"$n has no text"))
       } else {
@@ -104,7 +88,7 @@ object NodeTests {
       }
   }
 
-  def hasSubNodes: ValidateF[(Node, String), NodeSeq] =
+  def hasSubNodes: ValidateF[(Node, String), Seq[Node]] =
     //scala lacks automatic tuple unboxing so we have to do it manually
     //it also doesn't have variadic type parameters which would obviate the
     //need for this
@@ -112,10 +96,10 @@ object NodeTests {
 
     val (root: Node, name: String) = t
 
-    val sub = (root \ name)
-    sub.isEmpty match {
+    val subNodes = XMLUtils.nodeListToSeq(root.getChildNodes).filter(_.getNodeName == name)
+    subNodes.isEmpty match {
       case true => Left(errorType(s"could not find subnode of $root named $name"))
-      case false => Right(sub)
+      case false => Right(subNodes)
     }
   }
 

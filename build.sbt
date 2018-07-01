@@ -10,11 +10,6 @@ libraryDependencies ++=
       "ch.qos.logback"  %  "logback-classic"    % "1.2.1",
       "com.github.scopt" %% "scopt" % "3.5.0",
 
-
-      //scala XML standard library
-      //https://mvnrepository.com/artifact/org.scala-lang.modules/scala-xml
-      "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
-
       //transaction rule parsing
       "org.json4s" %% "json4s-native" % "3.5.3",
       //need it for producing JSON from the DSL

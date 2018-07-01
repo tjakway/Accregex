@@ -3,12 +3,32 @@ package com.jakway.util
 import java.io.StringWriter
 
 import com.jakway.gnucash.error.ValidationError
+import org.w3c.dom.{Node, NodeList}
 
-import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
-import scala.xml.{Node, PCData}
 
 object XMLUtils {
+
+  /**
+    * copy the list into a seq
+    * @param list
+    * @return
+    */
+  def nodeListToSeq(list: NodeList): Seq[Node] = {
+    if(list.getLength == 0) {
+      Seq()
+    } else {
+      import scala.collection.mutable
+      val buf: mutable.ArrayBuffer[Node] = new mutable.ArrayBuffer(list.getLength)
+
+      for(i <- 0 to list.getLength) {
+        buf.:+(list.item(i))
+      }
+
+      buf
+    }
+  }
+
   def searchNode(f: Node => Boolean)(top: Node): Seq[Node] = {
 
     /**
@@ -24,7 +44,7 @@ object XMLUtils {
         acc
       }
 
-      thisNode.child match {
+      nodeListToSeq(thisNode.getChildNodes) match {
         case Seq() => nextAcc
         case childNodes@_ => childNodes.foldLeft(nextAcc)(helper)
       }
@@ -33,8 +53,11 @@ object XMLUtils {
     helper(Seq(), top)
   }
 
+  def isPCData(n: Node): Boolean =
+    n.getNodeType() == Node.CDATA_SECTION_NODE
+
   def filterPCData(c: TraversableOnce[Node]): TraversableOnce[Node] =
-    c.filter(n => !(n.isInstanceOf[PCData] || n.label == "#PCDATA"))
+    c.filter(!isPCData(_))
 
   def nodeToString(node: Node): Either[ValidationError, String] = {
     case class NodeToStringError(override val msg: String)
