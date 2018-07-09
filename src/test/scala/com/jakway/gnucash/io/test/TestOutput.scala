@@ -55,6 +55,8 @@ object TestOutput {
       checkResults
     }
   }
+
+  def assertAndDeleteFile = checkAndDeleteFile(Seq())
 }
 import TestOutput._
 
