@@ -49,14 +49,14 @@ object TestOutput {
       checkResults match {
         case Left(errs) => TestOutputException(s"At least 2 errors occurred: `${errs.msg}` then " +
           s"`$couldNotDeleteMsg`")
-        case Right(()) => TestOutputException(couldNotDeleteMsg)
+        case Right(_) => TestOutputException(couldNotDeleteMsg)
       }
     } else {
-      checkResults
+      Unit
     }
   }
 
-  def assertAndDeleteFile = checkAndDeleteFile(Seq())
+  def assertAndDeleteFile = checkAndDeleteFile(Seq()) _
 }
 import TestOutput._
 
