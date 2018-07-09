@@ -30,9 +30,6 @@ object Driver {
     def apply: String => LoadTransactionNodesError = new LoadTransactionNodesError(_)
   }
 
-  case class WriteError(override val msg: String)
-    extends ValidationError(msg)
-
   case class CheckDiffError(override val msg: String)
     extends ValidationError(msg)
 }
@@ -70,29 +67,6 @@ class Driver(val config: ValidatedConfig) {
 
 
 
-  class Output(val compressionHandler: CompressionHandler,
-               val node: scala.xml.Node,
-               val events: Seq[RuleApplicatorLogEvent])
-
-
-  def write(o: Output): Either[ValidationError, File] = {
-    def wrap[A](t: Try[A], onError: String): Either[ValidationError, A] = t match {
-      case Success(r) => Right(r)
-      case Failure(t) => Left(WriteError(onError).withCause(t))
-    }
-
-    for {
-      fos <- wrap(Try { new FileOutputStream(config.outputPath) },
-        s"Error opening ${config.outputPath}")
-      os <- o.compressionHandler.wrapOutputStream(fos)
-      osw <- wrap(Try { new OutputStreamWriter(os, config.enc) },
-        s"Error opening OutputStreamWriter around ${config.outputPath}")
-      _ <- wrap(Try { XML.write(osw, o.node, config.enc, true, null) },
-        s"Error while writing XML node to OutputStreamWriter")
-    } yield {
-      config.outputPath
-    }
-  }
 
   def runEither(): Either[ValidationError, Output] = {
     case class OrigEqualsOutputError(override val msg: String)
