@@ -42,7 +42,7 @@ class Driver(val config: ValidatedConfig) {
     {
       for {
         output <- runEither()
-        _ <- write(output)
+        _ <- output.write(config.outputPath, config.enc)
       } yield {
         output
       }
