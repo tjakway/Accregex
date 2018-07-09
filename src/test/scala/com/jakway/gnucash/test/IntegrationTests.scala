@@ -8,26 +8,31 @@ import org.scalatest.{FlatSpec, Matchers}
 object IntegrationTests {
   case class IntegrationTestError(override val msg: String)
     extends ValidationError(msg)
+
+
+  trait HasFoodTestConf extends ResourceFiles {
+    val foodTestConf =  ValidatedConfig(
+      copyResourceToFile(foodTest),
+      copyResourceToFile(foodTestRules),
+      getTempFile(tempDir).right.get,
+      compress = false,
+      validateInput = true,
+      validateOutput = true,
+      "Imbalance-USD",
+      None,
+      checkDiff = true,
+      UnvalidatedConfig.default.verbosity.withDebug(false)
+    )
+  }
 }
 import IntegrationTests._
 
 class IntegrationTests
   extends FlatSpec
     with Matchers
-    with ResourceFiles {
+    with ResourceFiles
+    with HasFoodTestConf {
 
-  val foodTestConf = ValidatedConfig(
-    copyResourceToFile(foodTest),
-    copyResourceToFile(foodTestRules),
-    getTempFile(tempDir).right.get,
-    compress = false,
-    validateInput = true,
-    validateOutput = true,
-    "Imbalance-USD",
-    None,
-    checkDiff = true,
-    UnvalidatedConfig.default.verbosity.withDebug(false)
-  )
 
   def runFoodTest(testName: String, conf: ValidatedConfig = foodTestConf) = {
     it should testName in {

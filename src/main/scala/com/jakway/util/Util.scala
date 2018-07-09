@@ -3,6 +3,7 @@ package com.jakway.util
 import java.io.File
 
 import com.jakway.gnucash.error.{ValidateF, ValidationError}
+import com.jakway.gnucash.io.ErrorPrinter
 
 import scala.util.{Failure, Success, Try}
 
@@ -19,6 +20,26 @@ object Util {
   def either[A, B, C](a: Either[A, B])(ifLeft: A => C)(ifRight: B => C): C = a match {
     case Right(x) => ifRight(x)
     case Left(y) => ifLeft(y)
+  }
+
+  def checkAll[A, E](errorType: String => E)
+                    (checks: Seq[A => Either[String, Unit]])
+                    (objectToCheck: A): Either[E, A] = {
+
+    val empty: Seq[String] = Seq()
+    val allFailedChecks = checks.foldLeft(empty) {
+      case (failedChecks, thisCheck) => thisCheck(objectToCheck) match {
+        case Left(newFailureMessage) => failedChecks :+ newFailureMessage
+        case Right(()) => failedChecks
+      }
+    }
+
+    //return the object if all checks passed, otherwise return the errors
+    if(allFailedChecks.isEmpty) {
+      Right(objectToCheck)
+    } else {
+      Left(errorType("All failure messages: " + ErrorPrinter.formatMultipleErrorMessages(allFailedChecks)))
+    }
   }
 }
 

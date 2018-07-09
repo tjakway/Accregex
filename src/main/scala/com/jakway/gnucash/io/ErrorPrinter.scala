@@ -36,4 +36,10 @@ object ErrorPrinter {
     s"Throwable of type ${t.getClass().getCanonicalName}" +
       " with message " + t.getMessage + " with stack trace " +
       StackTraceString.stackTraceToString(t)
+
+  def formatMultipleErrorMessages(msgs: Seq[String]) = {
+    msgs.zipWithIndex.map {
+      case (msg, index) => s"$index: $msg"
+    }.reduce(_ + System.lineSeparator() + _)
+  }
 }
