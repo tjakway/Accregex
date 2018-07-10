@@ -3,10 +3,15 @@ package com.jakway.gnucash.io.test
 import java.io.File
 
 import com.jakway.gnucash.error.{MultiValidationError, ValidationError}
+import com.jakway.gnucash.io.Driver
 import com.jakway.gnucash.test.IntegrationTests.HasFoodTestConf
 import com.jakway.gnucash.test.ResourceFiles
 import com.jakway.util.Util
+import javax.xml.parsers.{DocumentBuilder, DocumentBuilderFactory}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import org.w3c.dom.Document
+
+import scala.util.Try
 
 object TestOutput {
   case class TestOutputException(override val msg: String)
@@ -57,6 +62,12 @@ object TestOutput {
   }
 
   def assertAndDeleteFile = checkAndDeleteFile(Seq()) _
+
+  def canOpenXML(file: File): Boolean = Try {
+    val dbf: DocumentBuilderFactory = DocumentBuilderFactory.newInstance()
+    val db: DocumentBuilder = dbf.newDocumentBuilder()
+    db.parse(file).toString
+  }.isSuccess
 }
 import TestOutput._
 
@@ -67,6 +78,14 @@ class TestOutput
     with HasFoodTestConf {
 
   "Output" should "write the food test output to file" in {
-    //assertAndDeleteFile()
+    val tempOutputPath = getTempDir().flatMap(getTempFile(_)).right.get
+
+    new Driver(foodTestConf.copy(outputPath = tempOutputPath)).run()
+
+    //make sure the file isn't empty
+    tempOutputPath.length() > 0 shouldEqual true
+    canOpenXML(tempOutputPath) shouldEqual true
+
+    assertAndDeleteFile(tempOutputPath)
   }
 }

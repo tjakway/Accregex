@@ -21,7 +21,9 @@ object IntegrationTests {
       "Imbalance-USD",
       None,
       checkDiff = true,
-      UnvalidatedConfig.default.verbosity.withDebug(false)
+      Config.Verbosity(printSummary = false,
+        printModifiedTransactionNodes = false,
+        debug = false)
     )
   }
 }
